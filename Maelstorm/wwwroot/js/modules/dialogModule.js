@@ -11,7 +11,7 @@
             _guiManager.getDialogsContainer().firstChild.remove();
         }
         dialogs = [];
-        dialogs.dialogsStackNumber = 1;
+        dialogsStackNumber = 1;
         openedDialog = null;
     };     
 
@@ -47,6 +47,13 @@
         return element;
     };
 
+    var addDialog = function (serverDialog) {
+        var dialog = new Dialog(serverDialog);
+        _guiManager.getDialogsContainer().appendChild(dialog.element);
+        messagesPanelsContainer.appendChild(dialog.messagesPanel);
+        dialogs.push(dialog);
+    };
+
     return {
 
         init: function (guiManager, uploadMessagesCount) {
@@ -62,12 +69,7 @@
             return dialogs.find(function (dialog) { return dialog.id === id; });
         },
 
-        addDialog: function (serverDialog) {
-            var dialog = new Dialog(serverDialog);
-            _guiManager.getDialogsContainer().appendChild(dialog.element);
-            messagesPanelsContainer.appendChild(dialog.messagesPanel);
-            dialogs.push(dialog);
-        },
+        addDialog: addDialog,
 
         removeDialogs: removeDialogs,
 
@@ -103,7 +105,7 @@
         },
 
         createDialogDiv: createDialogDiv,
-        getDialogStackNumber: function () { returndialogsStackNumber; }
+        getDialogsStackNumber: function () { return dialogsStackNumber; }
     };
 })();
 
@@ -130,7 +132,7 @@ var dialogGuiModule = (function () {
             mesSendBut = document.getElementById("mesSendBut");
             dark = document.getElementById("dark");
         },
-
+        
         getDialogsContainer: function () { return dialogsContainer; },
         getDialogTitleDiv: function () { return dialogTitleDiv; },
         getDialogStatusDiv: function () { return dialogStatusDiv; },

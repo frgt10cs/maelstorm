@@ -8,7 +8,7 @@ var api = apiModule;
 
 function init() {
     dialogGui.showUploading();
-    api.getDialogs(dialog.getDialogsStackNumber, (dialogs) => {
+    api.getDialogs(dialog.getDialogsStackNumber(), (dialogs) => {
         //signlRConnection.StartConnection();
         dialog.updateDialogs(dialogs);        
         dialogGui.hideUploading();

@@ -1,5 +1,16 @@
-﻿var apiModule = (function () {
+﻿class MaelstormRequest {
+    constructor(url, handler, type, data) {
+        this.url = url;
+        this.handler = handler;
+        this.type = (type === undefined ? "GET" : type);
+        this.data = data;
+    }
+}
+
+var apiModule = (function () {
     var _fingerprint;
+
+    var accessTokenGenerationTime;
 
     var areTokensValid = function () {
         var token = localStorage.getItem("MAT");
@@ -56,7 +67,7 @@
             var refresh = JSON.stringify({
                 token: token,
                 refreshtoken: refreshToken,
-                fingerPrint: _fingerprpint
+                fingerPrint: _fingerprint
             });
             $.ajax({
                 url: "/api/authentication/rfrshtkn",
@@ -128,6 +139,7 @@
     return {
         init: function(fingerprint) {
             _fingerprint = fingerprint;
+            accessTokenGenerationTime = Number(localStorage.getItem("ATGT"));
         },
 
         areTokensValid: areTokensValid,
