@@ -1,0 +1,247 @@
+﻿.conversations {
+    width: 25%;
+    color: white;
+}
+
+.conversation {
+    padding: 10px;
+    background-color: black;
+    cursor: pointer;
+}
+
+.conversationPhoto {
+    background-color: red;
+    width: 50px;
+    height: 50px;
+    display: inline-block;
+    background-size: cover;
+}
+
+.conversationPreview {
+    white-space: nowrap;
+    overflow: hidden;
+    width: 70%;
+    display: inline-block;
+    padding-left: 10px;
+}
+
+#conversationInner {
+    width: 75%;
+    background-color: darkred;
+}
+
+.conversationText {
+    display: inline-block;
+    width: 70%;
+    overflow: hidden;
+}
+
+.conversationDate {
+    display: inline-block;
+    float: right;
+    width: 30%;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+#conversationInfo {
+    height: 60px;
+    text-align: center;
+    background-color: black;
+    border: 1px solid;
+    color: white;
+}
+
+#conversationStatus {
+    font-size: 12px;
+}
+
+.conversationMessages {
+    background-color: darkred;
+    height: 460px;
+    padding-right: 30px;
+    padding-left: 30px;
+    overflow-y: scroll;
+    padding-bottom: 10px;
+}
+
+#conversationMessages::-webkit-scrollbar {
+    width: 0 !important
+}
+
+#conversationSend {
+    background-color: black;
+    display: flex;
+    justify-content: center;
+    padding: 16px 0px;
+}
+
+.messageBlock {
+    display: flex;
+}
+
+.message {
+    background-color: white;
+    display: inline-block;
+    color: black;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 8px;
+    margin-top: 5px;
+}
+
+.authMes {
+    justify-content: flex-end;
+}
+
+#mesInput {
+    background: none;
+    resize: none;
+    border: 1px solid white;
+    padding: 5px 10px;
+    width: 80%;
+    height: 50px;
+    color: white;
+}
+
+#mesSendBut {
+    background: none;
+    border: none;
+    background-image: url(/images/send.png);
+    background-color: white;
+    background-size: cover;
+    height: 50px;
+    width: 50px;
+}
+
+.status {
+    margin-top: -3px;
+    background-size: cover;
+    width: 10px;
+    height: 10px;
+    float: right;
+}
+
+.siteInfo {
+    position: absolute;
+    top: 40px;
+    left: 100px;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 15px;
+    left: 0;
+    right: 0;
+    width: fit-content;
+    margin: 0 auto;
+    border: 1px solid white;
+    display: none;
+    z-index: 9999;
+}
+
+.infoPict {
+    background-size: cover;
+    width: 40px;
+    height: 40px;
+}
+
+.infoText {
+    padding-left: 5px;
+    color: white;
+}
+
+#connecting {
+    background-color: darkred;
+}
+
+#connected {
+    background-color: darkgreen;
+}
+
+#uploading{
+    background-color:darkgreen;
+}
+
+#disconnected{
+    background-color: darkred;
+}
+
+.connectingPict {
+    background-image: url(/images/connecting.png);
+}
+
+.connectedPict {
+    background-image: url(/images/connected.png);
+}
+
+.uploadingPict {
+    background-image: url(/images/uploading.png);
+}
+
+.disconnectedPict{
+    background-image: url(/images/disconnected.png);
+}
+
+#dark {
+    position: absolute;
+    opacity: 0.6;
+    background-color: black;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.form {
+    display: none;
+    position: fixed;
+    z-index: 99;
+    top: 25%;
+    left: 50%;
+    -webkit-transform: translate(-50%, 0%);
+    transform: translate(-50%, 0%);
+    background-color: #2A2A2C;
+    padding: 10px 20px;
+    border: 3px solid #1F1F21;
+    width: 250px;
+}
+
+.btnLink {
+    background: none;
+    color: white;
+    border: none;
+    text-align: center;
+    width: 100%;
+    text-decoration: underline;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    border: 1px solid #0E0E0E;
+    -webkit-text-fill-color: white;
+    -webkit-box-shadow: 0 0 0px 1000px #151515 inset;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.fInput {
+    background-color: #252526;
+    border: 1px solid #1F1F21;
+    color: white;
+    margin-bottom: 5px;
+    padding-left: 5px;
+    width: 100%;
+}
+
+.fLabel {
+    text-align: center;
+    color: white;
+    font-size: 20px;
+    padding: 5px 0px;
+}

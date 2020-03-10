@@ -1,0 +1,34 @@
+[
+  {
+    "outputFileName": "wwwroot/js/bundled/conversations.js",
+    "inputFiles": [
+      "wwwroot/js/api.js",
+      "wwwroot/js/modules/accountModule.js",
+      "wwwroot/js/modules/dialogModule.js",
+      "wwwroot/js/modules/apiModule.js",
+      //"wwwroot/js/connectionGuiManager.js",
+      //"wwwroot/js/accountGuiManager.js",
+      //"wwwroot/js/dialogGuiManager.js",
+      //"wwwroot/js/accountManager.js",
+      //"wwwroot/js/dialogManager.js",      
+      //"wwwroot/js/user.js",
+      //"wwwroot/js/signalRConnection.js",
+      "wwwroot/js/main.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    }
+  },
+  {
+    "outputFileName": "wwwroot/css/bundled/conversations.css",
+    "inputFiles": [
+      "wwwroot/css/dialogs.css",
+      "wwwroot/css/user.css"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    }
+  }
+]

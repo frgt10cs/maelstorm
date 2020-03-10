@@ -1,0 +1,156 @@
+﻿<link rel="stylesheet" href="~/css/bundled/conversations.min.css" />
+<div id="settingsPanel">
+    <div id="settingsContainer">
+        <div class="settingsBlock settingsContainer">
+            <div class="settingsBlockTitle">
+                Sessions
+            </div>
+            <div class="settingsBlockInner">
+                <div id="sessions">
+                    <div id="sessionsContainer">
+
+                    </div>
+                    <input type="button" id="loadSessions" class="btnLink" value="Reload">
+                </div>
+            </div>
+        </div>
+        <div class="settingsBlock">
+            <div>
+                <input type="button" value="Выйти" id="logoutButton" class="btnLink" />
+            </div>
+        </div>
+    </div>
+    <div id="settingsPanelSlider">
+    </div>
+</div>
+<div id="loginForm" class="form">
+    <div class="fLabel">
+        Вход
+    </div>
+    <div>
+        <input type="text" id="login" class="fInput" />
+    </div>
+    <div>
+        <input type="password" id="password" class="fInput" />
+    </div>
+    <div>
+        <input type="button" id="loginBtn" value="Login" class="fInput" />
+    </div>
+    <div>
+        <input type="button" id="openReg" value="Registration" class="btnLink" />
+    </div>
+</div>
+<div id="regForm" class="form">
+    <div class="fLabel">
+        Регистрация
+    </div>
+    <div>
+        <input type="text" id="regLogin" class="fInput" placeholder="login" />
+    </div>
+    <div>
+        <input type="email" id="regEmail" class="fInput" placeholder="email" />
+    </div>
+    <div>
+        <input type="password" id="regPassword" class="fInput" placeholder="password" />
+    </div>
+    <div>
+        <input type="password" id="regPasswordConfirm" class="fInput" placeholder="repeat password" />
+    </div>
+    <div>
+        <input type="button" id="regBtn" value="Registration" class="fInput" />
+    </div>
+    <div>
+        <input type="button" id="openLogin" value="Login" class="btnLink" />
+    </div>
+</div>
+<div class="siteInfo" id="disconnected">
+    <div class="infoPict disconnectedPict">
+
+    </div>
+    <div class="infoText">
+        Связь с сервером потеряна. Пожалуйста, попробуйте перезагрузить страницу.
+    </div>
+</div>
+<div class="siteInfo" id="connecting">
+    <div class="infoPict connectingPict">
+
+    </div>
+    <div class="infoText">
+        Подключение...
+    </div>
+</div>
+<div class="siteInfo" id="connected">
+    <div class="infoPict connectedPict">
+
+    </div>
+    <div class="infoText">
+        Подключено
+    </div>
+</div>
+<div class="siteInfo" id="uploading">
+    <div class="infoPict uploadingPict">
+
+    </div>
+    <div class="infoText">
+        Получение данных с сервера...
+    </div>
+</div>
+<div class="container">
+    <div>
+        Искать:
+        <input id="findUserValue" type="text" />
+        <input type="button" id="findUserButton" value="Найти" />
+    </div>
+    <div id="findUserResults">
+
+    </div>
+    <div id="userFullInfoPanel">
+        <div class="row">
+            <div class="col">
+                <div id="userInfoAvatar">
+
+                </div>
+            </div>
+            <div class="col">
+                <div id="userInfoNickname">
+
+                </div>
+                <div id="userInfoStatus">
+
+                </div>
+                <div id="userInfoOnlineStatus">
+
+                </div>
+            </div>
+        </div>
+        <input type="button" value="К диалогу" id="userInfoOpenDialog" />
+        <input type="button" value="x" id="closeUserInfo" />
+    </div>
+    <div class="row">
+        <div id="dialogs" class="conversations">
+        </div>
+        <div id="conversationInner" class="">
+            <div id="conversationInfo">
+                <div id="conversationTitle">
+
+                </div>
+                <div id="conversationStatus">
+
+                </div>
+            </div>
+            <div id="panelsInner">
+            </div>
+            <div id="conversationSend">
+                <textarea id="mesInput"></textarea>
+                <button id="mesSendBut"></button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="dark">
+
+</div>
+<script src="~/lib/fingerprint/fingerprint2.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/bundled/conversations.min.js"></script>
