@@ -2,15 +2,17 @@ var accountGui = accountGuiModule;
 var account = accountModule;
 var loginForm = loginFormModule;
 var regForm = registrationFormModule;
+var dialogs = dialogsModule;
 var dialog = dialogModule;
 var dialogGui = dialogGuiModule;
+var date = dateModule;
 var api = apiModule;
 
 function init() {
     dialogGui.showUploading();
-    api.getDialogs(dialog.getDialogsStackNumber(), (dialogs) => {
+    api.getDialogs(dialogs.getDialogsStackNumber(), (data) => {
         //signlRConnection.StartConnection();
-        dialog.updateDialogs(dialogs);        
+        dialogs.updateDialogs(dialog.createDialogs(data));        
         dialogGui.hideUploading();
     });
 }
@@ -20,7 +22,8 @@ function initModules(fingerprint) {
     accountGui.init(loginForm, regForm);
     account.init(api, accountGui);
     dialogGui.init();
-    dialog.init(dialogGui);
+    dialog.init(api, date, 50, dialogGui.toTheTop);
+    dialogs.init(dialogGui);
     //signalRConnection = new SignalRConnection(api, fingerprint, "/messageHub", dialogManager, connectionGui); 
 }
 

@@ -1,8 +1,7 @@
 ﻿// Взаимодейсвтие с сообщениями
 var messageBox = document.getElementById("mesInput");
 var mesSendBut = document.getElementById("mesSendBut");
-var currentDate = new Date();
-var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sem", "Okt", "Nov", "Dec"];
+
 
 function CheckUnreadedMessageForRead(dialogId) {
     var conv = GetDialogById(dialogId);

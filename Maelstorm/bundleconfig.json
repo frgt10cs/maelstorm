@@ -3,9 +3,11 @@
     "outputFileName": "wwwroot/js/bundled/conversations.js",
     "inputFiles": [
       "wwwroot/js/api.js",
-      "wwwroot/js/modules/accountModule.js",      
+      "wwwroot/js/modules/accountModule.js",
       "wwwroot/js/modules/dialogModule.js",
+      "wwwroot/js/modules/dialogsModule.js",
       "wwwroot/js/modules/apiModule.js",
+      "wwwroot/js/modules/dateModule.js",
       //"wwwroot/js/connectionGuiManager.js",
       //"wwwroot/js/accountGuiManager.js",
       //"wwwroot/js/dialogGuiManager.js",
