@@ -7,11 +7,13 @@ var dialog = dialogModule;
 var dialogGui = dialogGuiModule;
 var date = dateModule;
 var api = apiModule;
+var signalRConnection = signalRModule;
+var connectionGui = connectionGuiModule;
 
 function init() {
     dialogGui.showUploading();
     api.getDialogs(dialogs.getDialogsStackNumber(), (data) => {
-        //signlRConnection.StartConnection();
+        signalRConnection.startConnection();
         dialogs.updateDialogs(dialog.createDialogs(data));        
         dialogGui.hideUploading();
     });
@@ -24,7 +26,8 @@ function initModules(fingerprint) {
     dialogGui.init();
     dialog.init(api, date, 50, dialogGui.toTheTop);
     dialogs.init(dialogGui);
-    //signalRConnection = new SignalRConnection(api, fingerprint, "/messageHub", dialogManager, connectionGui); 
+    connectionGui.init();
+    signalRConnection.init(api, fingerprint, dialogs, connectionGui);    
 }
 
 function main() {

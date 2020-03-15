@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <None Include="Views\Shared\Result.cshtml" />
-    <None Include="wwwroot\js\registration.js" />
   </ItemGroup>
 
   <ItemGroup>
