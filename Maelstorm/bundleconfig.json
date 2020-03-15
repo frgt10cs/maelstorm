@@ -7,14 +7,7 @@
       "wwwroot/js/modules/dialogsModule.js",
       "wwwroot/js/modules/apiModule.js",
       "wwwroot/js/modules/dateModule.js",
-      "wwwroot/js/modules/signalRModule.js",
-      //"wwwroot/js/connectionGuiManager.js",
-      //"wwwroot/js/accountGuiManager.js",
-      //"wwwroot/js/dialogGuiManager.js",
-      //"wwwroot/js/accountManager.js",
-      //"wwwroot/js/dialogManager.js",      
-      //"wwwroot/js/user.js",
-      //"wwwroot/js/signalRConnection.js",
+      "wwwroot/js/modules/signalRModule.js", 
       "wwwroot/js/main.js"
     ],
     "minify": {

@@ -23,9 +23,9 @@ function initModules(fingerprint) {
     api.init(fingerprint);
     accountGui.init(loginForm, regForm);
     account.init(api, accountGui);
-    dialogGui.init();
+    dialogGui.init(date);
     dialog.init(api, date, 50, dialogGui.toTheTop);
-    dialogs.init(dialogGui);
+    dialogs.init(dialogGui, dialog);
     connectionGui.init();
     signalRConnection.init(api, fingerprint, dialogs, connectionGui);    
 }

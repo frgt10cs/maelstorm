@@ -16,7 +16,7 @@
 
     var initHandlers = function () {
         connection.onclose(() => {
-            if (isClosedByClient || fingerprint === "") return;
+            if (isClosedByClient || _fingerprint === "") return;
             console.log("lost connection");
             startConnection();
         });

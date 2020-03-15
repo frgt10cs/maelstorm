@@ -2,40 +2,7 @@
     var _api;
     var _uploadCount;
     var onNewMessage;
-    var dialogContext;
-    var _dateModule;
-
-    var createDialogDiv = function (dialog) {
-        var element = document.createElement("div");
-        element.classList.add("conversation");
-        element.id = dialog.id;
-        element.onclick = function () {
-            //openDialog(dialog); 
-        };
-        var photoDiv = document.createElement("div");
-        photoDiv.classList.add("conversationPhoto");
-        photoDiv.style.backgroundImage = "url('/images/" + dialog.image + "')";
-        var convPreview = document.createElement("div");
-        convPreview.classList.add("conversationPreview");
-        var convTitle = document.createElement("div");
-        convTitle.classList.add("conversationTitle");
-        convTitle.innerText = dialog.title;
-        var convMessage = document.createElement("div");
-        convMessage.classList.add("conversationMessage");
-        var convText = document.createElement("div");
-        convText.classList.add("conversationText");
-        convText.innerText = dialog.lastMessageText !== null ? dialog.lastMessageText : "";
-        var convDate = document.createElement("div");
-        convDate.classList.add("conversationDate");
-        convDate.innerText = dialog.lastMessageDate !== null ? _dateModule.getDate(new Date(dialog.lastMessageDate)) : "";
-        convMessage.appendChild(convText);
-        convMessage.appendChild(convDate);
-        convPreview.appendChild(convTitle);
-        convPreview.appendChild(convMessage);
-        element.appendChild(photoDiv);
-        element.appendChild(convPreview);
-        return element;
-    };
+    var dialogContext;   
 
     var appendMessageToBegin = function (message) {
         dialogContext.messagesPanel.prepend(message.element);
@@ -104,11 +71,11 @@
     };  
 
     var uploadUnreadedMessages = function () {
-        _api.getUnreadedMessages(dialogContext.id, uploadCount, unreadedMessagesHandler);
+        _api.getUnreadedMessages(dialogContext.id, _uploadCount, unreadedMessagesHandler);
     };
 
     var uploadReadedMessages = function () {
-        _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, uploadCount, readedMessagesHandler);
+        _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount, readedMessagesHandler);
     };
 
     var createDialog = function (serverDialog) {
@@ -127,13 +94,16 @@
         dialog.allReadedUploaded = false;
         dialog.allUnreadedUploaded = false;
         dialog.uploadingBlocked = false;
-        dialog.messagesPanel = createMessagesPanel();
-        dialog.element = createDialogDiv(dialog);
+        dialog.messagesPanel = createMessagesPanel();        
         return dialog;
     };
 
+    var firstDialogMessagesUploading = function () {
+        uploadReadedMessages();
+    };
+
     return {
-        
+
         init: function (api, dateModule, uploadCount, onNewMessageHandler) {
             _api = api;
             _dateModule = dateModule;
@@ -143,6 +113,14 @@
 
         setDialogContext: function (dialog) {
             dialogContext = dialog;
+        },
+
+        openDialog: function () {
+            if (!dialog.isPanelOpened) {
+                firstDialogMessagesUploading();
+            }
+            dialogContext.isPanelOpened = true;
+            dialogContext.messagesPanel.style.display = "block";
         },
 
         createDialog: createDialog,
