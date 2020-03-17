@@ -14,6 +14,25 @@
         connection.invoke("Authorize", localStorage.getItem("MAT"), _fingerprint);
     };   
 
+    var startConnection = function () {
+        if (connection !== null && _fingerprint !== "" && connection.connectionState !== 1) {
+            connecting();
+            connection.start()
+                .then(connected)
+                .catch(function (error) {
+                    console.log("error on connecting");
+                    tryReconnectingCount += 1;
+                    if (tryReconnectingCount < timeToReconnect.length)
+                        setTimeout(() => startConnection(), timeToReconnect[tryReconnectingCount]);
+                    else {
+                        disconnected();
+                    }
+                });
+        } else {
+            connected();
+        }
+    };
+
     var initHandlers = function () {
         connection.onclose(() => {
             if (isClosedByClient || _fingerprint === "") return;
@@ -98,24 +117,7 @@
             initHandlers();
         },
 
-        startConnection: function () {
-            if (connection !== null && _fingerprint !== "" && connection.connectionState !== 1) {
-                connecting();
-                connection.start()
-                    .then(connected)
-                    .catch(function (error) {
-                        console.log("error on connecting");
-                        tryReconnectingCount += 1;
-                        if (tryReconnectingCount < timeToReconnect.length)
-                            setTimeout(() => startConnection(), timeToReconnect[tryReconnectingCount]);
-                        else {
-                            disconnected();
-                        }
-                    });
-            } else {
-                connected();
-            }
-        },
+        startConnection: startConnection,
 
         ping: function () {
             if (connection.connectionState === 1) {
@@ -132,6 +134,12 @@ var connectionGuiModule = (function () {
     var connectingInfo;
     var connectedInfo;
     var disconnectedInfo;
+
+    var hideConnectInfo = function () {
+        connectingInfo.style.display = "none";
+        connectedInfo.style.display = "none";
+    };
+
     return {
         init: function () {
             connectingInfo = document.getElementById("connecting");
@@ -143,10 +151,7 @@ var connectionGuiModule = (function () {
             connectingInfo.style.display = "flex";        
         },
 
-        hideConnectInfo: function () {
-            connectingInfo.style.display = "none";
-            connectedInfo.style.display = "none";
-        },
+        hideConnectInfo: hideConnectInfo,
 
         showConnected: function () {
             connectedInfo.style.display = "flex";

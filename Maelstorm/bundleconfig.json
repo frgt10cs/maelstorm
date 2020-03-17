@@ -1,13 +1,15 @@
 [
   {
     "outputFileName": "wwwroot/js/bundled/conversations.js",
-    "inputFiles": [      
+    "inputFiles": [
       "wwwroot/js/modules/accountModule.js",
       "wwwroot/js/modules/dialogModule.js",
+      "wwwroot/js/models/dialog.js",
+      "wwwroot/js/modules/messageModule.js",
       "wwwroot/js/modules/dialogsModule.js",
       "wwwroot/js/modules/apiModule.js",
       "wwwroot/js/modules/dateModule.js",
-      "wwwroot/js/modules/signalRModule.js", 
+      "wwwroot/js/modules/signalRModule.js",
       "wwwroot/js/main.js"
     ],
     "minify": {

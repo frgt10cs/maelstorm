@@ -4,6 +4,8 @@ var loginForm = loginFormModule;
 var regForm = registrationFormModule;
 var dialogs = dialogsModule;
 var dialog = dialogModule;
+var message = messageModule;
+var dialogsGui = dialogsGuiModule;
 var dialogGui = dialogGuiModule;
 var date = dateModule;
 var api = apiModule;
@@ -11,11 +13,11 @@ var signalRConnection = signalRModule;
 var connectionGui = connectionGuiModule;
 
 function init() {
-    dialogGui.showUploading();
+    dialogsGui.showUploading();
     api.getDialogs(dialogs.getDialogsStackNumber(), (data) => {
         signalRConnection.startConnection();
         dialogs.updateDialogs(dialog.createDialogs(data));        
-        dialogGui.hideUploading();
+        dialogsGui.hideUploading();
     });
 }
 
@@ -23,9 +25,10 @@ function initModules(fingerprint) {
     api.init(fingerprint);
     accountGui.init(loginForm, regForm);
     account.init(api, accountGui);
+    dialogsGui.init();
     dialogGui.init(date);
-    dialog.init(api, date, 50, dialogGui.toTheTop);
-    dialogs.init(dialogGui, dialog);
+    dialog.init(api, dialogGui, message, date, 50, dialogsGui.toTheTop);
+    dialogs.init(dialogsGui, dialog);
     connectionGui.init();
     signalRConnection.init(api, fingerprint, dialogs, connectionGui);    
 }

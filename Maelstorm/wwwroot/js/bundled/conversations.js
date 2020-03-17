@@ -141,7 +141,9 @@ var accountGuiModule = (function () {
 })();
 var dialogModule = (function () {
     var _api;
+    var _guiManager;
     var _uploadCount;
+    var _message;
     var onNewMessage;
     var dialogContext;   
 
@@ -165,12 +167,12 @@ var dialogModule = (function () {
 
     var onMessagesPanelScroll = function () {
         if (!dialogContext.uploadingBlocked) {
-            if (thdialogContextis.messagesPanel.scrollTop < 10 && !dialogContext.allReadedUpload) {
+            if (dialogContext.messagesPanel.scrollTop < 10 && !dialogContext.allReadedUpload) {
                 console.log("old upl");
                 dialogContext.uploadingBlocked = true;
                 uploadReadedMessages();
             }
-            else if (dialogContext.messagesPanel.scrollHeight - dialogContext.messagesPanel.scrollTop - this.messagesPanel.offsetHeight < 10
+            else if (dialogContext.messagesPanel.scrollHeight - dialogContext.messagesPanel.scrollTop - dialogContext.messagesPanel.offsetHeight < 10
                 && !dialogContext.allUnreadedUpload && dialogContext.unreadedMessages.length === 0) {
                 console.log("new upl");
                 dialogContext.uploadingBlocked = true;
@@ -179,10 +181,15 @@ var dialogModule = (function () {
         }
     };  
 
+    var isMessageFromOther = function (message) {
+        return dialogContext.interlocutorId === message.authorId;
+    };
+
     var unreadedMessagesHandler = function (messages) {
         if (messages !== null && messages !== undefined && messages.length > 0) {
             if (messages.length < _uploadCount) dialogContext.allUnreadedUpload = true;
             for (var i = 0; i < messages.length; i++) {
+                _message.createMessageElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToEnd(messages[i]);
                 dialogContext.unreadedMessages.push(messages[i]);
             }
@@ -199,6 +206,7 @@ var dialogModule = (function () {
             dialogContext.readedMessagesOffset += messages.length;
             var resultScrollTop = 0;
             for (var i = 0; i < messages.length; i++) {
+                _message.createMessageElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToBegin(messages[i]);
                 dialogContext.messages.unshift(messages[i]);
                 resultScrollTop += messages[i].element.offsetHeight;
@@ -219,24 +227,18 @@ var dialogModule = (function () {
         _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount, readedMessagesHandler);
     };
 
-    var createDialog = function (serverDialog) {
-        var dialog = {};
-        dialog.id = serverDialog.id;
-        dialog.title = serverDialog.title;
-        dialog.lastMessageText = serverDialog.lastMessageText;
-        dialog.lastMessageDate = serverDialog.lastMessageDate;
-        dialog.image = serverDialog.image;
-        dialog.interlocutorId = serverDialog.interlocutorId;
-        dialog.isPanelOpened = false;
-        dialog.unreadedMessages = [];
-        dialog.messages = [];
-        dialog.unconfirmedMessages = [];
-        dialog.readedMessagesOffset = 0;
-        dialog.allReadedUploaded = false;
-        dialog.allUnreadedUploaded = false;
-        dialog.uploadingBlocked = false;
-        dialog.messagesPanel = createMessagesPanel();        
-        return dialog;
+    var createDialog = function (serverDialog) {      
+        serverDialog.isPanelOpened = false;
+        serverDialog.unreadedMessages = [];
+        serverDialog.messages = [];
+        serverDialog.unconfirmedMessages = [];
+        serverDialog.readedMessagesOffset = 0;
+        serverDialog.allReadedUploaded = false;
+        serverDialog.allUnreadedUploaded = false;
+        serverDialog.uploadingBlocked = false;
+        serverDialog.messagesPanel = createMessagesPanel();
+        serverDialog.element = _guiManager.createDialogDiv(serverDialog);
+        return serverDialog;
     };
 
     var firstDialogMessagesUploading = function () {
@@ -245,8 +247,10 @@ var dialogModule = (function () {
 
     return {
 
-        init: function (api, dateModule, uploadCount, onNewMessageHandler) {
+        init: function (api, guiManager, messageModule, dateModule, uploadCount, onNewMessageHandler) {
             _api = api;
+            _guiManager = guiManager;
+            _message = messageModule;
             _dateModule = dateModule;
             _uploadCount = uploadCount;
             onNewMessage = onNewMessageHandler;
@@ -262,6 +266,7 @@ var dialogModule = (function () {
             }
             dialogContext.isPanelOpened = true;
             dialogContext.messagesPanel.style.display = "block";
+            _guiManager.setDialog(dialogContext.title, dialogContext.status);            
         },
 
         createDialog: createDialog,
@@ -291,44 +296,16 @@ var dialogModule = (function () {
             onNewMessage();            
         },
 
-        unreadedMessagesHandler: function(messages) {
-            if (messages !== null && messages !== undefined && messages.length > 0) {
-                if (messages.length < _uploadCount) dialogContext.allUnreadedUpload = true;
-                for (var i = 0; i < messages.length; i++) {
-                    appendMessageToEnd(messages[i]);
-                    dialogContext.unreadedMessages.push(messages[i]);
-                }
-            }
-            else {
-                dialogContext.allUnreadedUpload = true;
-            }
-            dialogContext.uploadingBlocked = false;
-        },
+        unreadedMessagesHandler: unreadedMessagesHandler,
 
-        readedMessagesHandler: function(messages) {
-            if (messages !== null && messages !== undefined && messages.length > 0) {
-                if (messages.length < _uploadCount) dialogContext.allReadedUpload = true;
-                dialogContext.readedMessagesOffset += messages.length;
-                var resultScrollTop = 0;
-                for (var i = 0; i < messages.length; i++) {
-                    appendMessageToBegin(messages[i]);
-                    dialogContext.messages.unshift(messages[i]);
-                    resultScrollTop += messages[i].element.offsetHeight;
-                }
-                dialogContext.messagesPanel.scrollTop = resultScrollTop;
-            }
-            else {
-                dialogContext.allReadedUpload = true;
-            }
-            dialogContext.uploadingBlocked = false;
-        },  
+        readedMessagesHandler: readedMessagesHandler,  
 
         sendMessage: function (message) {
             var id = dialogContext.unconfirmedMessages.length;
             message.dateOfSending = new Date();
             message.status = -1;
             message.bindId = id;
-            SendDialogMessage(message, (result) => {
+            _api.sendDialogMessage(message, (result) => {
                 var info = JSON.parse(result.data);
                 var confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
                 confirmedMessage.id = info.id;
@@ -343,6 +320,196 @@ var dialogModule = (function () {
         uploadUnreadedMessages: uploadUnreadedMessages,
 
         uploadReadedMessages: uploadUnreadedMessages
+    };
+})();
+
+var dialogGuiModule = (function () {
+    var _date;
+    var dialogTitleDiv;
+    var dialogStatusDiv;
+
+    return {
+        init: function (dateModule) {
+            _date = dateModule;
+            dialogTitleDiv = document.getElementById("conversationTitle");
+            dialogStatusDiv = document.getElementById("conversationStatus");
+        },
+
+        createDialogDiv: function (dialog) {
+            var element = document.createElement("div");
+            element.classList.add("conversation");
+            element.id = dialog.id;
+            var photoDiv = document.createElement("div");
+            photoDiv.classList.add("conversationPhoto");
+            photoDiv.style.backgroundImage = "url('/images/" + dialog.image + "')";
+            var convPreview = document.createElement("div");
+            convPreview.classList.add("conversationPreview");
+            var convTitle = document.createElement("div");
+            convTitle.classList.add("conversationTitle");
+            convTitle.innerText = dialog.title;
+            var convMessage = document.createElement("div");
+            convMessage.classList.add("conversationMessage");
+            var convText = document.createElement("div");
+            convText.classList.add("conversationText");
+            convText.innerText = dialog.lastMessageText !== null ? dialog.lastMessageText : "";
+            var convDate = document.createElement("div");
+            convDate.classList.add("conversationDate");
+            convDate.innerText = dialog.lastMessageDate !== null ? _date.getDate(new Date(dialog.lastMessageDate)) : "";
+            convMessage.appendChild(convText);
+            convMessage.appendChild(convDate);
+            convPreview.appendChild(convTitle);
+            convPreview.appendChild(convMessage);
+            element.appendChild(photoDiv);
+            element.appendChild(convPreview);
+            return element;
+        },
+
+        getDialogTitleDiv: function () { return dialogTitleDiv; },
+        getDialogStatusDiv: function () { return dialogStatusDiv; },
+        getMessageBox: function () { },
+        getSendMessageBtn: function () { },
+
+        setDialog: function (title, status) {
+            dialogTitleDiv.innerText = title;
+            dialogStatusDiv.innerText = status;
+        }
+    };
+})();
+class Dialog {
+
+    constructor(serverDialog) {        
+        this.id = serverDialog.id;
+        this.title = serverDialog.title;
+        this.lastMessageText = serverDialog.lastMessageText;
+        this.lastMessageDate = serverDialog.lastMessageDate;
+        this.image = serverDialog.image;
+        this.interlocutorId = serverDialog.interlocutorId;
+        this.isPanelOpened = false;
+        this.unreadedMessages = [];
+        this.messages = [];
+        this.unconfirmedMessages = [];
+        this.readedMessagesOffset = 0;
+        this.allReadedUploaded = false;
+        this.allUnreadedUploaded = false;
+        this.uploadingBlocked = false;
+        this.uploadCount = 20;
+        this.messagesPanel = this.createMessagesPanel();        
+    }
+
+    openDialog() {
+        if (!this.isPanelOpened) {
+            this.firstDialogMessagesUploading();
+        }
+        this.isPanelOpened = true;
+        this.messagesPanel.style.display = "block";
+    }
+
+    addNewMessage(message) {
+        if (this.isPanelOpened) {
+            this.appendMessageToEnd(message);
+            var isFromOther = message.authorId === dialog.interlocutorId;
+            message.CreateMessageElement(isFromOther);
+            if (isFromOther) {
+                this.unreadedMessages.push(message);
+            } else {
+                this.messages.push(message);
+                this.readedMessagesOffset++;
+            }
+        }
+        var preView = this.element.lastElementChild.lastElementChild;
+        preView.firstElementChild.innerText = message.text;
+        preView.lastElementChild.innerText = GetDate(new Date(message.dateOfSending));        
+    }
+
+    appendMessageToBegin(message) {
+        this.messagesPanel.prepend(message.element);
+    }
+
+    appendMessageToEnd(message) {
+        this.messagesPanel.appendChild(message.element);
+    }       
+}
+var messageModule = (function () {
+    var messageContext;
+    var _guiModule;
+
+    var createMessage = function (targetId) {
+        var message;
+        message.targetId = targetId;
+        message.text = _guiModule.getMessageBox();
+        return message;
+    };
+
+    var createMessageElement = function (message, isFromOther) {
+        var mesBlock = document.createElement("div");
+        mesBlock.classList.add("messageBlock");
+        mesBlock.id = message.id;
+        var messageDiv = document.createElement("div");
+        messageDiv.classList.add("message");
+        var messageText = document.createElement("div");
+        messageText.innerText = message.text;
+        messageDiv.appendChild(messageText);
+        if (!isFromOther) {
+            var statusDiv = document.createElement("div");
+            statusDiv.classList.add("status");
+            messageDiv.appendChild(statusDiv);
+            message.statusDiv = statusDiv;
+            mesBlock.classList.add("authMes");
+            updateStatus(message);
+        }
+        mesBlock.appendChild(messageDiv);
+        message.element = mesBlock;
+    };
+
+    var updateStatus = function (message) {
+        switch (message.status) {
+            case -1:
+                message.statusDiv.style.backgroundImage = "url(/images/notConfirmed.png)";
+                break;
+            case 0:
+                message.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
+                break;
+            case 1:
+                message.statusDiv.style.backgroundImage = "url(/images/readed.png)";
+                break;
+        }
+    };
+
+    return {
+
+        init: function (guiModule) {
+            _guiModule = guiModule;
+        },
+
+        setMessageContext: function (message) {
+            messageContext = message;
+        },
+
+        createMessage: createMessage,
+        createMessageElement: createMessageElement,
+
+        createMessages: function (serverMessages) {
+            var messages = [];
+            for (var i = 0; i < serverMessages.length; i++) {
+                messages.push(this.createMessage(messages[i]));
+            }
+            return messages;
+        },
+
+        updateStatus: updateStatus
+    };
+})();
+
+var messageGuiModule = (function () {
+    var messageBox,
+        mesSendBut;
+    return {
+        init: function () {
+            messageBox = document.getElementById("mesInput");
+            mesSendBut = document.getElementById("mesSendBut");
+        },
+        getMessageBox: function () { return messageBox; },
+        getMesSendBut: function () { return mesSendBut; }
     };
 })();
 var dialogsModule = (function () {
@@ -361,8 +528,7 @@ var dialogsModule = (function () {
         openedDialog = null;
     };             
 
-    var addDialog = function (dialog) {
-        dialog.element = _guiManager.createDialogDiv(dialog);
+    var addDialog = function (dialog) {        
         dialog.element.onclick = function () { openDialog(dialog); };
         _guiManager.getDialogsContainer().appendChild(dialog.element);
         _guiManager.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
@@ -375,8 +541,7 @@ var dialogsModule = (function () {
                 openedDialog.messagesPanel.style.display = "none";
             }
             _dialog.setDialogContext(dialog);            
-            _dialog.openDialog();
-            _guiManager.setDialog(dialog.title, dialog.status);            
+            _dialog.openDialog();            
             openedDialog = dialog;
         }
     };
@@ -422,74 +587,25 @@ var dialogsModule = (function () {
     };
 })();
 
-var dialogGuiModule = (function () {
+var dialogsGuiModule = (function () {
 
     var dialogsContainer,
-        dialogTitleDiv,
-        dialogStatusDiv,
         messagesPanelsContainer,
-        uploadingInfo,
-        messageBox,
-        mesSendBut,
-        dark,
-        _dateModule;  
+        uploadingInfo,        
+        dark;        
 
     return {
-        init: function (dateModule) {
-            _dateModule = dateModule;
-            dialogsContainer = document.getElementById("dialogs");
-            dialogTitleDiv = document.getElementById("conversationTitle");
-            dialogStatusDiv = document.getElementById("conversationStatus");
+        init: function () {            
+            dialogsContainer = document.getElementById("dialogs");            
             messagesPanelsContainer = document.getElementById("panelsInner");
-            uploadingInfo = document.getElementById("uploading");
-            messageBox = document.getElementById("mesInput");
-            mesSendBut = document.getElementById("mesSendBut");
+            uploadingInfo = document.getElementById("uploading");            
             dark = document.getElementById("dark");
-        },
-
-        createDialogDiv: function (dialog) {
-            var element = document.createElement("div");
-            element.classList.add("conversation");
-            element.id = dialog.id;            
-            var photoDiv = document.createElement("div");
-            photoDiv.classList.add("conversationPhoto");
-            photoDiv.style.backgroundImage = "url('/images/" + dialog.image + "')";
-            var convPreview = document.createElement("div");
-            convPreview.classList.add("conversationPreview");
-            var convTitle = document.createElement("div");
-            convTitle.classList.add("conversationTitle");
-            convTitle.innerText = dialog.title;
-            var convMessage = document.createElement("div");
-            convMessage.classList.add("conversationMessage");
-            var convText = document.createElement("div");
-            convText.classList.add("conversationText");
-            convText.innerText = dialog.lastMessageText !== null ? dialog.lastMessageText : "";
-            var convDate = document.createElement("div");
-            convDate.classList.add("conversationDate");
-            convDate.innerText = dialog.lastMessageDate !== null ? _dateModule.getDate(new Date(dialog.lastMessageDate)) : "";
-            convMessage.appendChild(convText);
-            convMessage.appendChild(convDate);
-            convPreview.appendChild(convTitle);
-            convPreview.appendChild(convMessage);
-            element.appendChild(photoDiv);
-            element.appendChild(convPreview);
-            return element;
-        },
-
+        },        
         
-        getDialogsContainer: function () { return dialogsContainer; },
-        getDialogTitleDiv: function () { return dialogTitleDiv; },
-        getDialogStatusDiv: function () { return dialogStatusDiv; },
+        getDialogsContainer: function () { return dialogsContainer; },        
         getMessagesPanelsContainer: function () { return messagesPanelsContainer; },
-        getUploadingInfo: function () { return uploadingInfo; },
-        getMessageBox: function () { return messageBox; },
-        getMesSendBut: function () { return mesSendBut; },
-        getDark: function () { return dark; }, 
-        
-        setDialog: function (title, status) {
-            dialogTitleDiv.innerText = title;
-            dialogStatusDiv.innerText = status;
-        },
+        getUploadingInfo: function () { return uploadingInfo; },        
+        getDark: function () { return dark; },                 
 
         showUploading: function () {
             dark.style.display = "block";
@@ -801,9 +917,28 @@ var signalRModule = (function () {
         connection.invoke("Authorize", localStorage.getItem("MAT"), _fingerprint);
     };   
 
+    var startConnection = function () {
+        if (connection !== null && _fingerprint !== "" && connection.connectionState !== 1) {
+            connecting();
+            connection.start()
+                .then(connected)
+                .catch(function (error) {
+                    console.log("error on connecting");
+                    tryReconnectingCount += 1;
+                    if (tryReconnectingCount < timeToReconnect.length)
+                        setTimeout(() => startConnection(), timeToReconnect[tryReconnectingCount]);
+                    else {
+                        disconnected();
+                    }
+                });
+        } else {
+            connected();
+        }
+    };
+
     var initHandlers = function () {
         connection.onclose(() => {
-            if (isClosedByClient || fingerprint === "") return;
+            if (isClosedByClient || _fingerprint === "") return;
             console.log("lost connection");
             startConnection();
         });
@@ -885,24 +1020,7 @@ var signalRModule = (function () {
             initHandlers();
         },
 
-        startConnection: function () {
-            if (connection !== null && _fingerprint !== "" && connection.connectionState !== 1) {
-                connecting();
-                connection.start()
-                    .then(connected)
-                    .catch(function (error) {
-                        console.log("error on connecting");
-                        tryReconnectingCount += 1;
-                        if (tryReconnectingCount < timeToReconnect.length)
-                            setTimeout(() => startConnection(), timeToReconnect[tryReconnectingCount]);
-                        else {
-                            disconnected();
-                        }
-                    });
-            } else {
-                connected();
-            }
-        },
+        startConnection: startConnection,
 
         ping: function () {
             if (connection.connectionState === 1) {
@@ -919,6 +1037,12 @@ var connectionGuiModule = (function () {
     var connectingInfo;
     var connectedInfo;
     var disconnectedInfo;
+
+    var hideConnectInfo = function () {
+        connectingInfo.style.display = "none";
+        connectedInfo.style.display = "none";
+    };
+
     return {
         init: function () {
             connectingInfo = document.getElementById("connecting");
@@ -930,10 +1054,7 @@ var connectionGuiModule = (function () {
             connectingInfo.style.display = "flex";        
         },
 
-        hideConnectInfo: function () {
-            connectingInfo.style.display = "none";
-            connectedInfo.style.display = "none";
-        },
+        hideConnectInfo: hideConnectInfo,
 
         showConnected: function () {
             connectedInfo.style.display = "flex";
@@ -955,6 +1076,8 @@ var loginForm = loginFormModule;
 var regForm = registrationFormModule;
 var dialogs = dialogsModule;
 var dialog = dialogModule;
+var message = messageModule;
+var dialogsGui = dialogsGuiModule;
 var dialogGui = dialogGuiModule;
 var date = dateModule;
 var api = apiModule;
@@ -962,11 +1085,11 @@ var signalRConnection = signalRModule;
 var connectionGui = connectionGuiModule;
 
 function init() {
-    dialogGui.showUploading();
+    dialogsGui.showUploading();
     api.getDialogs(dialogs.getDialogsStackNumber(), (data) => {
         signalRConnection.startConnection();
         dialogs.updateDialogs(dialog.createDialogs(data));        
-        dialogGui.hideUploading();
+        dialogsGui.hideUploading();
     });
 }
 
@@ -974,9 +1097,10 @@ function initModules(fingerprint) {
     api.init(fingerprint);
     accountGui.init(loginForm, regForm);
     account.init(api, accountGui);
+    dialogsGui.init();
     dialogGui.init(date);
-    dialog.init(api, date, 50, dialogGui.toTheTop);
-    dialogs.init(dialogGui, dialog);
+    dialog.init(api, dialogGui, message, date, 50, dialogsGui.toTheTop);
+    dialogs.init(dialogsGui, dialog);
     connectionGui.init();
     signalRConnection.init(api, fingerprint, dialogs, connectionGui);    
 }

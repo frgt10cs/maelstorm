@@ -14,8 +14,7 @@
         openedDialog = null;
     };             
 
-    var addDialog = function (dialog) {
-        dialog.element = _guiManager.createDialogDiv(dialog);
+    var addDialog = function (dialog) {        
         dialog.element.onclick = function () { openDialog(dialog); };
         _guiManager.getDialogsContainer().appendChild(dialog.element);
         _guiManager.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
@@ -28,8 +27,7 @@
                 openedDialog.messagesPanel.style.display = "none";
             }
             _dialog.setDialogContext(dialog);            
-            _dialog.openDialog();
-            _guiManager.setDialog(dialog.title, dialog.status);            
+            _dialog.openDialog();            
             openedDialog = dialog;
         }
     };
@@ -75,74 +73,25 @@
     };
 })();
 
-var dialogGuiModule = (function () {
+var dialogsGuiModule = (function () {
 
     var dialogsContainer,
-        dialogTitleDiv,
-        dialogStatusDiv,
         messagesPanelsContainer,
-        uploadingInfo,
-        messageBox,
-        mesSendBut,
-        dark,
-        _dateModule;  
+        uploadingInfo,        
+        dark;        
 
     return {
-        init: function (dateModule) {
-            _dateModule = dateModule;
-            dialogsContainer = document.getElementById("dialogs");
-            dialogTitleDiv = document.getElementById("conversationTitle");
-            dialogStatusDiv = document.getElementById("conversationStatus");
+        init: function () {            
+            dialogsContainer = document.getElementById("dialogs");            
             messagesPanelsContainer = document.getElementById("panelsInner");
-            uploadingInfo = document.getElementById("uploading");
-            messageBox = document.getElementById("mesInput");
-            mesSendBut = document.getElementById("mesSendBut");
+            uploadingInfo = document.getElementById("uploading");            
             dark = document.getElementById("dark");
-        },
-
-        createDialogDiv: function (dialog) {
-            var element = document.createElement("div");
-            element.classList.add("conversation");
-            element.id = dialog.id;            
-            var photoDiv = document.createElement("div");
-            photoDiv.classList.add("conversationPhoto");
-            photoDiv.style.backgroundImage = "url('/images/" + dialog.image + "')";
-            var convPreview = document.createElement("div");
-            convPreview.classList.add("conversationPreview");
-            var convTitle = document.createElement("div");
-            convTitle.classList.add("conversationTitle");
-            convTitle.innerText = dialog.title;
-            var convMessage = document.createElement("div");
-            convMessage.classList.add("conversationMessage");
-            var convText = document.createElement("div");
-            convText.classList.add("conversationText");
-            convText.innerText = dialog.lastMessageText !== null ? dialog.lastMessageText : "";
-            var convDate = document.createElement("div");
-            convDate.classList.add("conversationDate");
-            convDate.innerText = dialog.lastMessageDate !== null ? _dateModule.getDate(new Date(dialog.lastMessageDate)) : "";
-            convMessage.appendChild(convText);
-            convMessage.appendChild(convDate);
-            convPreview.appendChild(convTitle);
-            convPreview.appendChild(convMessage);
-            element.appendChild(photoDiv);
-            element.appendChild(convPreview);
-            return element;
-        },
-
+        },        
         
-        getDialogsContainer: function () { return dialogsContainer; },
-        getDialogTitleDiv: function () { return dialogTitleDiv; },
-        getDialogStatusDiv: function () { return dialogStatusDiv; },
+        getDialogsContainer: function () { return dialogsContainer; },        
         getMessagesPanelsContainer: function () { return messagesPanelsContainer; },
-        getUploadingInfo: function () { return uploadingInfo; },
-        getMessageBox: function () { return messageBox; },
-        getMesSendBut: function () { return mesSendBut; },
-        getDark: function () { return dark; }, 
-        
-        setDialog: function (title, status) {
-            dialogTitleDiv.innerText = title;
-            dialogStatusDiv.innerText = status;
-        },
+        getUploadingInfo: function () { return uploadingInfo; },        
+        getDark: function () { return dark; },                 
 
         showUploading: function () {
             dark.style.display = "block";
