@@ -1,6 +1,7 @@
 ﻿var dialogModule = (function () {
     var _api;
-    var _guiManager;
+    var _date;
+    var _guiManager;   
     var _uploadCount;
     var _message;
     var onNewMessage;
@@ -48,7 +49,7 @@
         if (messages !== null && messages !== undefined && messages.length > 0) {
             if (messages.length < _uploadCount) dialogContext.allUnreadedUpload = true;
             for (var i = 0; i < messages.length; i++) {
-                _message.createMessageElement(messages[i], isMessageFromOther(messages[i]));
+                _message.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToEnd(messages[i]);
                 dialogContext.unreadedMessages.push(messages[i]);
             }
@@ -65,7 +66,7 @@
             dialogContext.readedMessagesOffset += messages.length;
             var resultScrollTop = 0;
             for (var i = 0; i < messages.length; i++) {
-                _message.createMessageElement(messages[i], isMessageFromOther(messages[i]));
+                _message.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToBegin(messages[i]);
                 dialogContext.messages.unshift(messages[i]);
                 resultScrollTop += messages[i].element.offsetHeight;
@@ -104,15 +105,60 @@
         uploadReadedMessages();
     };
 
+    var createMessage = function () {
+        var message = {};
+        _message.setText(message, _guiManager.getMessageText());        
+        message.targetId = dialogContext.interlocutorId;
+        var id = dialogContext.unconfirmedMessages.length;
+        message.dateOfSending = new Date();
+        message.status = -1;
+        message.bindId = id;
+        return message;
+    };
+
+    var sendMessage = function (message) {       
+        addNewMessage(message);
+        dialogContext.unconfirmedMessages.push(message);  
+        _api.sendDialogMessage(message, (result) => {
+            var info = JSON.parse(result.data);
+            var confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
+            confirmedMessage.id = info.id;
+            confirmedMessage.element.id = info.id;
+            confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
+            dialogContext.unconfirmedMessages[info.bindId] = undefined;
+        });              
+    };
+
+    var addNewMessage = function (message) {
+        if (dialogContext.isPanelOpened) {            
+            var isFromOther = isMessageFromOther(message);
+            _message.setElement(message, isFromOther);            
+            if (isFromOther) {
+                dialogContext.unreadedMessages.push(message);
+            } else {
+                dialogContext.messages.push(message);
+                dialogContext.readedMessagesOffset++;
+            }
+            appendMessageToEnd(message);
+        }
+        var preView = dialogContext.element.lastElementChild.lastElementChild;
+        preView.firstElementChild.innerText = message.text;
+        preView.lastElementChild.innerText = _date.getDate(new Date(message.dateOfSending));
+        onNewMessage(dialogContext);
+    };
+
     return {
 
         init: function (api, guiManager, messageModule, dateModule, uploadCount, onNewMessageHandler) {
             _api = api;
             _guiManager = guiManager;
             _message = messageModule;
-            _dateModule = dateModule;
+            _date = dateModule;
             _uploadCount = uploadCount;
             onNewMessage = onNewMessageHandler;
+            _guiManager.getMessageSendBtn().onclick = function () {
+                sendMessage(createMessage());
+            };
         },
 
         setDialogContext: function (dialog) {
@@ -129,6 +175,7 @@
         },
 
         createDialog: createDialog,
+
         createDialogs: function (serverDialogs) {
             var dialogs = [];
             for (var i = 0; i < serverDialogs.length; i++) {
@@ -137,44 +184,13 @@
             return dialogs;
         },
 
-        addNewMessage: function (message) {
-            if (dialogContext.isPanelOpened) {
-                appendMessageToEnd(message);
-                var isFromOther = message.authorId === dialog.interlocutorId;
-                message.CreateMessageElement(isFromOther);
-                if (isFromOther) {
-                    dialogContext.unreadedMessages.push(message);
-                } else {
-                    dialogContext.messages.push(message);
-                    dialogContext.readedMessagesOffset++;
-                }
-            }
-            var preView = dialogContext.element.lastElementChild.lastElementChild;
-            preView.firstElementChild.innerText = message.text;
-            preView.lastElementChild.innerText = GetDate(new Date(message.dateOfSending));
-            onNewMessage();            
-        },
+        addNewMessage: addNewMessage,
 
         unreadedMessagesHandler: unreadedMessagesHandler,
 
         readedMessagesHandler: readedMessagesHandler,  
 
-        sendMessage: function (message) {
-            var id = dialogContext.unconfirmedMessages.length;
-            message.dateOfSending = new Date();
-            message.status = -1;
-            message.bindId = id;
-            _api.sendDialogMessage(message, (result) => {
-                var info = JSON.parse(result.data);
-                var confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
-                confirmedMessage.id = info.id;
-                confirmedMessage.element.id = info.id;
-                confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
-                unconfirmedMessages[info.bindId] = undefined;
-            });
-            dialogContext.unconfirmedMessages.push(message);
-            dialogContext.addNewMessage(message);
-        },
+        sendMessage: sendMessage,
 
         uploadUnreadedMessages: uploadUnreadedMessages,
 
@@ -186,12 +202,16 @@ var dialogGuiModule = (function () {
     var _date;
     var dialogTitleDiv;
     var dialogStatusDiv;
+    var messageSendBtn;
+    var messageTextBox;
 
     return {
         init: function (dateModule) {
             _date = dateModule;
             dialogTitleDiv = document.getElementById("conversationTitle");
             dialogStatusDiv = document.getElementById("conversationStatus");
+            messageTextBox = document.getElementById("messageTextBox");
+            messageSendBtn = document.getElementById("messageSendBtn");            
         },
 
         createDialogDiv: function (dialog) {
@@ -225,8 +245,8 @@ var dialogGuiModule = (function () {
 
         getDialogTitleDiv: function () { return dialogTitleDiv; },
         getDialogStatusDiv: function () { return dialogStatusDiv; },
-        getMessageBox: function () { },
-        getSendMessageBtn: function () { },
+        getMessageText: function () { return messageTextBox.value; },
+        getMessageSendBtn: function () { return messageSendBtn },
 
         setDialog: function (title, status) {
             dialogTitleDiv.innerText = title;

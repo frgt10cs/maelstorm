@@ -9,6 +9,5 @@ local time
 rename login and reg forms
 rename controller methods(get/put)
 after devide - add in startup addControllers and maps
-js send message
-api depends on FP
 isDatavlid in forms
+text valiation

@@ -141,7 +141,8 @@ var accountGuiModule = (function () {
 })();
 var dialogModule = (function () {
     var _api;
-    var _guiManager;
+    var _date;
+    var _guiManager;   
     var _uploadCount;
     var _message;
     var onNewMessage;
@@ -189,7 +190,7 @@ var dialogModule = (function () {
         if (messages !== null && messages !== undefined && messages.length > 0) {
             if (messages.length < _uploadCount) dialogContext.allUnreadedUpload = true;
             for (var i = 0; i < messages.length; i++) {
-                _message.createMessageElement(messages[i], isMessageFromOther(messages[i]));
+                _message.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToEnd(messages[i]);
                 dialogContext.unreadedMessages.push(messages[i]);
             }
@@ -206,7 +207,7 @@ var dialogModule = (function () {
             dialogContext.readedMessagesOffset += messages.length;
             var resultScrollTop = 0;
             for (var i = 0; i < messages.length; i++) {
-                _message.createMessageElement(messages[i], isMessageFromOther(messages[i]));
+                _message.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToBegin(messages[i]);
                 dialogContext.messages.unshift(messages[i]);
                 resultScrollTop += messages[i].element.offsetHeight;
@@ -245,15 +246,60 @@ var dialogModule = (function () {
         uploadReadedMessages();
     };
 
+    var createMessage = function () {
+        var message = {};
+        _message.setText(message, _guiManager.getMessageText());        
+        message.targetId = dialogContext.interlocutorId;
+        var id = dialogContext.unconfirmedMessages.length;
+        message.dateOfSending = new Date();
+        message.status = -1;
+        message.bindId = id;
+        return message;
+    };
+
+    var sendMessage = function (message) {       
+        addNewMessage(message);
+        dialogContext.unconfirmedMessages.push(message);  
+        _api.sendDialogMessage(message, (result) => {
+            var info = JSON.parse(result.data);
+            var confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
+            confirmedMessage.id = info.id;
+            confirmedMessage.element.id = info.id;
+            confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
+            dialogContext.unconfirmedMessages[info.bindId] = undefined;
+        });              
+    };
+
+    var addNewMessage = function (message) {
+        if (dialogContext.isPanelOpened) {            
+            var isFromOther = isMessageFromOther(message);
+            _message.setElement(message, isFromOther);            
+            if (isFromOther) {
+                dialogContext.unreadedMessages.push(message);
+            } else {
+                dialogContext.messages.push(message);
+                dialogContext.readedMessagesOffset++;
+            }
+            appendMessageToEnd(message);
+        }
+        var preView = dialogContext.element.lastElementChild.lastElementChild;
+        preView.firstElementChild.innerText = message.text;
+        preView.lastElementChild.innerText = _date.getDate(new Date(message.dateOfSending));
+        onNewMessage(dialogContext);
+    };
+
     return {
 
         init: function (api, guiManager, messageModule, dateModule, uploadCount, onNewMessageHandler) {
             _api = api;
             _guiManager = guiManager;
             _message = messageModule;
-            _dateModule = dateModule;
+            _date = dateModule;
             _uploadCount = uploadCount;
             onNewMessage = onNewMessageHandler;
+            _guiManager.getMessageSendBtn().onclick = function () {
+                sendMessage(createMessage());
+            };
         },
 
         setDialogContext: function (dialog) {
@@ -270,6 +316,7 @@ var dialogModule = (function () {
         },
 
         createDialog: createDialog,
+
         createDialogs: function (serverDialogs) {
             var dialogs = [];
             for (var i = 0; i < serverDialogs.length; i++) {
@@ -278,44 +325,13 @@ var dialogModule = (function () {
             return dialogs;
         },
 
-        addNewMessage: function (message) {
-            if (dialogContext.isPanelOpened) {
-                appendMessageToEnd(message);
-                var isFromOther = message.authorId === dialog.interlocutorId;
-                message.CreateMessageElement(isFromOther);
-                if (isFromOther) {
-                    dialogContext.unreadedMessages.push(message);
-                } else {
-                    dialogContext.messages.push(message);
-                    dialogContext.readedMessagesOffset++;
-                }
-            }
-            var preView = dialogContext.element.lastElementChild.lastElementChild;
-            preView.firstElementChild.innerText = message.text;
-            preView.lastElementChild.innerText = GetDate(new Date(message.dateOfSending));
-            onNewMessage();            
-        },
+        addNewMessage: addNewMessage,
 
         unreadedMessagesHandler: unreadedMessagesHandler,
 
         readedMessagesHandler: readedMessagesHandler,  
 
-        sendMessage: function (message) {
-            var id = dialogContext.unconfirmedMessages.length;
-            message.dateOfSending = new Date();
-            message.status = -1;
-            message.bindId = id;
-            _api.sendDialogMessage(message, (result) => {
-                var info = JSON.parse(result.data);
-                var confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
-                confirmedMessage.id = info.id;
-                confirmedMessage.element.id = info.id;
-                confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
-                unconfirmedMessages[info.bindId] = undefined;
-            });
-            dialogContext.unconfirmedMessages.push(message);
-            dialogContext.addNewMessage(message);
-        },
+        sendMessage: sendMessage,
 
         uploadUnreadedMessages: uploadUnreadedMessages,
 
@@ -327,12 +343,16 @@ var dialogGuiModule = (function () {
     var _date;
     var dialogTitleDiv;
     var dialogStatusDiv;
+    var messageSendBtn;
+    var messageTextBox;
 
     return {
         init: function (dateModule) {
             _date = dateModule;
             dialogTitleDiv = document.getElementById("conversationTitle");
             dialogStatusDiv = document.getElementById("conversationStatus");
+            messageTextBox = document.getElementById("messageTextBox");
+            messageSendBtn = document.getElementById("messageSendBtn");            
         },
 
         createDialogDiv: function (dialog) {
@@ -366,8 +386,8 @@ var dialogGuiModule = (function () {
 
         getDialogTitleDiv: function () { return dialogTitleDiv; },
         getDialogStatusDiv: function () { return dialogStatusDiv; },
-        getMessageBox: function () { },
-        getSendMessageBtn: function () { },
+        getMessageText: function () { return messageTextBox.value; },
+        getMessageSendBtn: function () { return messageSendBtn },
 
         setDialog: function (title, status) {
             dialogTitleDiv.innerText = title;
@@ -429,18 +449,9 @@ class Dialog {
         this.messagesPanel.appendChild(message.element);
     }       
 }
-var messageModule = (function () {
-    var messageContext;
-    var _guiModule;
+var messageModule = (function () {           
 
-    var createMessage = function (targetId) {
-        var message;
-        message.targetId = targetId;
-        message.text = _guiModule.getMessageBox();
-        return message;
-    };
-
-    var createMessageElement = function (message, isFromOther) {
+    var setElement = function (message, isFromOther) {
         var mesBlock = document.createElement("div");
         mesBlock.classList.add("messageBlock");
         mesBlock.id = message.id;
@@ -461,8 +472,13 @@ var messageModule = (function () {
         message.element = mesBlock;
     };
 
+    var setStatus = function (message, status) {
+        message.status = status;
+        updateStatus(message);
+    };
+
     var updateStatus = function (message) {
-        switch (message.status) {
+        switch (status) {
             case -1:
                 message.statusDiv.style.backgroundImage = "url(/images/notConfirmed.png)";
                 break;
@@ -475,41 +491,29 @@ var messageModule = (function () {
         }
     };
 
-    return {
-
-        init: function (guiModule) {
-            _guiModule = guiModule;
-        },
-
-        setMessageContext: function (message) {
-            messageContext = message;
-        },
-
-        createMessage: createMessage,
-        createMessageElement: createMessageElement,
-
-        createMessages: function (serverMessages) {
-            var messages = [];
-            for (var i = 0; i < serverMessages.length; i++) {
-                messages.push(this.createMessage(messages[i]));
-            }
-            return messages;
-        },
-
-        updateStatus: updateStatus
+    // more
+    var setText = function (message, text) {
+        if (!isEmptyOrSpaces(text)) {
+            text = text.trim();
+            text = text.replace(/\s\s+/g, ' ');
+            message.text = text;
+        }
     };
-})();
 
-var messageGuiModule = (function () {
-    var messageBox,
-        mesSendBut;
+    var isEmptyOrSpaces = function (str) {
+        return str === null || str.match(/^ *$/) !== null;
+    };
+
     return {
+
         init: function () {
-            messageBox = document.getElementById("mesInput");
-            mesSendBut = document.getElementById("mesSendBut");
+        
         },
-        getMessageBox: function () { return messageBox; },
-        getMesSendBut: function () { return mesSendBut; }
+               
+        setElement: setElement,        
+        setStatus: setStatus,
+        updateStatus: updateStatus,
+        setText: setText
     };
 })();
 var dialogsModule = (function () {
@@ -1099,7 +1103,7 @@ function initModules(fingerprint) {
     account.init(api, accountGui);
     dialogsGui.init();
     dialogGui.init(date);
-    dialog.init(api, dialogGui, message, date, 50, dialogsGui.toTheTop);
+    dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);
     dialogs.init(dialogsGui, dialog);
     connectionGui.init();
     signalRConnection.init(api, fingerprint, dialogs, connectionGui);    

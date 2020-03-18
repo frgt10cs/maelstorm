@@ -94,7 +94,7 @@
     justify-content: flex-end;
 }
 
-#mesInput {
+#messageTextBox{
     background: none;
     resize: none;
     border: 1px solid white;
@@ -104,7 +104,7 @@
     color: white;
 }
 
-#mesSendBut {
+#messageSendBtn {
     background: none;
     border: none;
     background-image: url(/images/send.png);

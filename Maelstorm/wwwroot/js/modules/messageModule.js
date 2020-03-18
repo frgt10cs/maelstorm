@@ -1,15 +1,6 @@
-﻿var messageModule = (function () {
-    var messageContext;
-    var _guiModule;
+﻿var messageModule = (function () {           
 
-    var createMessage = function (targetId) {
-        var message;
-        message.targetId = targetId;
-        message.text = _guiModule.getMessageBox();
-        return message;
-    };
-
-    var createMessageElement = function (message, isFromOther) {
+    var setElement = function (message, isFromOther) {
         var mesBlock = document.createElement("div");
         mesBlock.classList.add("messageBlock");
         mesBlock.id = message.id;
@@ -30,8 +21,13 @@
         message.element = mesBlock;
     };
 
+    var setStatus = function (message, status) {
+        message.status = status;
+        updateStatus(message);
+    };
+
     var updateStatus = function (message) {
-        switch (message.status) {
+        switch (status) {
             case -1:
                 message.statusDiv.style.backgroundImage = "url(/images/notConfirmed.png)";
                 break;
@@ -44,27 +40,28 @@
         }
     };
 
+    // more
+    var setText = function (message, text) {
+        if (!isEmptyOrSpaces(text)) {
+            text = text.trim();
+            text = text.replace(/\s\s+/g, ' ');
+            message.text = text;
+        }
+    };
+
+    var isEmptyOrSpaces = function (str) {
+        return str === null || str.match(/^ *$/) !== null;
+    };
+
     return {
 
-        init: function (guiModule) {
-            _guiModule = guiModule;
+        init: function () {
+        
         },
-
-        setMessageContext: function (message) {
-            messageContext = message;
-        },
-
-        createMessage: createMessage,
-        createMessageElement: createMessageElement,
-
-        createMessages: function (serverMessages) {
-            var messages = [];
-            for (var i = 0; i < serverMessages.length; i++) {
-                messages.push(this.createMessage(messages[i]));
-            }
-            return messages;
-        },
-
-        updateStatus: updateStatus
+               
+        setElement: setElement,        
+        setStatus: setStatus,
+        updateStatus: updateStatus,
+        setText: setText
     };
 })();
