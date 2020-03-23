@@ -24,7 +24,7 @@ function init() {
 function initModules(fingerprint) {
     api.init(fingerprint);
     accountGui.init(loginForm, regForm);
-    account.init(api, accountGui);
+    account.init(api, accountGui, init);
     dialogsGui.init();
     dialogGui.init(date);
     dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);

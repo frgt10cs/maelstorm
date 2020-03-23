@@ -1,29 +1,29 @@
 var accountModule = (function () {
     var _api;
     var _guiManager;    
+    var _onLogin;
 
     var login = function () {
         if (_guiManager.getLoginForm().isDataValid()) {
             _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword(),
-                () => {
-                    _guiManager.onLogin();
+                () => {                    
                     _guiManager.hideAllForms();
+                    _onLogin();
                 },
-                () => {
-                    onLoginFailed();
+                () => {                    
                     alert("Login failed");
                 });
         }   
     };
 
     var registration = function () {
-        if (_guiManager.regForm.isDataValid()) {
-            _api.registration(_guiManager.regForm.login,
+        if (_guiManager.getRegForm().isDataValid()) {
+            _api.registration(_guiManager.getRegForm().getLogin(),
                 _guiManager.getRegForm().getEmail(),
                 _guiManager.getRegForm().getPassword(),
-                _guiManager.getRegForm.getPasswordConfirm(),
-                () => { onRegistration(); },
-                (data) => { onRegistrationFailed(data); });
+                _guiManager.getRegForm().getPasswordConfirm(),
+                () => { _guiManager.openLogin(); },
+                (data) => { /*onRegistrationFailed(data);*/ });
         }  
     };
 
@@ -33,12 +33,13 @@ var accountModule = (function () {
     };
 
     return {
-        init: function (api, guiManager) {
+        init: function (api, guiManager, onLogin) {
             _api = api;
             _guiManager = guiManager;
             _guiManager.getLoginForm().getSubmitButton().onclick = login;
             _guiManager.getRegForm().getSubmitButton().onclick = registration;
             _guiManager.getLogoutBtn().onclick = logout;
+            _onLogin = onLogin;
         }
     };
 })();
@@ -878,6 +879,10 @@ var apiModule = (function () {
         getOnlineStatuses: function(ids, handler) {
             if (ids.length === 0) return;
             sendRequest(new MaelstormRequest("/user/getonlinestatuses", handler, "POST", ids));
+        },
+
+        findByNickname: function (nickname, handler) {
+            sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname, handler));
         }
     };
 })();
@@ -1100,7 +1105,7 @@ function init() {
 function initModules(fingerprint) {
     api.init(fingerprint);
     accountGui.init(loginForm, regForm);
-    account.init(api, accountGui);
+    account.init(api, accountGui, init);
     dialogsGui.init();
     dialogGui.init(date);
     dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);

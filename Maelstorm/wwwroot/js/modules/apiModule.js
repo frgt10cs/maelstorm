@@ -250,6 +250,10 @@ var apiModule = (function () {
         getOnlineStatuses: function(ids, handler) {
             if (ids.length === 0) return;
             sendRequest(new MaelstormRequest("/user/getonlinestatuses", handler, "POST", ids));
+        },
+
+        findByNickname: function (nickname, handler) {
+            sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname, handler));
         }
     };
 })();
