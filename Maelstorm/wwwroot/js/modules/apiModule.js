@@ -254,6 +254,10 @@ var apiModule = (function () {
 
         findByNickname: function (nickname, handler) {
             sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname, handler));
+        },
+
+        getUserInfo: function (userId, handler) {
+            sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + data.userId, handler));
         }
     };
 })();

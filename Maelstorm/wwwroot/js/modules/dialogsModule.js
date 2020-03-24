@@ -1,4 +1,5 @@
 ﻿var dialogsModule = (function () {
+    var _api;
     var _guiManager;    
     var _dialog;
     var openedDialog;
@@ -32,9 +33,34 @@
         }
     };
 
+    var tryOpenDialog = function (userInfo) {
+        var dialog = getDialogByInterlocutorId(userInfo.id);
+        if (dialog !== null && dialog !== undefined) {
+            openDialog(dialog);
+        } else {
+            api_.getDialog(userInfo.id, (dialog) => {
+                if (dialog !== null && dialog !== undefined) {
+                    addDialog(dialog);
+                    openDialog(dialog);
+                } else {
+                    var newDialog = {
+                        interlocutorId: userInfo.id,
+                        title: userInfo.nickname,
+                        lastMessageText: "",
+                        lastMessageDate: "",
+                        image: userInfo.avatar
+                    };
+                    addDialog(newDialog);
+                    openDialog(newDialog);
+                }
+            });
+        }
+    };
+
     return {
 
-        init: function (guiManager, dialogModule) {
+        init: function (api, guiManager, dialogModule) {
+            _api = api;
             _guiManager = guiManager;  
             _dialog = dialogModule;
             openedDialog = null;

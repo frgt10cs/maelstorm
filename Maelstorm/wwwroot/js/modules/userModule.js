@@ -1,19 +1,19 @@
 ﻿var userModule = (function () {
     var _api;
     var _guiManager;  
-    var prevSearch;
+    var prevSearch;   
+
+    var getUserInfo = function (userId) {
+        _api.getUserInfo(userId, function (userInfo) {
+            _guiManager.setUserInfo(userInfo);                       
+        });
+    };
 
     return {
         init: function (api, guiManager) {
             _api = api;
             _guiManager = guiManager;
-            _guiManager.getFindUserBtn().onclick = function () { findUserByNickname(); };
-            _guiManager.getUserFindInput.onkeydown = function (e) {
-                if (e.keyCode === 13) {
-                    findUserByNickname();
-                    return false;
-                }
-            };
+            _guiManager.setFindUserFunc(findUserByNickname);            
         },
 
         findUserByNickname: function () {
@@ -26,7 +26,7 @@
                             appendUserFound(users[i]);
                         }
                     } else {
-                        _guiManager.setNotFound();   
+                        _guiManager.setAsNotFound();   
                     }
                 });
             }
@@ -85,6 +85,47 @@ var userGuiModule = (function () {
             }
         },
 
-        setNotFound: function () { userResultsInner.innerText = "Не найдено"; }        
+        setAsNotFound: function () { userResultsInner.innerText = "Не найдено"; },  
+        appendUserFound: function (user, getInfo) {
+            var box = document.createElement("div");
+            box.classList.add("userPreviewInner");
+            box.onclick = function () { getInfo(); };
+            var imageBox = document.createElement("div");
+            imageBox.style.backgroundImage = "url('/images/" + user.miniAvatar + "')";
+            imageBox.classList.add("userPreviewAvatar");
+            box.appendChild(imageBox);
+            var nicknameBox = document.createElement("div");
+            nicknameBox.textContent = user.nickname;
+            nicknameBox.classList.add("userPreviewNickname");
+            box.appendChild(nicknameBox);
+            box.id = user.userId;
+            userResultsInner.appendChild(box);
+        },
+
+        setFindUserFunc: function (findFunc) {
+            findUserBtn.onclick = findFunc;
+            userFindTextBox.onkeydown = function (e) {
+                if (e.keyCode === 13) {
+                    findFunc();
+                    return false;
+                }
+            };
+        },
+
+        setUserInfo: function (userInfo) {
+            userInfoAvatarBox.style.backgroundImage = "url('/images/" + userInfo.avatar + "')";
+            userInfoNicknameBox.innerText = userInfo.nickname;
+            userInfoStatusBox.innerText = userInfo.status;
+            userInfoOnlineStatusBox.innerText = userInfo.onlineStatus ? "online" : "offline";
+            dark.style.display = "block";
+            userInfoPanel.style.display = "block";
+        },
+        setOpenDialogFunc: function (openDialogFunc) {
+            userInfoOpenDialog.onclick = function () {
+                openDialogFunc();
+                dark.style.display = "none";
+                userInfoPanel.style.display = "none";
+            };
+        }
     };
 })();

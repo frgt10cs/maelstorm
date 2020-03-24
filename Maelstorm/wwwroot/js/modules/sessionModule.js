@@ -2,30 +2,44 @@
     var _api;
     var _guiManager;
 
+    var closeSession = function (sessionId) {
+        _api.closeSession(sessionId, false);
+    };
+
+    var banSession = function (sessionId) {
+        _api.closeSession(sessionId, true);
+    };
+
+    var uploadSessions = function () {
+        _api.getSessions(function (sessions) {
+            _guiManager.clearSessionsContainer();
+            for (var i = 0; i < sessions.length; i++) {
+                _guiManager.appendSession(sessions[i]);
+            }
+        });
+    };
+
     return {
         init: function (api, guiManager) {
             _api = api;
             _guiManager = guiManager;
-            _guiManager.getLoadSessionsBtn().onclick = function () { uploadSessions(); }
+            _guiManager.setLoadSessionsFunc(uploadSessions);
+            _guiManager.setCloseFunc(closeSession());
+            _guiManager.setBanFunc(banSession());
         },
 
-        uploadSessions: function () {            
-            _api.getSessions(function (sessions) {
-                _guiManager.clearSessionsContainer();
-                for (var i = 0; i < sessions.length; i++) {
-                    var id = sessions[i].session.sessionId;
-                    _guiManager.appendSession(sessions[i],
-                        _api.closeSession(id, false),
-                        _api.closeSession(id, true));
-                }
-            });
-        }
+        uploadSessions: uploadSessions,                    
+        closeSession: closeSession,
+        banDevice: banSession
     };
 })();
 
 var sessionGuimodule = (function () {
     var sessionsContainer;
     var loadSessionsBtn; 
+
+    var _close;
+    var _ban;    
 
     var createElement = function (element, className = "", inner = "") {
         var newElement = document.createElement(element);
@@ -34,7 +48,7 @@ var sessionGuimodule = (function () {
         return newElement;
     };
 
-    var createSessionDiv = function (session, close, ban) {
+    var createSessionDiv = function (session) {
         var sessionDate = new Date(session.session.createdAt);
         var dateString = sessionDate.getDate() + "." + (sessionDate.getMonth() + 1) + "." + sessionDate.getFullYear();
         var container = createElement("div", "sessionContainer"),
@@ -52,8 +66,8 @@ var sessionGuimodule = (function () {
             closeSessionBtn = createElement("button", "sessionButton", "Close"),
             banDevice = createElement("button", "sessionButton", "Ban device");
         more.onclick = function () { $(moreContainer).slideToggle("fast"); };
-        closeSessionBtn.onclick = function () { close(); };
-        banSessionBtn.onclick = function () { ban(); };
+        closeSessionBtn.onclick = function () { _close(session.session.sessionId); };
+        banSessionBtn.onclick = function () { _ban(session.session.sessionId); };
         imageBox.style.backgroundImage = "url('/images/" + session.session.osCpu + ".png')";
         info.appendChild(title);
         info.appendChild(date);
@@ -83,12 +97,15 @@ var sessionGuimodule = (function () {
             loadSessionsBtn = document.getElementById("loadSessions");
         },
 
-        appendSession: function (session, close, ban) {
-            var div = createSessionDiv(sessions[i], close, ban);
-            sessionsContainer.appendChild(div);
-        },
+        clearSessionsContainer: clearSessionsContainer,
 
-        getLoadSessionsBtn: function () { return loadSessionsBtn; },
-        getSessionsContainer: function () { return sessionsContainer; }        
+        appendSession: function (session) {
+            var div = createSessionDiv(session);
+            sessionsContainer.appendChild(div);
+        },        
+
+        setCloseFunc: function (closeFunc) { _close = closeFunc; },
+        setBanFunc: function (banFunc) { _ban = banFunc; },
+        setLoadSessionsFunc: function (loadFunc) { loadSessionsBtn.onclick = loadFunc; }
     };
 })();
