@@ -257,7 +257,7 @@ var apiModule = (function () {
         },
 
         getUserInfo: function (userId, handler) {
-            sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + data.userId, handler));
+            sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId, handler));
         }
     };
 })();

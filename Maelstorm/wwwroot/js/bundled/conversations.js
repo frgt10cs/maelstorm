@@ -517,14 +517,14 @@ var messageModule = (function () {
         setText: setText
     };
 })();
-var dialogsModule = (function () {
+var dialogsModule = (function () {    
     var _guiManager;    
     var _dialog;
     var openedDialog;
     var dialogs;
     var dialogsStackNumber;               
 
-    var removeDialogs = function () {
+    var removeDialogs = function () {        
         while (_guiManager.getDialogsContainer().firstChild) {
             _guiManager.getDialogsContainer().firstChild.remove();
         }
@@ -551,9 +551,33 @@ var dialogsModule = (function () {
         }
     };
 
+    var tryOpenDialog = function (userInfo) {
+        var dialog = getDialogByInterlocutorId(userInfo.id);
+        if (dialog !== null && dialog !== undefined) {
+            openDialog(dialog);
+        } else {
+            api_.getDialog(userInfo.id, (dialog) => {
+                if (dialog !== null && dialog !== undefined) {
+                    addDialog(dialog);
+                    openDialog(dialog);
+                } else {
+                    var newDialog = {
+                        interlocutorId: userInfo.id,
+                        title: userInfo.nickname,
+                        lastMessageText: "",
+                        lastMessageDate: "",
+                        image: userInfo.avatar
+                    };
+                    addDialog(newDialog);
+                    openDialog(newDialog);
+                }
+            });
+        }
+    };
+
     return {
 
-        init: function (guiManager, dialogModule) {
+        init: function (guiManager, dialogModule) {            
             _guiManager = guiManager;  
             _dialog = dialogModule;
             openedDialog = null;
@@ -625,6 +649,246 @@ var dialogsGuiModule = (function () {
         toTheTop: function (dialog) {
             dialogsContainer.insertBefore(dialog.element, dialogsContainer.firstChild);
         }
+    };
+})();
+var userModule = (function () {
+    var _api;
+    var _guiManager;  
+    var prevSearch;   
+
+    var getUserInfo = function (userId) {
+        _api.getUserInfo(userId, function (userInfo) {
+            _guiManager.setUserInfo(userInfo);                       
+        });
+    };
+
+    var createUserFoundElement = function (user) {
+        var box = document.createElement("div");
+        box.classList.add("userPreviewInner");
+        box.onclick = function () { getUserInfo(user.id); };
+        var imageBox = document.createElement("div");
+        imageBox.style.backgroundImage = "url('/images/" + user.miniAvatar + "')";
+        imageBox.classList.add("userPreviewAvatar");
+        box.appendChild(imageBox);
+        var nicknameBox = document.createElement("div");
+        nicknameBox.textContent = user.nickname;
+        nicknameBox.classList.add("userPreviewNickname");
+        box.appendChild(nicknameBox);
+        box.id = user.userId;
+        return box;        
+    };
+
+    var findUserByNickname = function () {
+        var nickname = _guiManager.getUserFindValue();
+        if (nickname !== prevSearch) {
+            _api.findByNickname(nickname, function (users) {
+                _guiManager.clearUserResultsInnner();
+                if (users.length > 0) {
+                    for (var i = 0; i < users.length; i++) {
+                        _guiManager.appendUserFound(createUserFoundElement(users[i]));
+                    }
+                } else {
+                    _guiManager.setAsNotFound();
+                }
+            });
+        }
+        prevSearch = nickname;
+    };
+
+    return {
+        init: function (api, guiManager) {
+            _api = api;
+            _guiManager = guiManager;
+            _guiManager.setFindUserFunc(findUserByNickname);            
+        },
+
+        findUserByNickname: findUserByNickname
+    };
+})();
+
+var userGuiModule = (function () {
+    var userFindTextBox;
+    var userResultsInner;
+    var findUserBtn;
+    var userInfoPanel;
+    var userInfoNicknameBox;
+    var userInfoAvatarBox;
+    var userInfoStatusBox;
+    var userInfoOnlineStatusBox;
+    var userInfoOpenDialog;
+    var closeUserInfoBtn;
+    var dark;    
+
+    var closeUserInfo = function () {
+        dark.style.display = "none";
+        userInfoPanel.style.display = "none";
+    };    
+
+    return {
+        init: function () {
+            userFindTextBox = document.getElementById("findUserValue");
+            userResultsInner = document.getElementById("findUserResults");
+            findUserBtn = document.getElementById("findUserButton");
+            userInfoPanel = document.getElementById("userFullInfoPanel");
+            userInfoNicknameBox = document.getElementById("userInfoNickname");
+            userInfoAvatarBox = document.getElementById("userInfoAvatar");
+            userInfoStatusBox = document.getElementById("userInfoStatus");
+            userInfoOnlineStatusBox = document.getElementById("userInfoOnlineStatus");
+            userInfoOpenDialog = document.getElementById("userInfoOpenDialog");
+            closeUserInfoBtn = document.getElementById("closeUserInfo");
+            closeUserInfoBtn.onclick = function () { closeUserInfo(); };
+            dark = document.getElementById("dark");
+        },
+
+        //getUserFindValue: function () { return userFindTextBox.value; },
+        //getUserResultsInner: function () { return userResultsInner; },
+        //getFindUserBtn: function () { return findUserBtn; },
+        //getUserInfoPanel: function () { return userInfoPanel; },
+        //getUserInfoNicknameBox: function () { return userInfoNicknameBox; },
+        //getUserInfoAvatarBox: function () { return userInfoAvatarBox; },
+        //getUserInfoStatusBox: function () { return userInfoStatusBox; },
+        //getUserInfoOnlineStatusBox: function () { return userInfoOnlineStatusBox; },
+        //getUserInfoOpenDialog: function () { return userInfoOpenDialog; },
+
+        clearUserResultsInnner: function () {
+            while (userResultsInner.lastChild) {
+                userResultsInner.removeChild(userResultsInner.lastChild);
+            }
+        },
+
+        appendUserFound: function (element) {
+            userResultsInner.appendChild(element);
+        },
+
+        setAsNotFound: function () { userResultsInner.innerText = "Не найдено"; },          
+
+        setFindUserFunc: function (findFunc) {
+            findUserBtn.onclick = findFunc;
+            userFindTextBox.onkeydown = function (e) {
+                if (e.keyCode === 13) {
+                    findFunc();
+                    return false;
+                }
+            };
+        },        
+
+        setUserInfo: function (userInfo) {
+            userInfoAvatarBox.style.backgroundImage = "url('/images/" + userInfo.avatar + "')";
+            userInfoNicknameBox.innerText = userInfo.nickname;
+            userInfoStatusBox.innerText = userInfo.status;
+            userInfoOnlineStatusBox.innerText = userInfo.onlineStatus ? "online" : "offline";
+            dark.style.display = "block";
+            userInfoPanel.style.display = "block";
+        }
+
+        //setOpenDialogFunc: function (openDialogFunc) {
+        //    userInfoOpenDialog.onclick = function () {
+        //        openDialogFunc();
+        //        dark.style.display = "none";
+        //        userInfoPanel.style.display = "none";
+        //    };
+        //}
+    };
+})();
+var sessionModule = (function () {
+    var _api;
+    var _guiManager;
+
+    var closeSession = function (sessionId) {
+        _api.closeSession(sessionId, false);
+    };
+
+    var banSession = function (sessionId) {
+        _api.closeSession(sessionId, true);
+    };
+
+    var uploadSessions = function () {
+        _api.getSessions(function (sessions) {
+            _guiManager.clearSessionsContainer();
+            for (var i = 0; i < sessions.length; i++) {
+                _guiManager.appendSession(createSessionDiv(sessions[i]));
+            }
+        });
+    };
+
+    var createElement = function (element, className = "", inner = "") {
+        var newElement = document.createElement(element);
+        newElement.classList.add(className);
+        newElement.innerText = inner;
+        return newElement;
+    };
+
+    var createSessionDiv = function (session) {
+        var sessionDate = new Date(session.session.createdAt);
+        var dateString = sessionDate.getDate() + "." + (sessionDate.getMonth() + 1) + "." + sessionDate.getFullYear();
+        var container = createElement("div", "sessionContainer"),
+            imageBox = createElement("div", "sessionImage"),
+            mainInfo = createElement("div", "sessionMainInfo"),
+            info = createElement("div", "sessionInfo"),
+            title = createElement("div", "sessionTitle", session.session.location + " · " + session.session.osCpu),
+            date = createElement("div", "sessionDate", dateString + " · " + session.session.app),
+            more = createElement("div", "sessionMore", "More"),
+            moreContainer = createElement("div", "sessionMoreContainer"),
+            opened = createElement("div", "moreField", "Opened at: " + dateString),
+            ip = createElement("div", "moreField", "Ip: " + session.session.ipAddress),
+            isOnline = createElement("div", "moreField", "Status: " + (session.signalRSession === null ? "offline" : "online")),
+            buttons = createElement("div", "sessionButtons"),
+            closeSessionBtn = createElement("button", "sessionButton", "Close"),
+            banDeviceBtn = createElement("button", "sessionButton", "Ban device");
+        more.onclick = function () { $(moreContainer).slideToggle("fast"); };
+        closeSessionBtn.onclick = function () { closeSession(session.session.sessionId); };
+        banDeviceBtn.onclick = function () { banSession(session.session.sessionId); };
+        imageBox.style.backgroundImage = "url('/images/" + session.session.osCpu + ".png')";
+        info.appendChild(title);
+        info.appendChild(date);
+        info.appendChild(more);
+        mainInfo.appendChild(imageBox);
+        mainInfo.appendChild(info);
+        buttons.appendChild(closeSessionBtn);
+        buttons.appendChild(banDeviceBtn);
+        moreContainer.appendChild(opened);
+        moreContainer.appendChild(ip);
+        moreContainer.appendChild(isOnline);
+        moreContainer.appendChild(buttons);
+        container.appendChild(mainInfo);
+        container.appendChild(moreContainer);
+        return container;
+    };
+
+    return {
+        init: function (api, guiManager) {
+            _api = api;
+            _guiManager = guiManager;
+            _guiManager.setLoadSessionsFunc(uploadSessions);       
+        },
+
+        uploadSessions: uploadSessions,                    
+        closeSession: closeSession,
+        banDevice: banSession
+    };
+})();
+
+var sessionGuiModule = (function () {
+    var sessionsContainer;
+    var loadSessionsBtn;    
+
+    var clearSessionsContainer = function () {
+        while (sessionsContainer.firstChild) {
+            sessionsContainer.removeChild(sessionsContainer.firstChild);
+        }
+    };
+
+    return {
+        init: function () {
+            sessionsContainer = document.getElementById("sessionsContainer");
+            loadSessionsBtn = document.getElementById("loadSessions");
+        },
+
+        clearSessionsContainer: clearSessionsContainer,
+
+        appendSession: function (element) { sessionsContainer.appendChild(element); },        
+        
+        setLoadSessionsFunc: function (loadFunc) { loadSessionsBtn.onclick = loadFunc; }
     };
 })();
 class MaelstormRequest {
@@ -883,6 +1147,10 @@ var apiModule = (function () {
 
         findByNickname: function (nickname, handler) {
             sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname, handler));
+        },
+
+        getUserInfo: function (userId, handler) {
+            sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId, handler));
         }
     };
 })();
@@ -1092,6 +1360,10 @@ var date = dateModule;
 var api = apiModule;
 var signalRConnection = signalRModule;
 var connectionGui = connectionGuiModule;
+var user = userModule;
+var userGui = userGuiModule;
+var session = sessionModule;
+var sessionGui = sessionGuiModule;
 
 function init() {
     dialogsGui.showUploading();
@@ -1111,7 +1383,11 @@ function initModules(fingerprint) {
     dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);
     dialogs.init(dialogsGui, dialog);
     connectionGui.init();
-    signalRConnection.init(api, fingerprint, dialogs, connectionGui);    
+    signalRConnection.init(api, fingerprint, dialogs, connectionGui);
+    sessionGui.init();
+    session.init(api, sessionGui);
+    userGui.init();
+    user.init(api, userGui);
 }
 
 function main() {

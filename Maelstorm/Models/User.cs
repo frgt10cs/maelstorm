@@ -24,7 +24,7 @@ namespace Maelstorm.Models
             return new UserFindInfoViewModel()
             {
                 Nickname = user.Nickname,
-                UserId = user.Id,
+                Id = user.Id,
                 MiniAvatar = user.Image
             };
         }

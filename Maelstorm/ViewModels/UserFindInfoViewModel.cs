@@ -7,7 +7,7 @@ namespace Maelstorm.ViewModels
 {
     public class UserFindInfoViewModel
     {
-        public int UserId;
+        public int Id;
         public string Nickname;
         public string MiniAvatar;
     }

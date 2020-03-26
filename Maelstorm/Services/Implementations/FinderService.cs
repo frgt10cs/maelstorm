@@ -23,7 +23,7 @@ namespace Maelstorm.Services.Implementations
                 .Where(u => u.Nickname.Contains(nickname) && u.Id != userId)
                 .Select(u => new UserFindInfoViewModel
                 {
-                    UserId = u.Id,
+                    Id = u.Id,
                     MiniAvatar =  u.Image,
                     Nickname = u.Nickname
                 })

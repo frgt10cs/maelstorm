@@ -14,32 +14,10 @@
         _api.getSessions(function (sessions) {
             _guiManager.clearSessionsContainer();
             for (var i = 0; i < sessions.length; i++) {
-                _guiManager.appendSession(sessions[i]);
+                _guiManager.appendSession(createSessionDiv(sessions[i]));
             }
         });
     };
-
-    return {
-        init: function (api, guiManager) {
-            _api = api;
-            _guiManager = guiManager;
-            _guiManager.setLoadSessionsFunc(uploadSessions);
-            _guiManager.setCloseFunc(closeSession());
-            _guiManager.setBanFunc(banSession());
-        },
-
-        uploadSessions: uploadSessions,                    
-        closeSession: closeSession,
-        banDevice: banSession
-    };
-})();
-
-var sessionGuimodule = (function () {
-    var sessionsContainer;
-    var loadSessionsBtn; 
-
-    var _close;
-    var _ban;    
 
     var createElement = function (element, className = "", inner = "") {
         var newElement = document.createElement(element);
@@ -59,15 +37,15 @@ var sessionGuimodule = (function () {
             date = createElement("div", "sessionDate", dateString + " · " + session.session.app),
             more = createElement("div", "sessionMore", "More"),
             moreContainer = createElement("div", "sessionMoreContainer"),
-            opened = createElement("div", "moreField", "Opened at: " + datestring),
+            opened = createElement("div", "moreField", "Opened at: " + dateString),
             ip = createElement("div", "moreField", "Ip: " + session.session.ipAddress),
             isOnline = createElement("div", "moreField", "Status: " + (session.signalRSession === null ? "offline" : "online")),
             buttons = createElement("div", "sessionButtons"),
             closeSessionBtn = createElement("button", "sessionButton", "Close"),
-            banDevice = createElement("button", "sessionButton", "Ban device");
+            banDeviceBtn = createElement("button", "sessionButton", "Ban device");
         more.onclick = function () { $(moreContainer).slideToggle("fast"); };
-        closeSessionBtn.onclick = function () { _close(session.session.sessionId); };
-        banSessionBtn.onclick = function () { _ban(session.session.sessionId); };
+        closeSessionBtn.onclick = function () { closeSession(session.session.sessionId); };
+        banDeviceBtn.onclick = function () { banSession(session.session.sessionId); };
         imageBox.style.backgroundImage = "url('/images/" + session.session.osCpu + ".png')";
         info.appendChild(title);
         info.appendChild(date);
@@ -75,7 +53,7 @@ var sessionGuimodule = (function () {
         mainInfo.appendChild(imageBox);
         mainInfo.appendChild(info);
         buttons.appendChild(closeSessionBtn);
-        buttons.appendChild(banDevice);
+        buttons.appendChild(banDeviceBtn);
         moreContainer.appendChild(opened);
         moreContainer.appendChild(ip);
         moreContainer.appendChild(isOnline);
@@ -84,6 +62,23 @@ var sessionGuimodule = (function () {
         container.appendChild(moreContainer);
         return container;
     };
+
+    return {
+        init: function (api, guiManager) {
+            _api = api;
+            _guiManager = guiManager;
+            _guiManager.setLoadSessionsFunc(uploadSessions);       
+        },
+
+        uploadSessions: uploadSessions,                    
+        closeSession: closeSession,
+        banDevice: banSession
+    };
+})();
+
+var sessionGuiModule = (function () {
+    var sessionsContainer;
+    var loadSessionsBtn;    
 
     var clearSessionsContainer = function () {
         while (sessionsContainer.firstChild) {
@@ -99,13 +94,8 @@ var sessionGuimodule = (function () {
 
         clearSessionsContainer: clearSessionsContainer,
 
-        appendSession: function (session) {
-            var div = createSessionDiv(session);
-            sessionsContainer.appendChild(div);
-        },        
-
-        setCloseFunc: function (closeFunc) { _close = closeFunc; },
-        setBanFunc: function (banFunc) { _ban = banFunc; },
+        appendSession: function (element) { sessionsContainer.appendChild(element); },        
+        
         setLoadSessionsFunc: function (loadFunc) { loadSessionsBtn.onclick = loadFunc; }
     };
 })();

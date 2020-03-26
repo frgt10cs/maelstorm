@@ -11,6 +11,10 @@ var date = dateModule;
 var api = apiModule;
 var signalRConnection = signalRModule;
 var connectionGui = connectionGuiModule;
+var user = userModule;
+var userGui = userGuiModule;
+var session = sessionModule;
+var sessionGui = sessionGuiModule;
 
 function init() {
     dialogsGui.showUploading();
@@ -30,7 +34,11 @@ function initModules(fingerprint) {
     dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);
     dialogs.init(dialogsGui, dialog);
     connectionGui.init();
-    signalRConnection.init(api, fingerprint, dialogs, connectionGui);    
+    signalRConnection.init(api, fingerprint, dialogs, connectionGui);
+    sessionGui.init();
+    session.init(api, sessionGui);
+    userGui.init();
+    user.init(api, userGui);
 }
 
 function main() {

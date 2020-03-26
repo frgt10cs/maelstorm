@@ -1,12 +1,11 @@
-﻿var dialogsModule = (function () {
-    var _api;
+﻿var dialogsModule = (function () {    
     var _guiManager;    
     var _dialog;
     var openedDialog;
     var dialogs;
     var dialogsStackNumber;               
 
-    var removeDialogs = function () {
+    var removeDialogs = function () {        
         while (_guiManager.getDialogsContainer().firstChild) {
             _guiManager.getDialogsContainer().firstChild.remove();
         }
@@ -59,8 +58,7 @@
 
     return {
 
-        init: function (api, guiManager, dialogModule) {
-            _api = api;
+        init: function (guiManager, dialogModule) {            
             _guiManager = guiManager;  
             _dialog = dialogModule;
             openedDialog = null;

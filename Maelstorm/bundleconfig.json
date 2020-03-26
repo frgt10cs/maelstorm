@@ -7,6 +7,8 @@
       "wwwroot/js/models/dialog.js",
       "wwwroot/js/modules/messageModule.js",
       "wwwroot/js/modules/dialogsModule.js",
+      "wwwroot/js/modules/userModule.js",
+      "wwwroot/js/modules/sessionModule.js",
       "wwwroot/js/modules/apiModule.js",
       "wwwroot/js/modules/dateModule.js",
       "wwwroot/js/modules/signalRModule.js",
