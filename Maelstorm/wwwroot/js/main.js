@@ -32,13 +32,13 @@ function initModules(fingerprint) {
     dialogsGui.init();
     dialogGui.init(date);
     dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);
-    dialogs.init(dialogsGui, dialog);
+    dialogs.init(api, dialogsGui, dialog);
     connectionGui.init();
     signalRConnection.init(api, fingerprint, dialogs, connectionGui);
     sessionGui.init();
     session.init(api, sessionGui);
     userGui.init();
-    user.init(api, userGui);
+    user.init(api, userGui, dialogs);
 }
 
 function main() {

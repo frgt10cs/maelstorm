@@ -1,18 +1,24 @@
 ﻿var userModule = (function () {
     var _api;
     var _guiManager;  
-    var prevSearch;   
+    var _dialogs;
+    var prevSearch;
+    var openedUserInfo;
 
     var getUserInfo = function (userId) {
         _api.getUserInfo(userId, function (userInfo) {
-            _guiManager.setUserInfo(userInfo);                       
+            openedUserInfo = userInfo;
+            _guiManager.setUserInfo(userInfo);
+            _guiManager.showUserInfo();
         });
     };
 
     var createUserFoundElement = function (user) {
         var box = document.createElement("div");
         box.classList.add("userPreviewInner");
-        box.onclick = function () { getUserInfo(user.id); };
+        box.onclick = function () {
+            getUserInfo(user.id);            
+        };
         var imageBox = document.createElement("div");
         imageBox.style.backgroundImage = "url('/images/" + user.miniAvatar + "')";
         imageBox.classList.add("userPreviewAvatar");
@@ -43,10 +49,15 @@
     };
 
     return {
-        init: function (api, guiManager) {
+        init: function (api, guiManager, dialogs) {
             _api = api;
             _guiManager = guiManager;
-            _guiManager.setFindUserFunc(findUserByNickname);            
+            _dialogs = dialogs;
+            _guiManager.setFindUserFunc(findUserByNickname);
+            _guiManager.getUserInfoOpenDialog().onclick = function () {
+                _dialogs.openOrCreateDialog(openedUserInfo);
+                _guiManager.closeUserInfo();
+            };
         },
 
         findUserByNickname: findUserByNickname
@@ -64,12 +75,7 @@ var userGuiModule = (function () {
     var userInfoOnlineStatusBox;
     var userInfoOpenDialog;
     var closeUserInfoBtn;
-    var dark;    
-
-    var closeUserInfo = function () {
-        dark.style.display = "none";
-        userInfoPanel.style.display = "none";
-    };    
+    var dark;          
 
     return {
         init: function () {
@@ -87,7 +93,7 @@ var userGuiModule = (function () {
             dark = document.getElementById("dark");
         },
 
-        //getUserFindValue: function () { return userFindTextBox.value; },
+        getUserFindValue: function () { return userFindTextBox.value; },
         //getUserResultsInner: function () { return userResultsInner; },
         //getFindUserBtn: function () { return findUserBtn; },
         //getUserInfoPanel: function () { return userInfoPanel; },
@@ -95,7 +101,7 @@ var userGuiModule = (function () {
         //getUserInfoAvatarBox: function () { return userInfoAvatarBox; },
         //getUserInfoStatusBox: function () { return userInfoStatusBox; },
         //getUserInfoOnlineStatusBox: function () { return userInfoOnlineStatusBox; },
-        //getUserInfoOpenDialog: function () { return userInfoOpenDialog; },
+        getUserInfoOpenDialog: function () { return userInfoOpenDialog; },
 
         clearUserResultsInnner: function () {
             while (userResultsInner.lastChild) {
@@ -123,17 +129,17 @@ var userGuiModule = (function () {
             userInfoAvatarBox.style.backgroundImage = "url('/images/" + userInfo.avatar + "')";
             userInfoNicknameBox.innerText = userInfo.nickname;
             userInfoStatusBox.innerText = userInfo.status;
-            userInfoOnlineStatusBox.innerText = userInfo.onlineStatus ? "online" : "offline";
+            userInfoOnlineStatusBox.innerText = userInfo.onlineStatus ? "online" : "offline";            
+        },
+
+        showUserInfo: function() {
             dark.style.display = "block";
             userInfoPanel.style.display = "block";
-        }
+        },
 
-        //setOpenDialogFunc: function (openDialogFunc) {
-        //    userInfoOpenDialog.onclick = function () {
-        //        openDialogFunc();
-        //        dark.style.display = "none";
-        //        userInfoPanel.style.display = "none";
-        //    };
-        //}
+        closeUserInfo: function () {
+            dark.style.display = "none";
+            userInfoPanel.style.display = "none";
+        }        
     };
 })();

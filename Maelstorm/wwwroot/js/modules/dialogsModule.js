@@ -1,4 +1,5 @@
-﻿var dialogsModule = (function () {    
+﻿var dialogsModule = (function () {  
+    var _api;
     var _guiManager;    
     var _dialog;
     var openedDialog;
@@ -32,33 +33,37 @@
         }
     };
 
-    var tryOpenDialog = function (userInfo) {
+    var openOrCreateDialog = function (userInfo) {
         var dialog = getDialogByInterlocutorId(userInfo.id);
         if (dialog !== null && dialog !== undefined) {
             openDialog(dialog);
         } else {
-            api_.getDialog(userInfo.id, (dialog) => {
-                if (dialog !== null && dialog !== undefined) {
-                    addDialog(dialog);
-                    openDialog(dialog);
-                } else {
-                    var newDialog = {
-                        interlocutorId: userInfo.id,
-                        title: userInfo.nickname,
-                        lastMessageText: "",
-                        lastMessageDate: "",
-                        image: userInfo.avatar
-                    };
-                    addDialog(newDialog);
-                    openDialog(newDialog);
-                }
+            _api.getDialog(userInfo.id, (dialog) => {
+                //if (dialog === null || dialog === undefined) {
+                //    dialog = {
+                //        interlocutorId: userInfo.id,
+                //        title: userInfo.nickname,
+                //        lastMessageText: "",
+                //        lastMessageDate: "",
+                //        image: userInfo.avatar,
+                //        status: userInfo.status
+                //    }; 
+                //}
+                dialog = _dialog.createDialog(dialog);
+                addDialog(dialog);
+                openDialog(dialog);
             });
         }
     };
 
+    var getDialogByInterlocutorId = function (interlocutorId) {
+        return dialogs.find(function (dialog) { return dialog.interlocutorId === interlocutorId; });
+    };
+
     return {
 
-        init: function (guiManager, dialogModule) {            
+        init: function (api, guiManager, dialogModule) {  
+            _api = api;
             _guiManager = guiManager;  
             _dialog = dialogModule;
             openedDialog = null;
@@ -82,11 +87,10 @@
             dialogsStackNumber++;
         },
 
-        getDialogByInterlocutorId: function (interlocutorId) {
-            return dialogs.find(function (dialog) { return dialog.interlocutorId === interlocutorId; });
-        }, 
+        getDialogByInterlocutorId: getDialogByInterlocutorId, 
 
-        openDialog: openDialog,                
+        openDialog: openDialog,       
+        openOrCreateDialog: openOrCreateDialog,
 
         isDialogUploaded: function (interlocutorId) {
             var dialog = getDialogByInterlocutorId(interlocutorId);
@@ -110,7 +114,7 @@ var dialogsGuiModule = (function () {
             messagesPanelsContainer = document.getElementById("panelsInner");
             uploadingInfo = document.getElementById("uploading");            
             dark = document.getElementById("dark");
-        },        
+        },                
         
         getDialogsContainer: function () { return dialogsContainer; },        
         getMessagesPanelsContainer: function () { return messagesPanelsContainer; },
