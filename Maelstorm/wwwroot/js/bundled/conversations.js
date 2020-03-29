@@ -289,6 +289,12 @@ var dialogModule = (function () {
         onNewMessage(dialogContext);
     };
 
+    var updateInterlocutorStatus = function () {
+        _api.getOnlineStatuses([dialogContext.interlocutorId], function (statuses) {
+            _guiManager.getDialogStatusDiv().innerText = statuses[0].isOnline ? "online" : "offline";
+        });
+    };
+
     return {
 
         init: function (api, guiManager, messageModule, dateModule, uploadCount, onNewMessageHandler) {
@@ -308,13 +314,14 @@ var dialogModule = (function () {
         },
 
         openDialog: function () {
-            if (!dialog.isPanelOpened) {
+            if (!dialogContext.isPanelOpened) {                
                 firstDialogMessagesUploading();
             }
             dialogContext.isPanelOpened = true;
             dialogContext.messagesPanel.style.display = "block";
-            _guiManager.setDialog(dialogContext.title, dialogContext.status);            
-        },
+            _guiManager.setDialog(dialogContext.title);    
+            updateInterlocutorStatus();
+        },        
 
         createDialog: createDialog,
 
@@ -390,10 +397,9 @@ var dialogGuiModule = (function () {
         getMessageText: function () { return messageTextBox.value; },
         getMessageSendBtn: function () { return messageSendBtn },
 
-        setDialog: function (title, status) {
-            dialogTitleDiv.innerText = title;
-            dialogStatusDiv.innerText = status;
-        }
+        setDialog: function (title) {
+            dialogTitleDiv.innerText = title;            
+        }        
     };
 })();
 class Dialog {
@@ -557,17 +563,7 @@ var dialogsModule = (function () {
         if (dialog !== null && dialog !== undefined) {
             openDialog(dialog);
         } else {
-            _api.getDialog(userInfo.id, (dialog) => {
-                //if (dialog === null || dialog === undefined) {
-                //    dialog = {
-                //        interlocutorId: userInfo.id,
-                //        title: userInfo.nickname,
-                //        lastMessageText: "",
-                //        lastMessageDate: "",
-                //        image: userInfo.avatar,
-                //        status: userInfo.status
-                //    }; 
-                //}
+            _api.getDialog(userInfo.id, (dialog) => {                
                 dialog = _dialog.createDialog(dialog);
                 addDialog(dialog);
                 openDialog(dialog);
@@ -666,7 +662,7 @@ var userModule = (function () {
         _api.getUserInfo(userId, function (userInfo) {
             openedUserInfo = userInfo;
             _guiManager.setUserInfo(userInfo);
-            _guiManager.showUserInfo();
+            _guiManager.showUserInfo();            
         });
     };
 
@@ -745,8 +741,7 @@ var userGuiModule = (function () {
             userInfoStatusBox = document.getElementById("userInfoStatus");
             userInfoOnlineStatusBox = document.getElementById("userInfoOnlineStatus");
             userInfoOpenDialog = document.getElementById("userInfoOpenDialog");
-            closeUserInfoBtn = document.getElementById("closeUserInfo");
-            closeUserInfoBtn.onclick = function () { closeUserInfo(); };
+            closeUserInfoBtn = document.getElementById("closeUserInfo");            
             dark = document.getElementById("dark");
         },
 
@@ -802,10 +797,10 @@ var userGuiModule = (function () {
 })();
 var sessionModule = (function () {
     var _api;
-    var _guiManager;
+    var _guiManager;        
 
     var closeSession = function (sessionId) {
-        _api.closeSession(sessionId, false);
+        _api.closeSession(sessionId, false);        
     };
 
     var banSession = function (sessionId) {
@@ -846,7 +841,11 @@ var sessionModule = (function () {
             closeSessionBtn = createElement("button", "sessionButton", "Close"),
             banDeviceBtn = createElement("button", "sessionButton", "Ban device");
         more.onclick = function () { $(moreContainer).slideToggle("fast"); };
-        closeSessionBtn.onclick = function () { closeSession(session.session.sessionId); };
+        closeSessionBtn.onclick = function () {
+            closeSession(session.session.sessionId);
+            container.style.opacity = "0.6";
+            moreContainer.removeChild(buttons);
+        };
         banDeviceBtn.onclick = function () { banSession(session.session.sessionId); };
         imageBox.style.backgroundImage = "url('/images/" + session.session.osCpu + ".png')";
         info.appendChild(title);
@@ -869,7 +868,7 @@ var sessionModule = (function () {
         init: function (api, guiManager) {
             _api = api;
             _guiManager = guiManager;
-            _guiManager.setLoadSessionsFunc(uploadSessions);       
+            _guiManager.setLoadSessionsFunc(uploadSessions);            
         },
 
         uploadSessions: uploadSessions,                    
@@ -1152,7 +1151,7 @@ var apiModule = (function () {
 
         getOnlineStatuses: function(ids, handler) {
             if (ids.length === 0) return;
-            sendRequest(new MaelstormRequest("/user/getonlinestatuses", handler, "POST", ids));
+            sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", handler, "POST", ids));
         },
 
         findByNickname: function (nickname, handler) {
@@ -1199,6 +1198,7 @@ var signalRModule = (function () {
     var _fingerprint;
     var _dialogs;
     var _connectionGui;
+    var _accountGui;    
 
     var auth = function () {
         connection.invoke("Authorize", localStorage.getItem("MAT"), _fingerprint);
@@ -1271,7 +1271,7 @@ var signalRModule = (function () {
             localStorage.clear();
             isClosedByClient = true;
             connection.stop();
-            //accountManager.OpenLogin();
+            _accountGui.openLogin();
         });
     };
 
@@ -1293,11 +1293,12 @@ var signalRModule = (function () {
     };
 
     return {
-        init: function (api, fingerprint, dialogsModule, connectionGui) {
+        init: function (api, fingerprint, dialogsModule, connectionGui, accountGui) {
             _api = api;
             _fingerprint = fingerprint;
             _dialogs = dialogsModule;
             _connectionGui = connectionGui;
+            _accountGui = accountGui;
             timeToReconnect = [0, 2000, 2000, 4000, 6000];
             tryReconnectingCount = -1;
             isClosedByClient = false;
@@ -1316,7 +1317,7 @@ var signalRModule = (function () {
             } else {
                 console.log("Disconnected");
             }
-        }
+        }        
     };
 })();
 
@@ -1357,6 +1358,56 @@ var connectionGuiModule = (function () {
         }
     };
 })();
+var settingsModule = (function () {
+    var _guiManager;
+    return {
+        init: function (guiManager) {
+            _guiManager = guiManager;
+            _guiManager.getSettingsPanelSlider().onclick = function () { _guiManager.changeSettingsOpenState(); };
+        }
+    };
+})();
+
+var settingsGuiModule = (function () {
+    var settingsPanel;
+    var settingPanelSlider;
+    var settingsContainers;
+    var isPanelOpened = false;
+    var hideWidth;
+
+    var initSettingsPanel = function () {
+        for (var i = 0; i < settingsContainers.length; i++) {
+            var inner = settingsContainers[i].children[1];
+            settingsContainers[i].children[0].onclick = function () {
+                $(inner).slideToggle("slow");
+            };
+        }
+    };
+
+    return {
+        init: function () {
+            settingsPanel = document.getElementById("settingsPanel");
+            settingPanelSlider = document.getElementById("settingsPanelSlider");
+            settingsContainers = document.getElementsByClassName("settingsContainer");
+            hideWidth = -settingsPanel.offsetWidth + settingPanelSlider.offsetWidth
+            initSettingsPanel();
+        },
+
+        changeSettingsOpenState: function () {
+            if (isPanelOpened) {
+                $(settingsPanel).animate({ left: hideWidth + "px" }, 500);
+                settingPanelSlider.style.backgroundImage = "url(/images/openPanel.png)";
+            }
+            else {
+                $(settingsPanel).animate({ left: "0px" }, 500);
+                settingPanelSlider.style.backgroundImage = "url(/images/closePanel.png)";
+            }
+            isPanelOpened = !isPanelOpened;
+        },
+
+        getSettingsPanelSlider: function () { return settingPanelSlider; }
+    }
+})();
 var accountGui = accountGuiModule;
 var account = accountModule;
 var loginForm = loginFormModule;
@@ -1374,6 +1425,8 @@ var user = userModule;
 var userGui = userGuiModule;
 var session = sessionModule;
 var sessionGui = sessionGuiModule;
+var settings = settingsModule;
+var settingsGui = settingsGuiModule;
 
 function init() {
     dialogsGui.showUploading();
@@ -1393,11 +1446,13 @@ function initModules(fingerprint) {
     dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);
     dialogs.init(api, dialogsGui, dialog);
     connectionGui.init();
-    signalRConnection.init(api, fingerprint, dialogs, connectionGui);
+    signalRConnection.init(api, fingerprint, dialogs, connectionGui, accountGui);
     sessionGui.init();
     session.init(api, sessionGui);
     userGui.init();
     user.init(api, userGui, dialogs);
+    settingsGui.init();
+    settings.init(settingsGui);    
 }
 
 function main() {

@@ -1,9 +1,9 @@
 ﻿var sessionModule = (function () {
     var _api;
-    var _guiManager;
+    var _guiManager;        
 
     var closeSession = function (sessionId) {
-        _api.closeSession(sessionId, false);
+        _api.closeSession(sessionId, false);        
     };
 
     var banSession = function (sessionId) {
@@ -44,7 +44,11 @@
             closeSessionBtn = createElement("button", "sessionButton", "Close"),
             banDeviceBtn = createElement("button", "sessionButton", "Ban device");
         more.onclick = function () { $(moreContainer).slideToggle("fast"); };
-        closeSessionBtn.onclick = function () { closeSession(session.session.sessionId); };
+        closeSessionBtn.onclick = function () {
+            closeSession(session.session.sessionId);
+            container.style.opacity = "0.6";
+            moreContainer.removeChild(buttons);
+        };
         banDeviceBtn.onclick = function () { banSession(session.session.sessionId); };
         imageBox.style.backgroundImage = "url('/images/" + session.session.osCpu + ".png')";
         info.appendChild(title);
@@ -67,7 +71,7 @@
         init: function (api, guiManager) {
             _api = api;
             _guiManager = guiManager;
-            _guiManager.setLoadSessionsFunc(uploadSessions);       
+            _guiManager.setLoadSessionsFunc(uploadSessions);            
         },
 
         uploadSessions: uploadSessions,                    

@@ -249,7 +249,7 @@ var apiModule = (function () {
 
         getOnlineStatuses: function(ids, handler) {
             if (ids.length === 0) return;
-            sendRequest(new MaelstormRequest("/user/getonlinestatuses", handler, "POST", ids));
+            sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", handler, "POST", ids));
         },
 
         findByNickname: function (nickname, handler) {

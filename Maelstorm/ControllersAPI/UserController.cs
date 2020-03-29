@@ -58,7 +58,7 @@ namespace Maelstorm.ControllersAPI
         }
 
         [HttpPost]
-        [ActionName("GetOnlineStatus")]
+        [ActionName("GetOnlineStatuses")]
         public async Task<JsonResult> GetOnlineStatus(int[] ids)
         {
             return Json(await userServ.GetOnlineStatusesAsync(ids));

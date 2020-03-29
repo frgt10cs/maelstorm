@@ -1,7 +1,6 @@
 ﻿обработка неаутентификации по сигналу
 Дублирование сообщений
 Логирование не робит
-FP js
 ip google chrome in session
 when update browser sessions changes                      -|?
 notification if opened new session
@@ -11,3 +10,4 @@ rename controller methods(get/put)
 after devide - add in startup addControllers and maps
 isDatavlid in forms
 text valiation
+double rfrshtkn

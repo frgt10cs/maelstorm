@@ -9,6 +9,7 @@
     var _fingerprint;
     var _dialogs;
     var _connectionGui;
+    var _accountGui;    
 
     var auth = function () {
         connection.invoke("Authorize", localStorage.getItem("MAT"), _fingerprint);
@@ -81,7 +82,7 @@
             localStorage.clear();
             isClosedByClient = true;
             connection.stop();
-            //accountManager.OpenLogin();
+            _accountGui.openLogin();
         });
     };
 
@@ -103,11 +104,12 @@
     };
 
     return {
-        init: function (api, fingerprint, dialogsModule, connectionGui) {
+        init: function (api, fingerprint, dialogsModule, connectionGui, accountGui) {
             _api = api;
             _fingerprint = fingerprint;
             _dialogs = dialogsModule;
             _connectionGui = connectionGui;
+            _accountGui = accountGui;
             timeToReconnect = [0, 2000, 2000, 4000, 6000];
             tryReconnectingCount = -1;
             isClosedByClient = false;
@@ -126,7 +128,7 @@
             } else {
                 console.log("Disconnected");
             }
-        }
+        }        
     };
 })();
 

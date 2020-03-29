@@ -12,6 +12,7 @@
       "wwwroot/js/modules/apiModule.js",
       "wwwroot/js/modules/dateModule.js",
       "wwwroot/js/modules/signalRModule.js",
+      "wwwroot/js/modules/settingsModule.js",
       "wwwroot/js/main.js"
     ],
     "minify": {

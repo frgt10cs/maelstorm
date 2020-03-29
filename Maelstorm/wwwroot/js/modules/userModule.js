@@ -9,7 +9,7 @@
         _api.getUserInfo(userId, function (userInfo) {
             openedUserInfo = userInfo;
             _guiManager.setUserInfo(userInfo);
-            _guiManager.showUserInfo();
+            _guiManager.showUserInfo();            
         });
     };
 
@@ -88,8 +88,7 @@ var userGuiModule = (function () {
             userInfoStatusBox = document.getElementById("userInfoStatus");
             userInfoOnlineStatusBox = document.getElementById("userInfoOnlineStatus");
             userInfoOpenDialog = document.getElementById("userInfoOpenDialog");
-            closeUserInfoBtn = document.getElementById("closeUserInfo");
-            closeUserInfoBtn.onclick = function () { closeUserInfo(); };
+            closeUserInfoBtn = document.getElementById("closeUserInfo");            
             dark = document.getElementById("dark");
         },
 

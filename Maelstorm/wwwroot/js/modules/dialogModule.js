@@ -147,6 +147,12 @@
         onNewMessage(dialogContext);
     };
 
+    var updateInterlocutorStatus = function () {
+        _api.getOnlineStatuses([dialogContext.interlocutorId], function (statuses) {
+            _guiManager.getDialogStatusDiv().innerText = statuses[0].isOnline ? "online" : "offline";
+        });
+    };
+
     return {
 
         init: function (api, guiManager, messageModule, dateModule, uploadCount, onNewMessageHandler) {
@@ -166,13 +172,14 @@
         },
 
         openDialog: function () {
-            if (!dialog.isPanelOpened) {
+            if (!dialogContext.isPanelOpened) {                
                 firstDialogMessagesUploading();
             }
             dialogContext.isPanelOpened = true;
             dialogContext.messagesPanel.style.display = "block";
-            _guiManager.setDialog(dialogContext.title, dialogContext.status);            
-        },
+            _guiManager.setDialog(dialogContext.title);    
+            updateInterlocutorStatus();
+        },        
 
         createDialog: createDialog,
 
@@ -248,9 +255,8 @@ var dialogGuiModule = (function () {
         getMessageText: function () { return messageTextBox.value; },
         getMessageSendBtn: function () { return messageSendBtn },
 
-        setDialog: function (title, status) {
-            dialogTitleDiv.innerText = title;
-            dialogStatusDiv.innerText = status;
-        }
+        setDialog: function (title) {
+            dialogTitleDiv.innerText = title;            
+        }        
     };
 })();

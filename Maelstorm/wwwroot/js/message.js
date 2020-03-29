@@ -87,9 +87,3 @@ class Message {
         }
     }    
 }
-
-class ServerMessage extends Message {
-    constructor(serverMessage) {
-
-    }
-}

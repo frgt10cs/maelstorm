@@ -38,17 +38,7 @@
         if (dialog !== null && dialog !== undefined) {
             openDialog(dialog);
         } else {
-            _api.getDialog(userInfo.id, (dialog) => {
-                //if (dialog === null || dialog === undefined) {
-                //    dialog = {
-                //        interlocutorId: userInfo.id,
-                //        title: userInfo.nickname,
-                //        lastMessageText: "",
-                //        lastMessageDate: "",
-                //        image: userInfo.avatar,
-                //        status: userInfo.status
-                //    }; 
-                //}
+            _api.getDialog(userInfo.id, (dialog) => {                
                 dialog = _dialog.createDialog(dialog);
                 addDialog(dialog);
                 openDialog(dialog);
