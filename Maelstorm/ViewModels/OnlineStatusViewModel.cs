@@ -7,7 +7,7 @@ namespace Maelstorm.ViewModels
 {
     public class OnlineStatusViewModel
     {
-        public int UserId;
-        public bool IsOnline;
+        public int UserId { get; set; }
+        public bool IsOnline { get; set; }
     }
 }

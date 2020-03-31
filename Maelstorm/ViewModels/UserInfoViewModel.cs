@@ -7,10 +7,10 @@ namespace Maelstorm.ViewModels
 {
     public class UserInfoViewModel
     {
-        public int Id;
-        public string Nickname;
-        public string Avatar;
-        public string Status;
-        public bool OnlineStatus;
+        public int Id { get; set; }
+        public string Nickname { get; set; }
+        public string Avatar { get; set; }
+        public string Status { get; set; }
+        public bool OnlineStatus { get; set; }
     }
 }

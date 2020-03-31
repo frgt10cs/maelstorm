@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Maelstorm.Services.Implementations
@@ -16,15 +18,17 @@ namespace Maelstorm.Services.Implementations
         private MaelstormRepository context;
         private IPasswordService passServ;
         private IEmailService emailServ;
+        private ICryptographyService cryptoService;
         private readonly IConfiguration config;        
 
         public AccountService(MaelstormRepository context, IPasswordService passServ,
-            IEmailService emailServ, IConfiguration config)
+            IEmailService emailServ, IConfiguration config, ICryptographyService cryptoService)
         {
             this.context = context;
             this.passServ = passServ;
             this.emailServ = emailServ;
-            this.config = config;            
+            this.config = config;
+            this.cryptoService = cryptoService;
         }
 
         public async Task<ServiceResult> RegistrationAsync(RegistrationViewModel model)
@@ -87,10 +91,11 @@ namespace Maelstorm.Services.Implementations
         {
             User user = await context.Users.FirstOrDefaultAsync(u => u.Nickname == nickname);
             return user == null;
-        }       
+        }               
         
         private User CreateUser(RegistrationViewModel model)
         {
+            using var rsa = RSA.Create(2048);
             User user = new User()
             {
                 DateOfRegistration = DateTime.Now,
@@ -99,7 +104,9 @@ namespace Maelstorm.Services.Implementations
                 Salt = passServ.GetRandomString(),
                 Role = 0,
                 Status = "Stupid status from community",
-                Image = "defaultUser.png"
+                Image = "defaultUser.png",
+                PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
+                EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportRSAPrivateKey(), model.Email + model.Password, new byte[16]))
             };
             user.PasswordHash = passServ.GenerateHash(model.Password, user.Salt);
             return user;

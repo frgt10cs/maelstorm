@@ -8,12 +8,12 @@ namespace Maelstorm.ViewModels
 {
     public class DialogViewModel
     {
-        public int Id;
-        public string Title;
-        public long LastMessageNumber;
-        public string LastMessageText;
-        public DateTime? LastMessageDate;
-        public string Image;
-        public int InterlocutorId;        
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public long LastMessageNumber { get; set; }
+        public string LastMessageText { get; set; }
+        public DateTime? LastMessageDate { get; set; }
+        public string Image { get; set; }
+        public int InterlocutorId { get; set; }
     }
 }

@@ -3,14 +3,16 @@ using System;
 using Maelstorm.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Maelstorm.Migrations
 {
     [DbContext(typeof(MaelstormContext))]
-    partial class MaelstormContextModelSnapshot : ModelSnapshot
+    [Migration("20200331120315_encrUpd")]
+    partial class encrUpd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -179,6 +181,32 @@ namespace Maelstorm.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Maelstorm.ViewModels.DialogViewModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("InterlocutorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastMessageDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("LastMessageNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastMessageText")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("DialogViewModels");
                 });
 
             modelBuilder.Entity("Session", b =>

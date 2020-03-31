@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Http;
 using Maelstorm.Extensions;
 using System.Data.Common;
 using Microsoft.Data.Sqlite;
+using System.Security.Cryptography;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -33,11 +34,13 @@ namespace Maelstorm.Services.Implementations
         private IDistributedCache cache;
         private IHttpContextAccessor httpContext;
         private ISQLService sqlService;
+        private ICryptographyService cryptoService;
         private readonly int userId;
         private readonly JsonSerializerSettings serializerSettings;
 
         public DialogService(MaelstormRepository context, ILogger<MaelstormContext> logger,
-            IHubContext<MessageHub> messHub, IDistributedCache cache, IHttpContextAccessor httpContext, ISignalRSessionService sesServ, ISQLService sqlService)
+            IHubContext<MessageHub> messHub, IDistributedCache cache, IHttpContextAccessor httpContext,
+            ISignalRSessionService sesServ, ISQLService sqlService, ICryptographyService cryptoService)
         {
             this.context = context;
             this.logger = logger;            
@@ -46,6 +49,7 @@ namespace Maelstorm.Services.Implementations
             this.httpContext = httpContext;
             this.sesServ = sesServ;
             this.sqlService = sqlService;
+            this.cryptoService = cryptoService;
             userId = httpContext.HttpContext.GetUserId();
             serializerSettings = new JsonSerializerSettings();
             serializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
@@ -59,15 +63,28 @@ namespace Maelstorm.Services.Implementations
             dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.FirstUserId == ids[0] && d.SecondUserId == ids[1]);
             if (dialog == null)
             {
-                dialog = new Dialog()
-                {
-                    FirstUserId = ids[0],
-                    SecondUserId = ids[1],
-                    IsClosed = false
-                };
+                dialog = await CreateDialog(ids[0], ids[1]);
                 context.Dialogs.Add(dialog);
                 await context.SaveChangesAsync();
             }
+            return dialog;
+        }
+
+        private async Task<Dialog> CreateDialog(int firstUserId, int secondUserId, bool isClosed = false)
+        {
+            using var rsa = RSA.Create(20148);
+            byte[] privateKey = rsa.ExportRSAPrivateKey();
+            User firstUser = await context.Users.FirstOrDefaultAsync(u => u.Id == firstUserId);
+            User secondUser = await context.Users.FirstOrDefaultAsync(u => u.Id == secondUserId);
+            Dialog dialog = new Dialog()
+            {
+                FirstUserId = firstUserId,
+                SecondUserId = secondUserId,
+                IsClosed = isClosed,                
+                PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
+                EncryptedFirstPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(privateKey, firstUser.PublicKey, new byte[16])),
+                EncryptedSecondPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(privateKey, secondUser.PublicKey, new byte[16]))
+            };
             return dialog;
         }
 
@@ -200,7 +217,7 @@ namespace Maelstorm.Services.Implementations
             return messages;
         }
 
-        // отпимизировать
+        // добавить offset и Limit в sql запрос
         public async Task<List<DialogViewModel>> GetDialogsAsync(int stackNumber, int count)
         {
             List<DialogViewModel> models = new List<DialogViewModel>();
@@ -216,7 +233,7 @@ namespace Maelstorm.Services.Implementations
                     "inner join Users on " +
                     "(dialogs.FirstUserId = @userId and users.id = dialogs.SecondUserId) " +
                     "or(dialogs.SecondUserId = @userId and users.id = Dialogs.FirstUserId) " +
-                    "order by m.DateOfSending", new SqliteParameter[] { new SqliteParameter("@userId", userId)}, async (reader)=>
+                    "order by m.DateOfSending", new DbParameter[] { new SqliteParameter("@userId", userId)}, async (reader)=>
                     {
                         var models = new List<DialogViewModel>();
                         while (await reader.ReadAsync())

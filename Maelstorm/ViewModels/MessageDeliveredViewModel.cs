@@ -7,8 +7,8 @@ namespace Maelstorm.ViewModels
 {
     public class MessageDeliveredViewModel
     {
-        public int BindId;
-        public int Id;
-        public DateTime SentAt;
+        public int BindId { get; set; }
+        public int Id { get; set; }
+        public DateTime SentAt { get; set; }
     }
 }

@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 
 namespace Maelstorm.Services.Implementations
 {
-    public class SQLLiteService : ISQLService
+    public class SQLiteService : ISQLService
     {
         private MaelstormRepository context;
-        public SQLLiteService(MaelstormRepository context)
+        public SQLiteService(MaelstormRepository context)
         {
             this.context = context;
         }

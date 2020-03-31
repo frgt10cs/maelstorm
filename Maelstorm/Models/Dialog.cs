@@ -13,5 +13,8 @@ namespace Maelstorm.Models
         public int SecondUserId { get; set; }
         public bool IsClosed { get; set; }
         public DateTime LastActive { get; set; }
+        public string PublicKey { get; set; }
+        public string EncryptedFirstPrivateKey { get; set; }
+        public string EncryptedSecondPrivateKey { get; set; }
     }
 }

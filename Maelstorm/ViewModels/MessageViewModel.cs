@@ -7,11 +7,11 @@ namespace Maelstorm.ViewModels
 {
     public class MessageViewModel
     {
-        public int Id;
-        public int AuthorId;        
-        public int DialogId;
-        public DateTime DateOfSending;
-        public byte Status;
-        public string Text;         
+        public int Id { get; set; }
+        public int AuthorId { get; set; }
+        public int DialogId { get; set; }
+        public DateTime DateOfSending { get; set; }
+        public byte Status { get; set; }
+        public string Text { get; set; }
     }
 }

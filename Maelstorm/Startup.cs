@@ -45,11 +45,12 @@ namespace Maelstorm
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IDialogService, DialogService>();
             //services.AddScoped<ISQLService, SQLService>();
-            services.AddScoped<ISQLService, SQLLiteService>();
+            services.AddScoped<ISQLService, SQLiteService>();
             services.AddScoped<IFinderService, FinderService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ISessionService, SessionService>();
-            services.AddScoped<ISignalRSessionService, SignalRSessionService>();            
+            services.AddScoped<ISignalRSessionService, SignalRSessionService>();
+            services.AddScoped<ICryptographyService, CryptographyService>();
 
             #region Jwt / session validation
 

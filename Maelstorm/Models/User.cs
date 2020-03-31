@@ -18,6 +18,9 @@ namespace Maelstorm.Models
         public byte Role { get; set; }
         public string Status { get; set; }
         public bool EmailIsConfirmed { get; set; }  
+
+        public string PublicKey { get; set; }
+        public string EncryptedPrivateKey { get; set; }
         
         public static explicit operator UserFindInfoViewModel(User user)
         {
