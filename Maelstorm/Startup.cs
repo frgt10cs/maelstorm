@@ -62,7 +62,7 @@ namespace Maelstorm
             var encryptionEncodingKey = new EncryptingSymmetricKey(encodingSecurityKey);
             services.AddSingleton<IEncryptingKeys>(encryptionEncodingKey);
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
 
             // раскоментить при ошибках с jwt и всякого рода шифрования, чтобы видеть инфу об ошибке
             //IdentityModelEventSource.ShowPII = true;
@@ -146,6 +146,9 @@ namespace Maelstorm
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            app.UseRouting();
+            app.UseAuthorization();
+
             app.Use(async (context, next) =>
             {
                 context.Response.Headers.Add("Content-Security-Policy",
@@ -156,16 +159,17 @@ namespace Maelstorm
                 await next();
             });
 
-            app.UseSignalR(routes =>
+            app.UseEndpoints(routes =>
             {
                 routes.MapHub<MessageHub>("/messageHub");
             });
 
-            app.UseMvc(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
+                // определение маршрутов
+                endpoints.MapControllerRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
 

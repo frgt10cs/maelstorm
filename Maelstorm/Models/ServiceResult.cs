@@ -11,9 +11,9 @@ namespace Maelstorm.Models
     /// </summary>
     public class ServiceResult
     {
-        public bool IsSuccessful;
-        public List<string> ErrorMessages = new List<string>();
-        public string Data;
+        public bool IsSuccessful { get; set; }
+        public List<string> ErrorMessages { get; set; } = new List<string>();
+        public string Data { get; set; }
 
         public ServiceResult()
         {

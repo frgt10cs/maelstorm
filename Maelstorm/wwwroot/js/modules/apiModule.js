@@ -76,6 +76,7 @@ var apiModule = (function () {
                 dataType: "json",
                 data: refresh,
                 success: function (data) {
+                    console.log(data);
                     if (data.isSuccessful) {
                         var tokens = JSON.parse(data.data);
                         localStorage.setItem("MAT", tokens.AccessToken);

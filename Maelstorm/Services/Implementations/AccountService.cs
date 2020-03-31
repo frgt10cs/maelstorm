@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Maelstorm.Services.Implementations
@@ -32,7 +33,7 @@ namespace Maelstorm.Services.Implementations
             if (await EmailIsUnique(model.Email))
             {
                 if(await NicknameIsUnique(model.Nickname))
-                {
+                {                    
                     User user = CreateUser(model);
                     context.Users.Add(user);
                     await context.SaveChangesAsync();
