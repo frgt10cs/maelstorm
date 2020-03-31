@@ -1,5 +1,6 @@
 using System;
 using Maelstorm.Models;
+using Maelstorm.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 public abstract class MaelstormRepository : DbContext
@@ -10,5 +11,6 @@ public abstract class MaelstormRepository : DbContext
     public DbSet<Token> Tokens { get; protected set; }
     public DbSet<RegisteredApp> Apps { get; protected set; }
     public DbSet<Session> Sessions { get; protected set; }
-    public DbSet<BannedDevice> BannedDevices { get; protected set; }
+    public DbSet<BannedDevice> BannedDevices { get; protected set; }    
+    public DbQuery<DialogViewModel> DialogViewModels { get; protected set; }
 }

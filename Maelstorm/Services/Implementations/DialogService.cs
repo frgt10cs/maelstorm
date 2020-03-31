@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.AspNetCore.Http;
 using Maelstorm.Extensions;
+using System.Data.Common;
+using Microsoft.Data.Sqlite;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -30,11 +32,12 @@ namespace Maelstorm.Services.Implementations
         private IHubContext<MessageHub> messHub;
         private IDistributedCache cache;
         private IHttpContextAccessor httpContext;
+        private ISQLService sqlService;
         private readonly int userId;
         private readonly JsonSerializerSettings serializerSettings;
 
         public DialogService(MaelstormRepository context, ILogger<MaelstormContext> logger,
-            IHubContext<MessageHub> messHub, IDistributedCache cache, IHttpContextAccessor httpContext, ISignalRSessionService sesServ)
+            IHubContext<MessageHub> messHub, IDistributedCache cache, IHttpContextAccessor httpContext, ISignalRSessionService sesServ, ISQLService sqlService)
         {
             this.context = context;
             this.logger = logger;            
@@ -42,6 +45,7 @@ namespace Maelstorm.Services.Implementations
             this.cache = cache;
             this.httpContext = httpContext;
             this.sesServ = sesServ;
+            this.sqlService = sqlService;
             userId = httpContext.HttpContext.GetUserId();
             serializerSettings = new JsonSerializerSettings();
             serializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
@@ -203,27 +207,52 @@ namespace Maelstorm.Services.Implementations
             User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user != null)
             {
-                var dialogs = context.Dialogs.Where(d => d.FirstUserId == userId || d.SecondUserId == userId)
-                    .OrderByDescending(d => d.LastActive);                    
-                foreach(var dialog in dialogs)
-                {                    
-                    var lastMessage = await context.DialogMessages.LastOrDefaultAsync(m => m.DialogId == dialog.Id
-                        && (m.AuthorId == userId ? m.IsVisibleForAuthor : m.IsVisibleForOther));
-                    if(lastMessage != null)
+                models = await sqlService.ExecuteAsync("select dialogs.Id as Id, users.Id as interlocutorId, " +
+                    "users.Image as Image, users.Nickname as Title, m.Text as LastMessageText, m.DateOfSending as LastMessageDate from dialogs inner join " +
+                    "(select id, dialogId, Text, max(DateOfSending) as DateOfSending from DialogMessages " +
+                    "where (dialogMessages.AuthorId = @userId and dialogMessages.IsVisibleForAuthor) " +
+                    "or(dialogMessages.AuthorId != @userId and dialogMessages.IsVisibleForOther) group by DialogId) as m " +
+                    "on dialogs.Id = m.DialogId " +
+                    "inner join Users on " +
+                    "(dialogs.FirstUserId = @userId and users.id = dialogs.SecondUserId) " +
+                    "or(dialogs.SecondUserId = @userId and users.id = Dialogs.FirstUserId) " +
+                    "order by m.DateOfSending", new SqliteParameter[] { new SqliteParameter("@userId", userId)}, async (reader)=>
                     {
-                        int interlocutorId = dialog.FirstUserId == userId ? dialog.SecondUserId : dialog.FirstUserId;
-                        User target = await context.Users.FirstOrDefaultAsync(u => u.Id == interlocutorId);
-                        models.Add(new DialogViewModel()
+                        var models = new List<DialogViewModel>();
+                        while (await reader.ReadAsync())
                         {
-                            Id = dialog.Id,
-                            Image = target.Image,
-                            LastMessageDate = lastMessage.DateOfSending,
-                            LastMessageText = lastMessage.Text,
-                            InterlocutorId = interlocutorId,
-                            Title = target.Nickname
-                        });
-                    }
-                }
+                            models.Add(new DialogViewModel()
+                            {
+                                Id = reader.GetInt32(0),
+                                InterlocutorId = reader.GetInt32(1),
+                                Image = reader.GetString(2),
+                                Title = reader.GetString(3),
+                                LastMessageText = reader.GetString(4),
+                                LastMessageDate = reader.GetDateTime(5)                                
+                            });
+                        }
+                        return models;
+                    });
+                //var dialogMessages = from message in context.DialogMessages
+                //                     where (message.AuthorId == userId && message.IsVisibleForAuthor) ||
+                //                     (message.AuthorId != userId && message.IsVisibleForOther)
+                //                     group message by message.DialogId into messages
+                //                     select messages.OrderByDescending(m => m.DateOfSending).FirstOrDefault();
+                //var query = from dialog in context.Dialogs
+                //            join message in dialogMessages
+                //            on dialog.Id equals message.DialogId
+                //            from interlocutor in context.Users
+                //            where (dialog.FirstUserId == userId && dialog.SecondUserId == interlocutor.Id)
+                //            || (dialog.SecondUserId == userId && dialog.FirstUserId == interlocutor.Id)
+                //            orderby message.DateOfSending
+                //            select new
+                //            {
+                //                Avatar = user.Image,
+                //                DialogId = dialog.Id,
+                //                message.Text,
+                //                message.DateOfSending,
+                //                InterlocutorId = interlocutor.Id
+                //            };               
                 models = models.Skip((stackNumber - 1) * count).Take(count).ToList();                          
             }
             return models;
