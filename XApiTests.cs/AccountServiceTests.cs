@@ -26,7 +26,7 @@ namespace XApiTests.cs
             config = new FakeConfig();
             emailService = new EmailService();            
             passServ = new PasswordService(config);
-            accServ = new AccountService(context, passServ, emailService, config);
+            accServ = new AccountService(context, passServ, emailService, config, null);
         }
 
         [Fact]

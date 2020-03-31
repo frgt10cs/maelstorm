@@ -11,12 +11,17 @@ namespace Maelstorm.Services.Implementations
 {
     public class CryptographyService:ICryptographyService
     {
-        public byte[] AesEncryptBytes(byte[] bytes, string key, byte[] iv)
+        public byte[] AesEncryptBytes(byte[] bytes, string key, byte[] iv, int keySize = 128)
         {
+            int keyRequiredLength = keySize / 8;
+            if (key.Length > keyRequiredLength)
+                key = key.Substring(0, keyRequiredLength);
+            if (key.Length < keyRequiredLength)
+                key = key + key.Substring(0, keyRequiredLength - key.Length);
             byte[] result;
             using (Aes aes = Aes.Create())
             {
-                aes.KeySize = 128;
+                aes.KeySize = keySize;
                 aes.BlockSize = 128;
                 aes.Key = Encoding.UTF8.GetBytes(key);
 

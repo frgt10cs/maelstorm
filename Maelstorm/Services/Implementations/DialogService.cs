@@ -22,6 +22,7 @@ using Maelstorm.Extensions;
 using System.Data.Common;
 using Microsoft.Data.Sqlite;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -72,19 +73,23 @@ namespace Maelstorm.Services.Implementations
 
         private async Task<Dialog> CreateDialog(int firstUserId, int secondUserId, bool isClosed = false)
         {
-            using var rsa = RSA.Create(20148);
+            using var rsa = RSA.Create(2048);            
             byte[] privateKey = rsa.ExportRSAPrivateKey();
+            byte[] publicKey = rsa.ExportRSAPublicKey();
             User firstUser = await context.Users.FirstOrDefaultAsync(u => u.Id == firstUserId);
             User secondUser = await context.Users.FirstOrDefaultAsync(u => u.Id == secondUserId);
             Dialog dialog = new Dialog()
             {
                 FirstUserId = firstUserId,
                 SecondUserId = secondUserId,
-                IsClosed = isClosed,                
-                PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
-                EncryptedFirstPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(privateKey, firstUser.PublicKey, new byte[16])),
-                EncryptedSecondPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(privateKey, secondUser.PublicKey, new byte[16]))
-            };
+                IsClosed = isClosed,
+                PublicKey = Convert.ToBase64String(publicKey)               
+            };                            
+            rsa.ImportRSAPublicKey(Convert.FromBase64String(firstUser.PublicKey), out int bytesRead);
+            var param = rsa.ExportParameters(false);
+            dialog.EncryptedFirstPrivateKey = Convert.ToBase64String(rsa.Encrypt(privateKey, RSAEncryptionPadding.OaepSHA256));
+            rsa.ImportRSAPublicKey(Convert.FromBase64String(secondUser.PublicKey), out bytesRead);
+            dialog.EncryptedSecondPrivateKey = Convert.ToBase64String(rsa.Encrypt(privateKey, RSAEncryptionPadding.OaepSHA256));
             return dialog;
         }
 

@@ -106,7 +106,7 @@ namespace Maelstorm.Services.Implementations
                 Status = "Stupid status from community",
                 Image = "defaultUser.png",
                 PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
-                EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportRSAPrivateKey(), model.Email + model.Password, new byte[16]))
+                EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportRSAPrivateKey(), model.Password, new byte[16]))
             };
             user.PasswordHash = passServ.GenerateHash(model.Password, user.Salt);
             return user;
