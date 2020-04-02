@@ -528,8 +528,7 @@ var dialogsModule = (function () {
     var _guiManager;    
     var _dialog;
     var openedDialog;
-    var dialogs;
-    var dialogsStackNumber;               
+    var dialogs;               
 
     var removeDialogs = function () {        
         while (_guiManager.getDialogsContainer().firstChild) {
@@ -544,7 +543,7 @@ var dialogsModule = (function () {
         dialog.element.onclick = function () { openDialog(dialog); };
         _guiManager.getDialogsContainer().appendChild(dialog.element);
         _guiManager.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
-        dialogs.push(dialog);
+        dialogs.push(dialog);        
     };
 
     var openDialog = function (dialog) {
@@ -611,8 +610,8 @@ var dialogsModule = (function () {
             var dialog = getDialogByInterlocutorId(interlocutorId);
             return dialog !== null && dialog !== undefined;
         },
-        
-        getDialogsStackNumber: function () { return dialogsStackNumber; }
+
+        getDialogsOffset: function () { return dialogs.length; }
     };
 })();
 
@@ -1047,8 +1046,8 @@ var apiModule = (function () {
 
         areTokensValid: areTokensValid,
 
-        getDialogs: function(stackNumber, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialogs?stackNumber=" + stackNumber, handler));
+        getDialogs: function(offset, count, handler) {
+            sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset+"&count="+count, handler));
         },
 
         getReadedMessages: function(dialogId, offset, count, handler) {
@@ -1431,7 +1430,7 @@ var settingsGui = settingsGuiModule;
 
 function init() {
     dialogsGui.showUploading();
-    api.getDialogs(dialogs.getDialogsStackNumber(), (data) => {
+    api.getDialogs(dialogs.getDialogsOffset(), 20, (data) => {
         signalRConnection.startConnection();
         dialogs.updateDialogs(dialog.createDialogs(data));        
         dialogsGui.hideUploading();

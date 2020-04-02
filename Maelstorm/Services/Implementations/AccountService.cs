@@ -15,17 +15,15 @@ namespace Maelstorm.Services.Implementations
 {
     public class AccountService:IAccountService
     {
-        private MaelstormRepository context;
-        private IPasswordService passServ;
+        private MaelstormContext context;        
         private IEmailService emailServ;
         private ICryptographyService cryptoService;
         private readonly IConfiguration config;        
 
-        public AccountService(MaelstormRepository context, IPasswordService passServ,
-            IEmailService emailServ, IConfiguration config, ICryptographyService cryptoService)
+        public AccountService(MaelstormContext context, IEmailService emailServ,
+            IConfiguration config, ICryptographyService cryptoService)
         {
-            this.context = context;
-            this.passServ = passServ;
+            this.context = context;            
             this.emailServ = emailServ;
             this.config = config;
             this.cryptoService = cryptoService;
@@ -101,14 +99,14 @@ namespace Maelstorm.Services.Implementations
                 DateOfRegistration = DateTime.Now,
                 Email = model.Email,
                 Nickname = model.Nickname,
-                Salt = passServ.GetRandomString(),
+                Salt = cryptoService.GetRandomString(),
                 Role = 0,
                 Status = "Stupid status from community",
                 Image = "defaultUser.png",
                 PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
                 EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportRSAPrivateKey(), model.Password, new byte[16]))
             };
-            user.PasswordHash = passServ.GenerateHash(model.Password, user.Salt);
+            user.PasswordHash = cryptoService.GeneratePasswordHash(model.Password, user.Salt);
             return user;
         }
 
@@ -119,7 +117,7 @@ namespace Maelstorm.Services.Implementations
                 Action = action,
                 GenerationDate = DateTime.Now,
                 UserId = userId,
-                Value = passServ.GetRandomString()
+                Value = cryptoService.GetRandomString()
             };
             return token;
         }       

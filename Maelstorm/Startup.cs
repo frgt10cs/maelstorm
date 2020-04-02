@@ -36,16 +36,16 @@ namespace Maelstorm
             services.AddOptions();
             services.Configure<JwtOptions>(Configuration);
 
-            services.AddDbContext<MaelstormRepository, MaelstormContext>();
+            services.AddDbContext<MaelstormContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("MaelstormDatabase"))); ;
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<IAccountService, AccountService>();            
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IDialogService, DialogService>();
-            //services.AddScoped<ISQLService, SQLService>();
-            services.AddScoped<ISQLService, SQLiteService>();
+            services.AddScoped<ISQLService, SQLService>();
+            //services.AddScoped<ISQLService, SQLiteService>();
             services.AddScoped<IFinderService, FinderService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ISessionService, SessionService>();

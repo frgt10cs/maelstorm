@@ -14,8 +14,8 @@ namespace Maelstorm.Services.Implementations
 {
     public class SQLService : ISQLService
     {
-        private MaelstormRepository context;        
-        public SQLService(MaelstormRepository context)
+        private MaelstormContext context;        
+        public SQLService(MaelstormContext context)
         {
             this.context = context;            
         }
@@ -43,6 +43,6 @@ namespace Maelstorm.Services.Implementations
                 }
             }
             return models;
-        }
+        }        
     }
 }

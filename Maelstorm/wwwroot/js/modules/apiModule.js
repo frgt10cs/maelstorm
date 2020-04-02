@@ -145,8 +145,8 @@ var apiModule = (function () {
 
         areTokensValid: areTokensValid,
 
-        getDialogs: function(stackNumber, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialogs?stackNumber=" + stackNumber, handler));
+        getDialogs: function(offset, count, handler) {
+            sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset+"&count="+count, handler));
         },
 
         getReadedMessages: function(dialogId, offset, count, handler) {

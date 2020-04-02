@@ -16,11 +16,11 @@ namespace Maelstorm.Services.Implementations
 {
     public class UserService : IUserService
     {
-        private MaelstormRepository context;
+        private MaelstormContext context;
         private IDistributedCache cache;
         private IOptions<JwtOptions> jwtOptions;
         private IHubContext<MessageHub> messHub;
-        public UserService(MaelstormRepository context, IDistributedCache cache,
+        public UserService(MaelstormContext context, IDistributedCache cache,
             IOptions<JwtOptions> jwtOptions, IHubContext<MessageHub> messHub)
         {
             this.context = context;

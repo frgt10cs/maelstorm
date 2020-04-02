@@ -3,8 +3,7 @@
     var _guiManager;    
     var _dialog;
     var openedDialog;
-    var dialogs;
-    var dialogsStackNumber;               
+    var dialogs;               
 
     var removeDialogs = function () {        
         while (_guiManager.getDialogsContainer().firstChild) {
@@ -19,7 +18,7 @@
         dialog.element.onclick = function () { openDialog(dialog); };
         _guiManager.getDialogsContainer().appendChild(dialog.element);
         _guiManager.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
-        dialogs.push(dialog);
+        dialogs.push(dialog);        
     };
 
     var openDialog = function (dialog) {
@@ -86,8 +85,8 @@
             var dialog = getDialogByInterlocutorId(interlocutorId);
             return dialog !== null && dialog !== undefined;
         },
-        
-        getDialogsStackNumber: function () { return dialogsStackNumber; }
+
+        getDialogsOffset: function () { return dialogs.length; }
     };
 })();
 

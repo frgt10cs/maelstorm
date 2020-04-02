@@ -70,10 +70,9 @@ namespace Maelstorm.ControllersAPI
         }
 
         [ActionName("GetDialogs")]
-        public async Task<ActionResult<List<DialogViewModel>>> GetDialogs(int stackNumber)
-        {
-            int count = 20;
-            var dialogs = await dialServ.GetDialogsAsync(stackNumber, count);
+        public async Task<ActionResult<List<DialogViewModel>>> GetDialogs(int offset, int count)
+        {            
+            var dialogs = await dialServ.GetDialogsAsync(offset, count);
             return dialogs;
         }
 

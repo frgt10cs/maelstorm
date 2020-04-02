@@ -8,11 +8,11 @@ using System.Text;
 
 namespace XApiTests.cs
 {
-    class FakeContext : MaelstormRepository
+    class FakeContext : MaelstormContext
     {
         private static readonly FakeContext db = new FakeContext();
         public static FakeContext Context() => db;
-        private FakeContext()
+        private FakeContext():base(null)
         {
             Users.Add(new User()
             {

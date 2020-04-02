@@ -1,4 +1,5 @@
-﻿using Maelstorm.Services.Interfaces;
+﻿using Maelstorm.Database;
+using Maelstorm.Services.Interfaces;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -13,8 +14,8 @@ namespace Maelstorm.Services.Implementations
 {
     public class SQLiteService : ISQLService
     {
-        private MaelstormRepository context;
-        public SQLiteService(MaelstormRepository context)
+        private MaelstormContext context;
+        public SQLiteService(MaelstormContext context)
         {
             this.context = context;
         }

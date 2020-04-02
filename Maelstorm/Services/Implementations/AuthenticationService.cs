@@ -22,21 +22,21 @@ namespace Maelstorm.Services.Implementations
 {
     public class AuthenticationService : IAuthenticationService
     {
-        private MaelstormRepository context;
+        private MaelstormContext context;
         private IOptions<JwtOptions> jwtOptions;
         private ISigningKeys signingKeys;
-        private IEncryptingKeys encryptingKeys;
-        private IPasswordService passServ;
+        private IEncryptingKeys encryptingKeys;        
         private ILogger<AccountService> logger;
+        private ICryptographyService cryptoServ;
 
-        public AuthenticationService(MaelstormRepository context, IPasswordService passServ, IOptions<JwtOptions> jwtOptions,
+        public AuthenticationService(MaelstormContext context, IOptions<JwtOptions> jwtOptions, ICryptographyService cryptoServ,
             ISigningKeys signingKeys, IEncryptingKeys encryptingKeys, ILogger<AccountService> logger)
-        {
+        {            
             this.context = context;
             this.jwtOptions = jwtOptions;
             this.signingKeys = signingKeys;
-            this.encryptingKeys = encryptingKeys;
-            this.passServ = passServ;
+            this.cryptoServ = cryptoServ;
+            this.encryptingKeys = encryptingKeys;            
             this.logger = logger;
         }
 
@@ -55,7 +55,7 @@ namespace Maelstorm.Services.Implementations
                         session = new Session()
                         {
                             UserId = user.Id,
-                            SessionId = GenerateRandomToken(),
+                            SessionId = cryptoServ.GetRandomString(),
                             FingerPrint = model.Fingerprint,
                             CreatedAt = DateTime.Now,
                             App = model.App,
@@ -96,7 +96,7 @@ namespace Maelstorm.Services.Implementations
             var user = await context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
             if (user != null)
             {
-                string hash = passServ.GenerateHash(model.Password, user.Salt);
+                string hash = cryptoServ.GeneratePasswordHash(model.Password, user.Salt);
                 if (hash == user.PasswordHash)
                 {
                     result = user;
@@ -172,7 +172,7 @@ namespace Maelstorm.Services.Implementations
             TokensViewmodel model = new TokensViewmodel()
             {
                 AccessToken = tokenHandler.WriteToken(token),
-                RefreshToken = GenerateRandomToken(),
+                RefreshToken = cryptoServ.GetRandomString(),
                 GenerationTime = generationTime
             };
             return model;
@@ -242,16 +242,6 @@ namespace Maelstorm.Services.Implementations
                 }
             }
             return location;
-        }
-
-        private string GenerateRandomToken()
-        {
-            byte[] randomNumber = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(randomNumber);
-            }
-            return Convert.ToBase64String(randomNumber);
-        }
+        }       
     }
 }

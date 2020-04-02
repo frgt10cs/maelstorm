@@ -12,3 +12,4 @@ isDatavlid in forms
 text valiation
 double rfrshtkn
 on rfrrsh error
+validation parameters on api

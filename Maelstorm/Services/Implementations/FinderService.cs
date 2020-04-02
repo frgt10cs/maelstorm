@@ -11,8 +11,8 @@ namespace Maelstorm.Services.Implementations
 {
     public class FinderService : IFinderService
     {
-        private MaelstormRepository context;
-        public FinderService(MaelstormRepository context)
+        private MaelstormContext context;
+        public FinderService(MaelstormContext context)
         {
             this.context = context;
         }

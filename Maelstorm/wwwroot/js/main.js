@@ -20,7 +20,7 @@ var settingsGui = settingsGuiModule;
 
 function init() {
     dialogsGui.showUploading();
-    api.getDialogs(dialogs.getDialogsStackNumber(), (data) => {
+    api.getDialogs(dialogs.getDialogsOffset(), 20, (data) => {
         signalRConnection.startConnection();
         dialogs.updateDialogs(dialog.createDialogs(data));        
         dialogsGui.hideUploading();
