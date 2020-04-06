@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Maelstorm.DTO
+namespace Maelstorm.Dtos
 {
     // включает в себя данные об используемом приложении для общения с апи
     public class AuthenticationApiDTO:AuthenticationDTO

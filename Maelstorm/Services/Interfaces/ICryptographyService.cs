@@ -10,5 +10,6 @@ namespace Maelstorm.Services.Interfaces
         byte[] AesEncryptBytes(byte[] bytes, string key, byte[] iv, int keySize = 128);
         string GetRandomString();
         string GeneratePasswordHash(string password, string salt);
+        byte[] GenerateIV();
     }
 }

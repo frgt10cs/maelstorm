@@ -190,10 +190,12 @@ var apiModule = (function () {
                 dataType: "json",
                 success: function (data) {
                     if (data.isSuccessful) {
-                        var tokens = JSON.parse(data.data);
-                        localStorage.setItem("MAT", tokens.AccessToken);
-                        localStorage.setItem("MRT", tokens.RefreshToken);
-                        updateTokenTime(tokens.GenerationTime);
+                        var result = JSON.parse(data.data);
+                        localStorage.setItem("MAT", result.Tokens.AccessToken);
+                        localStorage.setItem("MRT", result.Tokens.RefreshToken);
+                        localStorage.setItem("IV", result.IVBase64);
+                        console.log(result.EncryptedPrivateKey);
+                        updateTokenTime(result.Tokens.GenerationTime);
                         onSuccess();
                     } else {
                         onFailed();

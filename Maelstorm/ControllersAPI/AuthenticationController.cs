@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.DTO;
+using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Maelstorm.Extensions;

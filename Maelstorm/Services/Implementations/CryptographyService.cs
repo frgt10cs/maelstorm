@@ -70,5 +70,12 @@ namespace Maelstorm.Services.Implementations
                 numBytesRequested: 256 / 8
                 ));
         }
+
+        public byte[] GenerateIV()
+        {
+            using var aes = Aes.Create();
+            aes.GenerateIV();
+            return aes.IV;
+        }
     }
 }

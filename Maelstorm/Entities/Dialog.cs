@@ -1,10 +1,6 @@
-﻿using Maelstorm.DTO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System;
 
-namespace Maelstorm.Models
+namespace Maelstorm.Entities
 {
     public class Dialog
     {

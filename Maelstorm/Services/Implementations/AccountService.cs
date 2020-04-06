@@ -1,7 +1,8 @@
 ﻿using Maelstorm.Database;
 using Maelstorm.Models;
+using Maelstorm.Entities;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.DTO;
+using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -103,9 +104,11 @@ namespace Maelstorm.Services.Implementations
                 Role = 0,
                 Status = "Stupid status from community",
                 Image = "defaultUser.png",
-                PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
-                EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportRSAPrivateKey(), model.Password, new byte[16]))
+                PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey())                
             };
+            var iv = cryptoService.GenerateIV();
+            user.IVBase64 = Convert.ToBase64String(iv);
+            user.EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportRSAPrivateKey(), model.Password, iv));            
             user.PasswordHash = cryptoService.GeneratePasswordHash(model.Password, user.Salt);
             return user;
         }

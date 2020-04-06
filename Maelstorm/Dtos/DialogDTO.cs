@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Maelstorm.DTO
+namespace Maelstorm.Dtos
 {
     public class DialogDTO
     {

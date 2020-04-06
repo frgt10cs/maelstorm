@@ -1,7 +1,8 @@
 using Maelstorm.Models;
+using Maelstorm.Entities;
 using System;
 
-namespace Maelstorm.DTO
+namespace Maelstorm.Dtos
 {
     public class SessionDTO
     {

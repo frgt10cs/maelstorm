@@ -1,8 +1,9 @@
 ﻿using Maelstorm.Crypto.Interfaces;
 using Maelstorm.Database;
 using Maelstorm.Models;
+using Maelstorm.Entities;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.DTO;
+using Maelstorm.Dtos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,7 @@ using Newtonsoft.Json;
 using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
+using Maelstorm.Dtos;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -76,7 +78,8 @@ namespace Maelstorm.Services.Implementations
                     session.IpAddress = ip;
                     session.RefreshToken = tokens.RefreshToken;
                     await context.SaveChangesAsync();
-                    result.Data = JsonConvert.SerializeObject(tokens);
+                    var authResult = new AuthenticationResultDTO() { IVBase64 = user.IVBase64, EncryptedPrivateKey = user.EncryptedPrivateKey, Tokens = tokens };
+                    result.Data = JsonConvert.SerializeObject(authResult);
                 }
                 else
                 {

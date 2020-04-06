@@ -15,11 +15,11 @@
             _encoding = encoding;
         },
 
-        generateIV() {
+        generateIV: function() {
 
         },
 
-        genereateAesKeyByPassPhrase(passphrase, length) {
+        genereateAesKeyByPassPhrase: function(passphrase, length) {
             passphrase = validatePassphrase(passphrase, length);
             var keyBytes = getBytes(passphrase);
             return window.crypto.subtle.importKey(
@@ -31,7 +31,7 @@
             );
         },
 
-        encryptAes(aesKey, iv, plainText) {
+        encryptAes: function(aesKey, iv, plainText) {
             var dataBytes = _encoding.getBytes(plainText);
             return window.crypto.subtle.encrypt({
                 name: "AES-CBC",                
@@ -40,7 +40,7 @@
             aesKey, dataBytes);
         },
 
-        decryptAes(aesKey, iv, encryptedDataBase64) {
+        decryptAes: function(aesKey, iv, encryptedDataBase64) {
             var encryptedBytes = _encoding.base64ToArray(encryptedDataBase64);
             return window.crypto.subtle.decrypt({
                 name: "AES-CBC",

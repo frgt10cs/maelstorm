@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Maelstorm.DTO
+namespace Maelstorm.Dtos
 {
-    public class UserFindInfoDTO
+    public class MessageDeliveredDTO
     {
+        public int BindId { get; set; }
         public int Id { get; set; }
-        public string Nickname { get; set; }
-        public string MiniAvatar { get; set; }
+        public DateTime SentAt { get; set; }
     }
 }

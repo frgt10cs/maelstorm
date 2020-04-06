@@ -1,5 +1,5 @@
 ﻿using Maelstorm.Models;
-using Maelstorm.DTO;
+using Maelstorm.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;

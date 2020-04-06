@@ -1,8 +1,9 @@
 ﻿using Maelstorm.Database;
+using Maelstorm.Entities;
 using Maelstorm.Hubs;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.DTO;
+using Maelstorm.Dtos;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;

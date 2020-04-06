@@ -140,6 +140,58 @@ var accountGuiModule = (function () {
         }
     };
 })();
+var cryptoModule = (function () {
+    var _encoding;
+
+    var validatePassphrase = function (passphrase, length) {
+        var requiredLength = length / 8;
+        if (passphrase.length < requiredLength)
+            passphrase = passphrase + passphrase.substring(0, requiredLength - passphrase.length);
+        else if (passphrase.length > requiredLength)
+            passphrase = passphrase.substring(0, requiredLength);
+        return passphrase;
+    }
+
+    return {
+        init: function (encoding) {
+            _encoding = encoding;
+        },
+
+        generateIV: function() {
+
+        },
+
+        genereateAesKeyByPassPhrase: function(passphrase, length) {
+            passphrase = validatePassphrase(passphrase, length);
+            var keyBytes = getBytes(passphrase);
+            return window.crypto.subtle.importKey(
+                "raw",
+                keyBytes,
+                "AES-CBC",
+                true,
+                ["encrypt", "decrypt"]
+            );
+        },
+
+        encryptAes: function(aesKey, iv, plainText) {
+            var dataBytes = _encoding.getBytes(plainText);
+            return window.crypto.subtle.encrypt({
+                name: "AES-CBC",                
+                iv: iv,
+            },
+            aesKey, dataBytes);
+        },
+
+        decryptAes: function(aesKey, iv, encryptedDataBase64) {
+            var encryptedBytes = _encoding.base64ToArray(encryptedDataBase64);
+            return window.crypto.subtle.decrypt({
+                name: "AES-CBC",
+                iv: iv,
+            },
+            aesKey, encryptedBytes);
+        }       
+    }
+})();
 var dialogModule = (function () {
     var _api;
     var _date;
@@ -1091,10 +1143,12 @@ var apiModule = (function () {
                 dataType: "json",
                 success: function (data) {
                     if (data.isSuccessful) {
-                        var tokens = JSON.parse(data.data);
-                        localStorage.setItem("MAT", tokens.AccessToken);
-                        localStorage.setItem("MRT", tokens.RefreshToken);
-                        updateTokenTime(tokens.GenerationTime);
+                        var result = JSON.parse(data.data);
+                        localStorage.setItem("MAT", result.Tokens.AccessToken);
+                        localStorage.setItem("MRT", result.Tokens.RefreshToken);
+                        localStorage.setItem("IV", result.IVBase64);
+                        console.log(result.EncryptedPrivateKey);
+                        updateTokenTime(result.Tokens.GenerationTime);
                         onSuccess();
                     } else {
                         onFailed();
@@ -1427,6 +1481,7 @@ var session = sessionModule;
 var sessionGui = sessionGuiModule;
 var settings = settingsModule;
 var settingsGui = settingsGuiModule;
+var crypto = cryptoModule;
 
 function init() {
     dialogsGui.showUploading();

@@ -1,7 +1,7 @@
 ﻿using Maelstorm.Models;
 using Maelstorm.Services.Implementations;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.DTO;
+using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
