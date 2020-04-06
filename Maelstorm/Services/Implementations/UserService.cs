@@ -2,7 +2,7 @@
 using Maelstorm.Hubs;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.DTO;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -60,12 +60,12 @@ namespace Maelstorm.Services.Implementations
             return await cache.GetAsync(id.ToString()) != null;
         }
 
-        public async Task<List<OnlineStatusViewModel>> GetOnlineStatusesAsync(params int[] ids)
+        public async Task<List<OnlineStatusDTO>> GetOnlineStatusesAsync(params int[] ids)
         {
-            var statuses = new List<OnlineStatusViewModel>();
+            var statuses = new List<OnlineStatusDTO>();
             foreach(int id in ids)
             {
-                statuses.Add(new OnlineStatusViewModel()
+                statuses.Add(new OnlineStatusDTO()
                 {
                     UserId = id,
                     IsOnline = await IsOnlineAsync(id)
@@ -74,14 +74,14 @@ namespace Maelstorm.Services.Implementations
             return statuses;
         }
 
-        public async Task<List<SessionViewModel>> GetSessionsAsync(int userId)
+        public async Task<List<SessionDTO>> GetSessionsAsync(int userId)
         {
-            List<SessionViewModel> models = new List<SessionViewModel>();
+            List<SessionDTO> models = new List<SessionDTO>();
             var sessions = context.Sessions.Where(s => s.UserId == userId);
             var signalRSessions = await cache.GetListAsync<SignalRSession>(userId.ToString());
             foreach (Session session in sessions)
             {
-                models.Add(new SessionViewModel()
+                models.Add(new SessionDTO()
                 {
                     Session = session,
                     SignalRSession = signalRSessions?.FirstOrDefault(s => s.Fingerprint == session.FingerPrint)
@@ -90,14 +90,14 @@ namespace Maelstorm.Services.Implementations
             return models;
         }
 
-        public async Task<UserInfoViewModel> GetUserInfoAsync(int userId)
+        public async Task<UserInfoDTO> GetUserInfoAsync(int userId)
         {
             if (userId > 0)
             {
                 User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {
-                    var userInfo = new UserInfoViewModel()
+                    var userInfo = new UserInfoDTO()
                     {
                         Avatar = user.Image,
                         Id = user.Id,

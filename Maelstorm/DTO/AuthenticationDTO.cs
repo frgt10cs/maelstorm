@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Maelstorm.ViewModels
+namespace Maelstorm.DTO
 {
-    public class AuthenticationViewModel
+    public class AuthenticationDTO
     {
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Not email address")]

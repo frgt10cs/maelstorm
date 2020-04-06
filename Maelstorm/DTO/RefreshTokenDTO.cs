@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Maelstorm.ViewModels
+namespace Maelstorm.DTO
 {
-    public class RefreshTokenViewModel
+    public class RefreshTokenDTO
     {
         [Required]
         public string Token { get; set; }

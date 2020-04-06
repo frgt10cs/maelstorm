@@ -2,7 +2,6 @@ using Maelstorm.Controllers;
 using Maelstorm.Database;
 using Maelstorm.Services.Implementations;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using System;

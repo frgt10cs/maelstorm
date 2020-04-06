@@ -1,4 +1,4 @@
-﻿using Maelstorm.ViewModels;
+﻿using Maelstorm.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,9 +22,9 @@ namespace Maelstorm.Models
         public string PublicKey { get; set; }
         public string EncryptedPrivateKey { get; set; }
         
-        public static explicit operator UserFindInfoViewModel(User user)
+        public static explicit operator UserFindInfoDTO(User user)
         {
-            return new UserFindInfoViewModel()
+            return new UserFindInfoDTO()
             {
                 Nickname = user.Nickname,
                 Id = user.Id,
@@ -32,9 +32,9 @@ namespace Maelstorm.Models
             };
         }
 
-        public static explicit operator UserInfoViewModel(User user)
+        public static explicit operator UserInfoDTO(User user)
         {
-            return new UserInfoViewModel()
+            return new UserInfoDTO()
             {
                 Id = user.Id,
                 Avatar = user.Image,

@@ -17,6 +17,7 @@ var session = sessionModule;
 var sessionGui = sessionGuiModule;
 var settings = settingsModule;
 var settingsGui = settingsGuiModule;
+var crypto = cryptoModule;
 
 function init() {
     dialogsGui.showUploading();

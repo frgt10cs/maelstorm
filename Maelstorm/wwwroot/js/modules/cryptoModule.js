@@ -1,4 +1,4 @@
-﻿var crypto = (function () {
+﻿var cryptoModule = (function () {
     var _encoding;
 
     var validatePassphrase = function (passphrase, length) {

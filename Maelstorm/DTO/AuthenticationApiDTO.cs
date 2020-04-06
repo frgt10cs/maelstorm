@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Maelstorm.ViewModels
+namespace Maelstorm.DTO
 {
-    // выключает в себя данные об используемом приложении для общения с апи
-    public class AuthenticationApiViewModel:AuthenticationViewModel
+    // включает в себя данные об используемом приложении для общения с апи
+    public class AuthenticationApiDTO:AuthenticationDTO
     {
         [Required(ErrorMessage = "AppId is required")]                      
         public long AppId { get; set; }

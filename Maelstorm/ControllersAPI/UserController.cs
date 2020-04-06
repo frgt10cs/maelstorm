@@ -52,7 +52,7 @@ namespace Maelstorm.ControllersAPI
 
         [HttpPost]
         [ActionName("CloseSession")]
-        public async Task CloseSession(CloseSessionViewModel model)
+        public async Task CloseSession(CloseSessionDTO model)
         {
             await userServ.CloseSessionAsync(HttpContext.GetUserId(), model.SessionId, model.BanDevice);
         }

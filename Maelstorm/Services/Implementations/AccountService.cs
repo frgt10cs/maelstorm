@@ -1,7 +1,7 @@
 ﻿using Maelstorm.Database;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,7 +29,7 @@ namespace Maelstorm.Services.Implementations
             this.cryptoService = cryptoService;
         }
 
-        public async Task<ServiceResult> RegistrationAsync(RegistrationViewModel model)
+        public async Task<ServiceResult> RegistrationAsync(RegistrationDTO model)
         {            
             var result = new ServiceResult();           
             if (await EmailIsUnique(model.Email))
@@ -91,7 +91,7 @@ namespace Maelstorm.Services.Implementations
             return user == null;
         }               
         
-        private User CreateUser(RegistrationViewModel model)
+        private User CreateUser(RegistrationDTO model)
         {
             using var rsa = RSA.Create(2048);
             User user = new User()

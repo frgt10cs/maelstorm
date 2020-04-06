@@ -1,4 +1,4 @@
-﻿using Maelstorm.ViewModels;
+﻿using Maelstorm.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;

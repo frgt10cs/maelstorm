@@ -1,4 +1,4 @@
-﻿using Maelstorm.ViewModels;
+﻿using Maelstorm.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,7 @@ namespace Maelstorm.Models
 
         }
 
-        public DialogMessage(MessageSendViewModel model, int authorId, int dialogId)
+        public DialogMessage(MessageSendDTO model, int authorId, int dialogId)
         {
             AuthorId = authorId;
             DialogId = dialogId;

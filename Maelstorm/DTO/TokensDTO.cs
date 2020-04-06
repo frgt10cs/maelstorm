@@ -1,6 +1,6 @@
 using System;
 
-public class TokensViewmodel
+public class TokensDTO
 {
     public string AccessToken { get; set; }
     public DateTime GenerationTime { get; set; }

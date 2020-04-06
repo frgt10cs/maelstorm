@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Maelstorm.ViewModels
+namespace Maelstorm.DTO
 {
-    public class UserInfoViewModel
+    public class UserInfoDTO
     {
         public int Id { get; set; }
         public string Nickname { get; set; }

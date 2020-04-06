@@ -1,7 +1,7 @@
 ﻿using Maelstorm.Database;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -90,7 +90,7 @@ namespace Maelstorm.Services.Implementations
             return dialog;
         }
 
-        public async Task<ServiceResult> SendDialogMessageAsync(MessageSendViewModel model)
+        public async Task<ServiceResult> SendDialogMessageAsync(MessageSendDTO model)
         {            
             ServiceResult result = new ServiceResult();
             Dialog dialog = await GetOrCreateDialogAsync(model.TargetId);
@@ -105,7 +105,7 @@ namespace Maelstorm.Services.Implementations
                         DialogMessage message = new DialogMessage(model, userId, dialog.Id);                        
                         context.DialogMessages.Add(message);                        
                         await context.SaveChangesAsync();
-                        MessageDeliveredViewModel confirm = new MessageDeliveredViewModel()
+                        MessageDeliveredDTO confirm = new MessageDeliveredDTO()
                         {
                             Id = message.Id,
                             BindId = model.BindId,
@@ -131,7 +131,7 @@ namespace Maelstorm.Services.Implementations
 
         private async Task NewMessagePush(DialogMessage message)
         {
-            var messageViewModel = new MessageViewModel()
+            var messageViewModel = new MessageDTO()
             {
                 Id = message.Id,
                 AuthorId = message.AuthorId,                
@@ -180,9 +180,9 @@ namespace Maelstorm.Services.Implementations
                 .Take(count);
         }
 
-        private async Task<List<MessageViewModel>> ToMessageViewModelsAsync(IQueryable<DialogMessage> messages)
+        private async Task<List<MessageDTO>> ToMessageViewModelsAsync(IQueryable<DialogMessage> messages)
         {
-            return await messages.Select(m => new MessageViewModel()
+            return await messages.Select(m => new MessageDTO()
             {
                 Id = m.Id,
                 AuthorId = m.AuthorId,                
@@ -194,10 +194,10 @@ namespace Maelstorm.Services.Implementations
             .ToListAsync();
         }
 
-        public async Task<List<MessageViewModel>> GetReadedDialogMessagesAsync(int dialogId, int offset, int count)
+        public async Task<List<MessageDTO>> GetReadedDialogMessagesAsync(int dialogId, int offset, int count)
         {
             if (!(dialogId > 0 && offset >= 0 && count > 0 && count <= 100)) return null;
-            List<MessageViewModel> messages = null;
+            List<MessageDTO> messages = null;
             Dialog dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.Id == dialogId);
             if (dialog != null)
             {
@@ -206,10 +206,10 @@ namespace Maelstorm.Services.Implementations
             return messages;
         }
 
-        public async Task<List<MessageViewModel>> GetUnreadedDialogMessagesAsync(int dialogId, int count)
+        public async Task<List<MessageDTO>> GetUnreadedDialogMessagesAsync(int dialogId, int count)
         {
             if (!(dialogId > 0 && count > 0 && count <= 100)) return null;
-            List<MessageViewModel> messages = null;
+            List<MessageDTO> messages = null;
             Dialog dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.Id == dialogId);
             if(dialog != null)
             {
@@ -218,9 +218,9 @@ namespace Maelstorm.Services.Implementations
             return messages;
         }
 
-        public async Task<List<DialogViewModel>> GetDialogsAsync(int offset, int count)
+        public async Task<List<DialogDTO>> GetDialogsAsync(int offset, int count)
         {
-            List<DialogViewModel> models = new List<DialogViewModel>();
+            List<DialogDTO> models = new List<DialogDTO>();
             User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user != null)
             {
@@ -251,12 +251,12 @@ namespace Maelstorm.Services.Implementations
             return models;
         }
         
-        public async Task<List<DialogViewModel>> DialogViewModelSqlCoverter(DbDataReader reader)
+        public async Task<List<DialogDTO>> DialogViewModelSqlCoverter(DbDataReader reader)
         {
-            var models = new List<DialogViewModel>();
+            var models = new List<DialogDTO>();
             while (await reader.ReadAsync())
             {
-                models.Add(new DialogViewModel()
+                models.Add(new DialogDTO()
                 {
                     Id = reader.GetInt32(0),
                     InterlocutorId = reader.GetInt32(1),
@@ -308,9 +308,9 @@ namespace Maelstorm.Services.Implementations
             return null;
         }
 
-        public async Task<DialogViewModel> GetDialogAsync(int interlocutorId)
+        public async Task<DialogDTO> GetDialogAsync(int interlocutorId)
         {
-            DialogViewModel model = null;
+            DialogDTO model = null;
             User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user != null)
             {               

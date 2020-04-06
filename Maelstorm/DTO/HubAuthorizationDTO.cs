@@ -1,6 +1,6 @@
 using System;
 
-public class HubAuthorizationViewmodel
+public class HubAuthorizationDTO
 {
     public string Token { get; set; }
     public string Fingerprint { get; set; }

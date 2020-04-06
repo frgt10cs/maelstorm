@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Maelstorm.Crypto.Interfaces;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -42,7 +42,7 @@ namespace Maelstorm.Controllers
 
         [HttpPost]
         [ActionName("Registration")]
-        public async Task<IActionResult> Registration(RegistrationViewModel model)
+        public async Task<IActionResult> Registration(RegistrationDTO model)
         {
             ServiceResult result;
             if (ModelState.IsValid)

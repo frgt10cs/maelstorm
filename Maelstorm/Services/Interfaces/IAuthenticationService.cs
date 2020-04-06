@@ -1,6 +1,6 @@
 ﻿using Maelstorm.Crypto.Interfaces;
 using Maelstorm.Models;
-using Maelstorm.ViewModels;
+using Maelstorm.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +11,9 @@ namespace Maelstorm.Services.Interfaces
 {
     public interface IAuthenticationService
     {
-        Task<ServiceResult> AuthenticateAsync(AuthenticationViewModel model, string ip);
-        Task<ServiceResult> RefreshToken(RefreshTokenViewModel model, string ip);
-        TokensViewmodel CreateTokens(Claim[] claims);
+        Task<ServiceResult> AuthenticateAsync(AuthenticationDTO model, string ip);
+        Task<ServiceResult> RefreshToken(RefreshTokenDTO model, string ip);
+        TokensDTO CreateTokens(Claim[] claims);
         JwtValidationResult ValidateToken(string token, bool doesExpiredTokenThrowException = false);
     }
 }

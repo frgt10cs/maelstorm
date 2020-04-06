@@ -1,5 +1,5 @@
 ﻿using Maelstorm.Models;
-using Maelstorm.ViewModels;
+using Maelstorm.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

@@ -5,9 +5,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Maelstorm.ViewModels
+namespace Maelstorm.DTO
 {
-    public class RegistrationViewModel
+    public class RegistrationDTO
     {
         [Required(ErrorMessage ="Nickname is required")]
         [MinLength(3,ErrorMessage ="Nickname is too short. Minimum length is 3")]

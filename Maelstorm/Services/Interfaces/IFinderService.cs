@@ -1,4 +1,4 @@
-﻿using Maelstorm.ViewModels;
+﻿using Maelstorm.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +8,6 @@ namespace Maelstorm.Services.Interfaces
 {
     public interface IFinderService
     {
-        Task<List<UserFindInfoViewModel>> FindUsersByNicknameAsync(int userId, string nickname);
+        Task<List<UserFindInfoDTO>> FindUsersByNicknameAsync(int userId, string nickname);
     }
 }

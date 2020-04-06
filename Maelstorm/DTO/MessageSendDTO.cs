@@ -5,9 +5,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Maelstorm.ViewModels
+namespace Maelstorm.DTO
 {
-    public class MessageSendViewModel
+    public class MessageSendDTO
     {             
         [Required]
         [Range(0, int.MaxValue)]
