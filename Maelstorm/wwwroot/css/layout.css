@@ -17,3 +17,11 @@ a:hover {
 .mainContainer{
     height:90vh;
 }
+
+.hideScroll::-webkit-scrollbar {
+    display: none;
+}
+
+.hideScroll {
+    -ms-overflow-style: none;
+}

@@ -26,8 +26,8 @@
         updateStatus(message);
     };
 
-    var updateStatus = function (message) {
-        switch (status) {
+    var updateStatus = function (message) {        
+        switch (message.status) {
             case -1:
                 message.statusDiv.style.backgroundImage = "url(/images/notConfirmed.png)";
                 break;

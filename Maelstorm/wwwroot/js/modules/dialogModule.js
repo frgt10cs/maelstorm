@@ -18,6 +18,7 @@
     var createMessagesPanel = function () {
         var element = document.createElement("div");
         element.classList.add("conversationMessages");
+        element.classList.add("hideScroll");
         element.style.display = "none";
         element.onscroll = function () {
             onMessagesPanelScroll();

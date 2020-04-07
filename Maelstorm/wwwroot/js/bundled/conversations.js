@@ -212,6 +212,7 @@ var dialogModule = (function () {
     var createMessagesPanel = function () {
         var element = document.createElement("div");
         element.classList.add("conversationMessages");
+        element.classList.add("hideScroll");
         element.style.display = "none";
         element.onscroll = function () {
             onMessagesPanelScroll();
@@ -536,8 +537,8 @@ var messageModule = (function () {
         updateStatus(message);
     };
 
-    var updateStatus = function (message) {
-        switch (status) {
+    var updateStatus = function (message) {        
+        switch (message.status) {
             case -1:
                 message.statusDiv.style.backgroundImage = "url(/images/notConfirmed.png)";
                 break;
