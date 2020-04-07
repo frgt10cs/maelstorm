@@ -8,9 +8,10 @@ a:hover {
     text-decoration: none;
 }
 
-.dark {
-    background-color: #1E1E1E;
+.logoContainer {
+    background-color: #D32F2F;
     color: white;
+    margin-bottom:10px;
 }
 
 .mainContainer{

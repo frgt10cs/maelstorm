@@ -95,12 +95,12 @@
         Получение данных с сервера...
     </div>
 </div>
-<div class="container">
-    <div>
-        Искать:
-        <input id="findUserValue" type="text" />
-        <input type="button" id="findUserButton" value="Найти" />
-    </div>
+<div class="container" id="mainConversationContainer">
+    <div id="userSearchContainer">
+            Искать:
+            <input id="findUserValue" type="text" />
+            <input type="button" id="findUserButton" value="Найти" />
+        </div>
     <div id="findUserResults">
 
     </div>
@@ -126,24 +126,22 @@
         <input type="button" value="К диалогу" id="userInfoOpenDialog" />
         <input type="button" value="x" id="closeUserInfo" />
     </div>
-    <div class="row">
-        <div id="dialogs" class="conversations">
+    <div id="dialogs" class="conversations">
+    </div>
+    <div id="conversationInner" class="">
+        <div id="conversationInfo">
+            <div id="conversationTitle">
+
+            </div>
+            <div id="conversationStatus">
+
+            </div>
         </div>
-        <div id="conversationInner" class="">
-            <div id="conversationInfo">
-                <div id="conversationTitle">
-
-                </div>
-                <div id="conversationStatus">
-
-                </div>
-            </div>
-            <div id="panelsInner">
-            </div>
-            <div id="conversationSend">
-                <textarea id="messageTextBox"></textarea>
-                <button id="messageSendBtn"></button>
-            </div>
+        <div id="panelsInner">
+        </div>
+        <div id="conversationSend">
+            <textarea id="messageTextBox"></textarea>
+            <button id="messageSendBtn"></button>
         </div>
     </div>
 </div>
