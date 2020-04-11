@@ -1,0 +1,58 @@
+﻿#connecting {
+    background-color: darkred;
+}
+
+#connected {
+    background-color: darkgreen;
+}
+
+#uploading {
+    background-color: darkgreen;
+}
+
+#disconnected {
+    background-color: darkred;
+}
+
+.connectingPict {
+    background-image: url(/images/connecting.png);
+}
+
+.connectedPict {
+    background-image: url(/images/connected.png);
+}
+
+.uploadingPict {
+    background-image: url(/images/uploading.png);
+}
+
+.disconnectedPict {
+    background-image: url(/images/disconnected.png);
+}
+
+.siteInfo {
+    position: absolute;
+    top: 40px;
+    left: 100px;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 15px;
+    left: 0;
+    right: 0;
+    width: fit-content;
+    margin: 0 auto;
+    border: 1px solid white;
+    display: none;
+    z-index: 9999;
+}
+
+.infoPict {
+    background-size: cover;
+    width: 40px;
+    height: 40px;
+}
+
+.infoText {
+    padding-left: 5px;
+    color: white;
+}

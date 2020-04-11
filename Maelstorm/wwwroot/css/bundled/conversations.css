@@ -1,272 +1,3 @@
-#mainConversationContainer{
-    display:flex;
-    width:90%;
-}
-
-.bgDark {
-    background-color: #131313;
-}
-
-#dialogs {
-    background-color: #202020;
-    margin-right: 10px;
-    color: white;
-    width: 290px;
-}
-
-.conversation {
-    padding: 10px;
-    background-color: #191919;
-    cursor: pointer;
-    display:flex;
-}
-
-.conversationPhoto {
-    background-color: red;
-    min-width: 50px;
-    min-height: 50px;    
-    background-size: cover;
-    border-radius:50%;
-
-    background-position:center;
-    background-size:80px;
-    background-position-y:-15px;
-}
-
-.conversationPreview {
-    white-space: nowrap;
-    overflow: hidden;    
-    padding-left: 10px;
-    flex: 1 auto;
-    display: flex;
-    flex-direction: column;
-}
-
-#conversationInner {
-    width: 670px;
-    background-color: darkred;
-}
-
-.conversationText {
-    width: 70%;
-    overflow: hidden;
-}
-
-.conversationDate {    
-    float: right;
-    width: 30%;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-#conversationInfo {    
-    text-align: center;
-    background-color: #2A2A2A;
-    color: white;
-    padding: 5px 0px 10px 0px;
-}
-
-#conversationStatus {
-    font-size: 12px;
-    color: #D32F2F;
-}
-
-.conversationMessage{
-    display:flex;
-}
-
-.conversationMessages {
-    background-color: #1D1D1D;
-    height: 460px;
-    padding: 0px 10px 0px 10px;
-    overflow-y: scroll;
-    padding-bottom: 10px;    
-}
-
-#conversationMessages::-webkit-scrollbar {
-    width: 0 !important
-}
-
-#conversationSend {
-    background-color: #1B1B1B;
-    display: flex;
-    justify-content: center;
-    padding: 16px 0px;
-    align-items:center;
-}
-
-.messageBlock {
-    display: flex;
-}
-
-.message {
-    background-color: white;
-    display: inline-block;
-    color: black;
-    font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 8px;
-    margin-top: 5px;
-    word-break:break-all;
-    max-width:80%;
-}
-
-.authMes {
-    justify-content: flex-end;
-}
-
-#messageTextBox {
-    background: none;
-    resize: none;
-    border: none;
-    padding: 5px 10px;
-    width: 80%;
-    height: 36px;
-    color: white;
-    border-bottom: 2px solid #D32F2F;
-    margin: 0px 20px 0px 20px;
-}
-
-#messageSendBtn {
-    background: none;
-    border: none;
-    background-image: url(/images/send.svg);    
-    background-size: cover;
-    height: 30px;
-    width: 30px;
-}
-
-.status {
-    margin-top: -3px;
-    background-size: cover;
-    width: 10px;
-    height: 10px;
-    float: right;
-}
-
-.siteInfo {
-    position: absolute;
-    top: 40px;
-    left: 100px;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 15px;
-    left: 0;
-    right: 0;
-    width: fit-content;
-    margin: 0 auto;
-    border: 1px solid white;
-    display: none;
-    z-index: 9999;
-}
-
-.infoPict {
-    background-size: cover;
-    width: 40px;
-    height: 40px;
-}
-
-.infoText {
-    padding-left: 5px;
-    color: white;
-}
-
-#connecting {
-    background-color: darkred;
-}
-
-#connected {
-    background-color: darkgreen;
-}
-
-#uploading{
-    background-color:darkgreen;
-}
-
-#disconnected{
-    background-color: darkred;
-}
-
-.connectingPict {
-    background-image: url(/images/connecting.png);
-}
-
-.connectedPict {
-    background-image: url(/images/connected.png);
-}
-
-.uploadingPict {
-    background-image: url(/images/uploading.png);
-}
-
-.disconnectedPict{
-    background-image: url(/images/disconnected.png);
-}
-
-#dark {
-    position: absolute;
-    opacity: 0.6;
-    background-color: black;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    display: none;
-}
-
-.form {
-    display: none;
-    position: fixed;
-    z-index: 99;
-    top: 25%;
-    left: 50%;
-    -webkit-transform: translate(-50%, 0%);
-    transform: translate(-50%, 0%);
-    background-color: #2A2A2C;
-    padding: 10px 20px;
-    border: 3px solid #1F1F21;
-    width: 250px;
-}
-
-.btnLink {
-    background: none;
-    color: white;
-    border: none;
-    text-align: center;
-    width: 100%;
-    text-decoration: underline;
-}
-
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-textarea:-webkit-autofill:hover,
-textarea:-webkit-autofill:focus,
-select:-webkit-autofill,
-select:-webkit-autofill:hover,
-select:-webkit-autofill:focus {
-    border: 1px solid #0E0E0E;
-    -webkit-text-fill-color: white;
-    -webkit-box-shadow: 0 0 0px 1000px #151515 inset;
-    transition: background-color 5000s ease-in-out 0s;
-}
-
-.fInput {
-    background-color: #252526;
-    border: 1px solid #1F1F21;
-    color: white;
-    margin-bottom: 5px;
-    padding-left: 5px;
-    width: 100%;
-}
-
-.fLabel {
-    text-align: center;
-    color: white;
-    font-size: 20px;
-    padding: 5px 0px;
-}
 #findUserResults {
     color: white;
 }
@@ -424,4 +155,167 @@ select:-webkit-autofill:focus {
 
 .settingsBlockInner {
     display: none;
+}
+#dark {
+    position: absolute;
+    opacity: 0.6;
+    background-color: black;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+/* dialog */
+
+.dialogPhoto {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: darksalmon;
+
+    /* edit*/
+    background-position: center;
+    background-size: 80px;
+    background-position-y: -15px;
+}
+
+.dialogTextPreview {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dialogDate {
+    position: absolute;
+    top: 0px;
+    right: 5px;
+}
+
+
+.dialogInfo {
+    background-color: #2D3338;
+}
+
+.status {
+    font-size: 12px;
+}
+
+.search-input {
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    border-color: white;
+    width: 100%;
+}
+.form {
+    display: none;
+    position: fixed;
+    z-index: 99;
+    top: 25%;
+    left: 50%;
+    -webkit-transform: translate(-50%, 0%);
+    transform: translate(-50%, 0%);
+    background-color: #2A2A2C;
+    padding: 10px 20px;
+    border: 3px solid #1F1F21;
+    width: 250px;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    border: 1px solid #0E0E0E;
+    -webkit-text-fill-color: white;
+    -webkit-box-shadow: 0 0 0px 1000px #151515 inset;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.fInput {
+    background-color: #252526;
+    border: 1px solid #1F1F21;
+    color: white;
+    margin-bottom: 5px;
+    padding-left: 5px;
+    width: 100%;
+}
+
+.fLabel {
+    text-align: center;
+    color: white;
+    font-size: 20px;
+    padding: 5px 0px;
+}
+
+.btnLink {
+    background: none;
+    color: white;
+    border: none;
+    text-align: center;
+    width: 100%;
+    text-decoration: underline;
+}
+#connecting {
+    background-color: darkred;
+}
+
+#connected {
+    background-color: darkgreen;
+}
+
+#uploading {
+    background-color: darkgreen;
+}
+
+#disconnected {
+    background-color: darkred;
+}
+
+.connectingPict {
+    background-image: url(/images/connecting.png);
+}
+
+.connectedPict {
+    background-image: url(/images/connected.png);
+}
+
+.uploadingPict {
+    background-image: url(/images/uploading.png);
+}
+
+.disconnectedPict {
+    background-image: url(/images/disconnected.png);
+}
+
+.siteInfo {
+    position: absolute;
+    top: 40px;
+    left: 100px;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 15px;
+    left: 0;
+    right: 0;
+    width: fit-content;
+    margin: 0 auto;
+    border: 1px solid white;
+    display: none;
+    z-index: 9999;
+}
+
+.infoPict {
+    background-size: cover;
+    width: 40px;
+    height: 40px;
+}
+
+.infoText {
+    padding-left: 5px;
+    color: white;
 }

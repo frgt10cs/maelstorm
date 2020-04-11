@@ -2,19 +2,23 @@
 
     var setElement = function (message, isFromOther) {
         var mesBlock = document.createElement("div");
-        mesBlock.classList.add("messageBlock");
+        mesBlock.className = "messageContainer mt-2 overflow-hidden";
         mesBlock.id = message.id;
+
         var messageDiv = document.createElement("div");
-        messageDiv.classList.add("message");
+        messageDiv.className = "message bg-white text-dark px-2 py-1 mw-75 rounded d-inline-block";
+
         var messageText = document.createElement("div");
+        message.className = "messageText text-break";
         messageText.innerText = message.text;
+
         messageDiv.appendChild(messageText);
         if (!isFromOther) {
             var statusDiv = document.createElement("div");
-            statusDiv.classList.add("status");
+            statusDiv.className = "messageStatus float-right";
             messageDiv.appendChild(statusDiv);
             message.statusDiv = statusDiv;
-            mesBlock.classList.add("authMes");
+            messageDiv.classList.add("float-right");
             updateStatus(message);
         }
         mesBlock.appendChild(messageDiv);

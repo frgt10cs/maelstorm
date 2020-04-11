@@ -1,0 +1,53 @@
+﻿.form {
+    display: none;
+    position: fixed;
+    z-index: 99;
+    top: 25%;
+    left: 50%;
+    -webkit-transform: translate(-50%, 0%);
+    transform: translate(-50%, 0%);
+    background-color: #2A2A2C;
+    padding: 10px 20px;
+    border: 3px solid #1F1F21;
+    width: 250px;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    border: 1px solid #0E0E0E;
+    -webkit-text-fill-color: white;
+    -webkit-box-shadow: 0 0 0px 1000px #151515 inset;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.fInput {
+    background-color: #252526;
+    border: 1px solid #1F1F21;
+    color: white;
+    margin-bottom: 5px;
+    padding-left: 5px;
+    width: 100%;
+}
+
+.fLabel {
+    text-align: center;
+    color: white;
+    font-size: 20px;
+    padding: 5px 0px;
+}
+
+.btnLink {
+    background: none;
+    color: white;
+    border: none;
+    text-align: center;
+    width: 100%;
+    text-decoration: underline;
+}

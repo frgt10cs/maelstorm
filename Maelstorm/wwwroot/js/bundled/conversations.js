@@ -292,7 +292,7 @@ var dialogModule = (function () {
         serverDialog.allUnreadedUploaded = false;
         serverDialog.uploadingBlocked = false;
         serverDialog.messagesPanel = createMessagesPanel();
-        serverDialog.element = _guiManager.createDialogDiv(serverDialog);
+        serverDialog.element = _guiManager.createDialogLi(serverDialog);
         return serverDialog;
     };
 
@@ -416,32 +416,49 @@ var dialogGuiModule = (function () {
             messageSendBtn = document.getElementById("messageSendBtn");            
         },
 
-        createDialogDiv: function (dialog) {
-            var element = document.createElement("div");
-            element.classList.add("conversation");
+        createDialogLi: function (dialog) {
+            var element = document.createElement("li");            
+            element.className = "list-group-item mt-1 bg-dark text-white border-0";
             element.id = dialog.id;
+
+            var dialogInner = document.createElement("div");
+            dialogInner.className = "row position-relative";
+
+            var photoContainer = document.createElement("div");
+            photoContainer.className = "col-auto pl-0 pr-0";
+
             var photoDiv = document.createElement("div");
-            photoDiv.classList.add("conversationPhoto");
+            photoDiv.className = "dialogPhoto";
             photoDiv.style.backgroundImage = "url('/images/" + dialog.image + "')";
-            var convPreview = document.createElement("div");
-            convPreview.classList.add("conversationPreview");
-            var convTitle = document.createElement("div");
-            convTitle.classList.add("conversationTitle");
-            convTitle.innerText = dialog.title;
-            var convMessage = document.createElement("div");
-            convMessage.classList.add("conversationMessage");
-            var convText = document.createElement("div");
-            convText.classList.add("conversationText");
-            convText.innerText = dialog.lastMessageText !== null ? dialog.lastMessageText : "";
-            var convDate = document.createElement("div");
-            convDate.classList.add("conversationDate");
-            convDate.innerText = dialog.lastMessageDate !== null ? _date.getDate(new Date(dialog.lastMessageDate)) : "";
-            convMessage.appendChild(convText);
-            convMessage.appendChild(convDate);
-            convPreview.appendChild(convTitle);
-            convPreview.appendChild(convMessage);
-            element.appendChild(photoDiv);
-            element.appendChild(convPreview);
+
+            var dialogPreviewContainer = document.createElement("div");
+            dialogPreviewContainer.className = "col-8";
+
+            var dialogPreview = document.createElement("div");
+            dialogPreview.className = "dialogPreview";
+
+            var dialogTitle = document.createElement("div");
+            dialogTitle.className = "dialogTitle";
+            dialogTitle.innerText = dialog.title;
+
+            var dialogMessage = document.createElement("div");
+            dialogMessage.className = "dialogTextPreview";
+            dialogMessage.innerText = dialog.lastMessageText !== null ? dialog.lastMessageText : "";
+
+            var dialogDate = document.createElement("div");
+            dialogDate.className = "dialogDate";
+            dialogDate.innerText = dialog.lastMessageDate !== null ? _date.getDate(new Date(dialog.lastMessageDate)) : "";
+
+            photoContainer.appendChild(photoDiv);
+            dialogPreview.appendChild(dialogTitle);
+            dialogPreview.appendChild(dialogMessage);
+            dialogPreviewContainer.appendChild(dialogPreview);
+            dialogInner.appendChild(photoContainer);
+            dialogInner.appendChild(dialogPreviewContainer);
+            dialogInner.appendChild(dialogDate);
+            element.appendChild(dialogInner);
+
+
             return element;
         },
 
@@ -513,19 +530,23 @@ var messageModule = (function () {
 
     var setElement = function (message, isFromOther) {
         var mesBlock = document.createElement("div");
-        mesBlock.classList.add("messageBlock");
+        mesBlock.className = "messageContainer mt-2 overflow-hidden";
         mesBlock.id = message.id;
+
         var messageDiv = document.createElement("div");
-        messageDiv.classList.add("message");
+        messageDiv.className = "message bg-white text-dark px-2 py-1 mw-75 rounded d-inline-block";
+
         var messageText = document.createElement("div");
+        message.className = "messageText text-break";
         messageText.innerText = message.text;
+
         messageDiv.appendChild(messageText);
         if (!isFromOther) {
             var statusDiv = document.createElement("div");
-            statusDiv.classList.add("status");
+            statusDiv.className = "messageStatus float-right";
             messageDiv.appendChild(statusDiv);
             message.statusDiv = statusDiv;
-            mesBlock.classList.add("authMes");
+            messageDiv.classList.add("float-right");
             updateStatus(message);
         }
         mesBlock.appendChild(messageDiv);

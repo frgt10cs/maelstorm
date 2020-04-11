@@ -25,3 +25,15 @@ a:hover {
 .hideScroll {
     -ms-overflow-style: none;
 }
+
+.invert {
+    filter: invert(1);
+}
+
+.bg-darkness {
+    background-color: #191919;
+}
+
+.rotate {
+    transform: rotate(90deg);
+}
