@@ -335,10 +335,10 @@ var dialogModule = (function () {
                 dialogContext.readedMessagesOffset++;
             }
             appendMessageToEnd(message);
-        }
-        var preView = dialogContext.element.lastElementChild.lastElementChild;
-        preView.firstElementChild.innerText = message.text;
-        preView.lastElementChild.innerText = _date.getDate(new Date(message.dateOfSending));
+        }        
+        var previewText = dialogContext.element.lastElementChild.children[1].lastElementChild.lastElementChild;
+        previewText.innerText = message.text;
+        dialogContext.element.lastElementChild.lastElementChild.innerText = _date.getDate(new Date(message.dateOfSending));
         onNewMessage(dialogContext);
     };
 
@@ -359,6 +359,7 @@ var dialogModule = (function () {
             onNewMessage = onNewMessageHandler;
             _guiManager.getMessageSendBtn().onclick = function () {
                 sendMessage(createMessage());
+                _guiManager.clearMessageTextInput();
             };
         },
 
@@ -401,11 +402,26 @@ var dialogModule = (function () {
 })();
 
 var dialogGuiModule = (function () {
-    var _date;
-    var dialogTitleDiv;
-    var dialogStatusDiv;
-    var messageSendBtn;
-    var messageTextBox;
+    let _date;
+    let dialogTitleDiv;
+    let dialogStatusDiv;
+    let messageSendBtn;
+    let messageTextBox;
+
+    
+
+    var smallDeviceMenuInit = function () {
+        let openedDialogContainer = document.getElementById("openedDialogContainer");
+        let dialogListContainer = document.getElementById("dialogListContainer");
+        document.getElementById("openDialogListBtn").onclick = function () {
+            openedDialogContainer.style.display = "none";
+            dialogListContainer.style.display = "block";
+        };
+        document.getElementById("openOpenedDialogBtn").onclick = function () {
+            openedDialogContainer.style.display = "block";
+            dialogListContainer.style.display = "none";
+        }
+    }
 
     return {
         init: function (dateModule) {
@@ -413,7 +429,9 @@ var dialogGuiModule = (function () {
             dialogTitleDiv = document.getElementById("conversationTitle");
             dialogStatusDiv = document.getElementById("conversationStatus");
             messageTextBox = document.getElementById("messageTextBox");
-            messageSendBtn = document.getElementById("messageSendBtn");            
+            messageSendBtn = document.getElementById("messageSendBtn");  
+            //if (window.screen.width < 992)
+                smallDeviceMenuInit();
         },
 
         createDialogLi: function (dialog) {
@@ -458,14 +476,15 @@ var dialogGuiModule = (function () {
             dialogInner.appendChild(dialogDate);
             element.appendChild(dialogInner);
 
-
             return element;
         },
 
         getDialogTitleDiv: function () { return dialogTitleDiv; },
         getDialogStatusDiv: function () { return dialogStatusDiv; },
         getMessageText: function () { return messageTextBox.value; },
-        getMessageSendBtn: function () { return messageSendBtn },
+        getMessageSendBtn: function () { return messageSendBtn },   
+
+        clearMessageTextInput: function () { messageTextBox.value = ""; },
 
         setDialog: function (title) {
             dialogTitleDiv.innerText = title;            
