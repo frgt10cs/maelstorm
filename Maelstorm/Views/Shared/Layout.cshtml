@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
@@ -17,14 +18,13 @@
             integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
             crossorigin="anonymous"></script>
     <link rel="stylesheet" href="~/css/layout.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
 </head>
-<body class="bg-darkness">
-    <nav class="navbar navbar-dark bg-dark">
+<body class="bg-darkness vh-100 d-flex flex-column">
+    <nav class="navbar navbar-dark bg-dark-2">
         <div class="navbar-header">
             <a class="navbar-brand" href="#">Maelstorm</a>
         </div>
     </nav>
-    @RenderBody();
+    @RenderBody()
 </body>
 </html>

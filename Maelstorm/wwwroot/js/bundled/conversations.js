@@ -406,28 +406,35 @@ var dialogGuiModule = (function () {
     let dialogTitleDiv;
     let dialogStatusDiv;
     let messageSendBtn;
-    let messageTextBox;
-
-    
+    let messageTextBox;    
 
     var smallDeviceMenuInit = function () {
-        let openedDialogContainer = document.getElementById("openedDialogContainer");
         let dialogListContainer = document.getElementById("dialogListContainer");
-        document.getElementById("openDialogListBtn").onclick = function () {
-            openedDialogContainer.style.display = "none";
-            dialogListContainer.style.display = "block";
-        };
-        document.getElementById("openOpenedDialogBtn").onclick = function () {
-            openedDialogContainer.style.display = "block";
-            dialogListContainer.style.display = "none";
+        let openedDialogContainer = document.getElementById("openedDialogContainer");
+
+        let openDialogListBtn = document.getElementById("openDialogListBtn");
+        let openOpenedDialogBtn = document.getElementById("openOpenedDialogBtn");
+
+        openDialogListBtn.onclick = function () {
+            dialogListContainer.className = dialogListContainer.className.replace("d-none", "d-block");
+            openedDialogContainer.className = openedDialogContainer.className.replace("d-flex", "d-none");
+            openOpenedDialogBtn.className = openOpenedDialogBtn.className.replace("bg-dark-5", "bg-dark-2");
+            openDialogListBtn.className = openDialogListBtn.className.replace("bg-dark-2", "bg-dark-5");
+        }
+
+        openOpenedDialogBtn.onclick = function () {
+            dialogListContainer.className = dialogListContainer.className.replace("d-block", "d-none");
+            openedDialogContainer.className = openedDialogContainer.className.replace("d-none", "d-flex");
+            openOpenedDialogBtn.className = openOpenedDialogBtn.className.replace("bg-dark-2", "bg-dark-5");
+            openDialogListBtn.className = openDialogListBtn.className.replace("bg-dark-5", "bg-dark-2");
         }
     }
 
     return {
         init: function (dateModule) {
             _date = dateModule;
-            dialogTitleDiv = document.getElementById("conversationTitle");
-            dialogStatusDiv = document.getElementById("conversationStatus");
+            dialogTitleDiv = document.getElementById("dialogInfoTitle");
+            dialogStatusDiv = document.getElementById("dialogInfoStatus");
             messageTextBox = document.getElementById("messageTextBox");
             messageSendBtn = document.getElementById("messageSendBtn");  
             //if (window.screen.width < 992)
@@ -436,7 +443,7 @@ var dialogGuiModule = (function () {
 
         createDialogLi: function (dialog) {
             var element = document.createElement("li");            
-            element.className = "list-group-item mt-1 bg-dark text-white border-0";
+            element.className = "list-group-item mt-1 bg-dark-2 text-white border-0";
             element.id = dialog.id;
 
             var dialogInner = document.createElement("div");
@@ -553,7 +560,7 @@ var messageModule = (function () {
         mesBlock.id = message.id;
 
         var messageDiv = document.createElement("div");
-        messageDiv.className = "message bg-white text-dark px-2 py-1 mw-75 rounded d-inline-block";
+        messageDiv.className = "message text-white px-2 py-1 mw-75 rounded d-inline-block float-right bg-dark-6";
 
         var messageText = document.createElement("div");
         message.className = "messageText text-break";

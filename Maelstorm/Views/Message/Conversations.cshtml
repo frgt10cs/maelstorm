@@ -128,8 +128,8 @@
 </div>
 
 <!--Small device menu-->
-<div class="row d-lg-none m-0 m-auto">
-    <div id="openDialogListBtn" class="col-sm-4 col-4 col-md-4 bg-secondary justify-center d-flex align-items-center justify-content-center py-2">
+<div class="row d-lg-none m-0">
+    <div id="openDialogListBtn" class="col-sm-4 col-4 col-md-4 bg-dark-2 justify-center d-flex align-items-center justify-content-center py-2">
         <svg class="bi bi-view-list invert" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
              xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd"
@@ -137,7 +137,7 @@
                   clip-rule="evenodd" />
         </svg>
     </div>
-    <div id="openOpenedDialogBtn" class="col-sm-4 col-4 col-md-4 bg-dark justify-center d-flex align-items-center justify-content-center py-2">
+    <div id="openOpenedDialogBtn" class="col-sm-4 col-4 col-md-4 bg-dark-2 justify-center d-flex align-items-center justify-content-center py-2">
         <svg class="bi bi-chat invert" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
              xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd"
@@ -145,7 +145,7 @@
                   clip-rule="evenodd" />
         </svg>
     </div>
-    <div class="col-sm-4 col-4 col-md-4 bg-dark justify-center d-flex align-items-center justify-content-center py-2">
+    <div class="col-sm-4 col-4 col-md-4 bg-dark-2 justify-center d-flex align-items-center justify-content-center py-2">
         <svg class="bi bi-search invert" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
              xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd"
@@ -158,12 +158,11 @@
     </div>
 </div>
 <!--main container-->
-<div class="container-fluid container-lg mt-lg-2">
-    <div class="row">
-        <!--dialog list-->
-        <div id="dialogListContainer" class="col-12 col-sm-12 col-md-12 col-lg-4 h-100 bg-dark d-lg-block">
-            <div class="row d-none d-lg-flex mt-1 mt-lg-0 p-2">
-                <div class="col-lg-auto">
+<div id="mainContainer" class="container-fluid container-lg pt-lg-2 pb-lg-4">
+    <div class="row h-100">
+        <div id="dialogListContainer" class="col-12 col-sm-12 col-md-12 col-lg-4 h-100 bg-dark-2 d-none d-lg-block">
+            <div id="searchDialogContainer" class="row d-none d-lg-flex p-2 align-items-center bg-dark-2">
+                <div class="col-auto col-lg-auto">
                     <svg class="bi bi-search invert" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
                          xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd"
@@ -175,21 +174,20 @@
                     </svg>
                 </div>
                 <div class="col pl-0">
-                    <input type="text" class="bg-dark search-input">
+                    <input type="text" class="bg-dark-2 search-input text-white">
                 </div>
             </div>
-            <ul class="list-group" id="dialogs"></ul>
+            <ul id="dialogs" class="list-group y-scroll"></ul>
         </div>
-        <!--opened dialog-->
-        <div id="openedDialogContainer" class="col-12 col-sm-12 col-md-12 col-lg-8 h-100 bg-dark text-white p-0">
-            <div id="conversationInfo" class="dialogInfo text-center pt-2 pb-1 border-bottom">
-                <div id="conversationTitle" class="conversationTitle"></div>
-                <div id="conversationStatus" class="conversationStatus status"></div>
+        <div id="openedDialogContainer" class="col-12 col-sm-12 col-md-12 col-lg-8 h-100 bg-dark text-white p-0 d-flex flex-column justify-content-between">
+            <div id="dialogInfoContainer" class="dialogInfo text-center pt-2 pb-1 bg-dark-2">
+                <div id="dialogInfoTitle"></div>
+                <div id="dialogInfoStatus"></div>
             </div>
-            <div class="mt-2 pb-2 container-lg" id="panelsInner"></div>
-            <div class="container-lg">
+            <div id="panelsInner" class="pt-2 pb-2 container-lg h-100 y-scroll bg-dark-3"></div>
+            <div class="container-lg bg-dark-2">
                 <div class="row p-2">
-                    <input id="messageTextBox" type="text" class="form-control col col-sm col-md col-lg">
+                    <input type="text" id="messageTextBox" class="form-control col col-sm col-md col-lg">
                     <button id="messageSendBtn" class="btn col-auto col-sm-auto col-md-auto col-lg-auto">
                         <svg class="bi bi-triangle rotate invert" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
                              xmlns="http://www.w3.org/2000/svg">

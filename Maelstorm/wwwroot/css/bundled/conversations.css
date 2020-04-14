@@ -193,12 +193,11 @@
     right: 5px;
 }
 
-
 .dialogInfo {
     background-color: #2D3338;
 }
 
-.status {
+#dialogInfoStatus {
     font-size: 12px;
 }
 
@@ -207,6 +206,55 @@
     border-style: solid;
     border-color: white;
     width: 100%;
+}
+
+#mainContainer {
+    height: calc(100% - 87px);
+}
+
+nav {
+    height: 55px;
+}
+
+#panelsInner::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+}
+
+#panelsInner {
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+}
+
+#dialogs::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+}
+
+#dialogs {
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+    height: 100%;
+}
+
+#searchDialogContainer {
+    height: 56px;
+}
+
+#dialogInfoContainer{
+    min-height: 56px;
+}
+
+.border-bottom-dark-3 {
+    border-bottom: 2px solid #23282C;
+}
+
+@media screen and (min-width: 992px) {
+    #dialogs {
+        height: calc(100% - 56px);
+    }
+
+    #mainContainer {
+        height: calc(100% - 56px);
+    }
 }
 .form {
     display: none;

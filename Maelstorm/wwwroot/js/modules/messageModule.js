@@ -6,7 +6,7 @@
         mesBlock.id = message.id;
 
         var messageDiv = document.createElement("div");
-        messageDiv.className = "message bg-white text-dark px-2 py-1 mw-75 rounded d-inline-block";
+        messageDiv.className = "message text-white px-2 py-1 mw-75 rounded d-inline-block float-right bg-dark-6";
 
         var messageText = document.createElement("div");
         message.className = "messageText text-break";
