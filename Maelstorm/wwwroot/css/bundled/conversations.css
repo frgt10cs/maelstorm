@@ -167,7 +167,7 @@
     display: none;
 }
 
-/* dialog */
+/* dialog list */
 
 .dialogPhoto {
     width: 50px;
@@ -193,36 +193,11 @@
     right: 5px;
 }
 
-.dialogInfo {
-    background-color: #2D3338;
-}
-
-#dialogInfoStatus {
-    font-size: 12px;
-}
-
 .search-input {
     border-width: 0 0 1px 0;
     border-style: solid;
     border-color: white;
     width: 100%;
-}
-
-#mainContainer {
-    height: calc(100% - 87px);
-}
-
-nav {
-    height: 55px;
-}
-
-#panelsInner::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
-}
-
-#panelsInner {
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
-    scrollbar-width: none; /* Firefox */
 }
 
 #dialogs::-webkit-scrollbar {
@@ -235,12 +210,43 @@ nav {
     height: 100%;
 }
 
+#dialogs > li{
+    cursor: pointer;
+}
+
 #searchDialogContainer {
     height: 56px;
 }
 
-#dialogInfoContainer{
+/* opened dialog */
+
+.dialogInfo {
+    background-color: #2D3338;
+}
+
+#dialogInfoStatus {
+    font-size: 12px;
+}
+
+#panelsInner::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+}
+
+#panelsInner {
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+}
+
+#dialogInfoContainer {
     min-height: 56px;
+}
+
+#mainContainer {
+    height: calc(100% - 87px);
+}
+
+nav {
+    height: 55px;
 }
 
 .border-bottom-dark-3 {

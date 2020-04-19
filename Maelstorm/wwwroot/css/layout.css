@@ -34,6 +34,10 @@ a:hover {
     transform: rotate(90deg);
 }
 
+y-scroll {
+    overflow-y: scroll;
+}
+
 /* bg color */
 
 .bg-dark-2 {
