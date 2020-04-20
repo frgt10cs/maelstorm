@@ -5,14 +5,12 @@
 
     let login = function () {
         if (_guiManager.getLoginForm().isDataValid()) {
-            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword(),
-                () => {                    
-                    _guiManager.hideAllForms();
-                    _onLogin();
-                },
-                () => {                    
-                    alert("Login failed");
-                });
+            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword()).then(() => {
+                _guiManager.hideAllForms();
+                _onLogin();
+            }, error => {
+                console.log(error);
+            });               
         }   
     };
 
@@ -21,9 +19,11 @@
             _api.registration(_guiManager.getRegForm().getLogin(),
                 _guiManager.getRegForm().getEmail(),
                 _guiManager.getRegForm().getPassword(),
-                _guiManager.getRegForm().getPasswordConfirm(),
-                () => { _guiManager.openLogin(); },
-                (data) => { /*onRegistrationFailed(data);*/ });
+                _guiManager.getRegForm().getPasswordConfirm()).then(() => {
+                    _guiManager.openLogin();
+                }, error => {
+                    console.log(error);
+                });                
         }  
     };
 

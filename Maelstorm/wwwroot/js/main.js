@@ -21,10 +21,12 @@ let crypto = cryptoModule;
 
 function init() {
     dialogsGui.showUploading();
-    api.getDialogs(dialogs.getDialogsOffset(), 20, (data) => {
+    api.getDialogs(dialogs.getDialogsOffset(), 20).then(data => {
         signalRConnection.startConnection();
-        dialogs.updateDialogs(dialog.createDialogs(data));        
+        dialogs.updateDialogs(dialog.createDialogs(data));
         dialogsGui.hideUploading();
+    }, error => {
+        console.log(error);
     });
 }
 

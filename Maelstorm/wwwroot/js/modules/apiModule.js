@@ -1,7 +1,6 @@
 ﻿class MaelstormRequest {
-    constructor(url, handler, type, data) {
-        this.url = url;
-        this.handler = handler;
+    constructor(url, type, data) {
+        this.url = url;        
         this.type = (type === undefined ? "GET" : type);
         this.data = data;
     }
@@ -29,69 +28,92 @@ let apiModule = (function () {
     };
 
     let sendRequest = function (request) {
-        if (!isTokenExpired()) {
-            $.ajax({
-                url: request.url,
-                type: request.type,
-                contentType: "application/json",
-                dataType: "json",
-                data: request.type === "POST" ? JSON.stringify(request.data) : null,
-                beforeSend: function (xhr) {
-                    let token = localStorage.getItem("MAT");
-                    if (token !== undefined) {
-                        xhr.setRequestHeader("Authorization", "Bearer " + token);
+        return new Promise(function (resolve, reject) {
+            if (!isTokenExpired()) {
+                $.ajax({
+                    url: request.url,
+                    type: request.type,
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: request.type === "POST" ? JSON.stringify(request.data) : null,
+                    beforeSend: function (xhr) {
+                        let token = localStorage.getItem("MAT");
+                        if (token !== undefined) {
+                            xhr.setRequestHeader("Authorization", "Bearer " + token);
+                        }
+                    },
+                    success: function (data) {
+                        resolve(data);
+                    },
+                    error: function (error) {
+                        reject(error);
+                    },
+                    statusCode: {
+                        401: function (xhr) {
+                            if (xhr.getResponseHeader("Token-Expired")) {
+                                refreshToken().then(() => {
+                                    sendRequest(request).then(() => {
+                                        resolve();
+                                    }, error => {
+                                        reject(error);
+                                    });
+                                }, error => {
+                                    console.log(error); reject(error);
+                                });
+                            } else {
+                                //
+                            }
+                        }
                     }
-                },
-                success: function (data) {
-                    request.handler(data);
-                },
-                statusCode: {
-                    401: function (xhr) {
-                        if (xhr.getResponseHeader("Token-Expired")) {
-                            refreshToken(request);
+                });
+            } else {
+                refreshToken().then(() => {
+                    sendRequest(request).then(() => {
+                        resolve();
+                    }, error => {
+                        reject(error);
+                    });
+                }, error => {
+                    reject(error);
+                });
+            }
+        });        
+    };
+
+    let refreshToken = function () {
+        return new Promise(function (resolve, reject) {
+            let token = localStorage.getItem("MAT");
+            let refreshToken = localStorage.getItem("MRT");
+            if (areTokensValid() && isTokenExpired()) {
+                let refresh = JSON.stringify({
+                    token: token,
+                    refreshtoken: refreshToken,
+                    fingerPrint: _fingerprint
+                });
+                $.ajax({
+                    url: "/api/authentication/rfrshtkn",
+                    type: "POST",
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: refresh,
+                    success: function (data) {
+                        console.log(data);
+                        if (data.isSuccessful) {
+                            let tokens = JSON.parse(data.data);
+                            localStorage.setItem("MAT", tokens.AccessToken);
+                            localStorage.setItem("MRT", tokens.RefreshToken);
+                            updateTokenTime(tokens.GenerationTime);
+                            resolve();
                         } else {
+                            localStorage.removeItem("MAT");
+                            localStorage.removeItem("MRT");
+                            reject(new Error("Token refreshing error: " + data.errorMessages.join(' ')))                                                        
                             //
                         }
                     }
-                }
-            });
-        } else {
-            refreshToken(request);
-        }
-    };
-
-    let refreshToken = function (request) {
-        let token = localStorage.getItem("MAT");
-        let refreshToken = localStorage.getItem("MRT");
-        if (areTokensValid() && isTokenExpired()) {
-            let refresh = JSON.stringify({
-                token: token,
-                refreshtoken: refreshToken,
-                fingerPrint: _fingerprint
-            });
-            $.ajax({
-                url: "/api/authentication/rfrshtkn",
-                type: "POST",
-                contentType: "application/json",
-                dataType: "json",
-                data: refresh,
-                success: function (data) {
-                    console.log(data);
-                    if (data.isSuccessful) {
-                        let tokens = JSON.parse(data.data);
-                        localStorage.setItem("MAT", tokens.AccessToken);
-                        localStorage.setItem("MRT", tokens.RefreshToken);
-                        updateTokenTime(tokens.GenerationTime);
-                        sendRequest(request);
-                    } else {
-                        console.log("Token refreshing error: " + data.errorMessages.join(' '));
-                        localStorage.removeItem("MAT");
-                        localStorage.removeItem("MRT");
-                        //
-                    }
-                }
-            });
-        }
+                });
+            }
+        });        
     };
 
     let isEmptyOrSpaces = function (str) {
@@ -138,26 +160,44 @@ let apiModule = (function () {
     };  
 
     return {
-        init: function(fingerprint) {
+        init: function (fingerprint) {
             _fingerprint = fingerprint;
             accessTokenGenerationTime = Number(localStorage.getItem("ATGT"));
         },
 
         areTokensValid: areTokensValid,
 
-        getDialogs: function(offset, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset+"&count="+count, handler));
+        getDialogs: function (offset, count) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset + "&count=" + count)).then(dialogs => {
+                    resolve(dialogs);
+                }, (error) => {
+                    reject(error);
+                });
+            });
         },
 
-        getReadedMessages: function(dialogId, offset, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, handler, "GET"));
+        getReadedMessages: function (dialogId, offset, count) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {
+                    resolve(messages);
+                }, error => {
+                    reject(error);
+                });
+            })
         },
 
-        getUnreadedMessages: function(dialogId, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&count=" + count, handler, "GET"));
+        getUnreadedMessages: function (dialogId, count) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {
+                    resolve(messages);
+                }, error => {
+                    reject(error);
+                });
+            })
         },
 
-        sendDialogMessage: function(message, onSuccessful) {
+        sendDialogMessage: function (message, onSuccessful) {
             if (message.targetId !== 0) {
                 if (!isEmptyOrSpaces(message.text)) {
                     if (message.text.length > 1 && message.text.length < 4096) {
@@ -174,93 +214,127 @@ let apiModule = (function () {
             }
         },
 
-        login: function(login, password, onSuccess, onFailed) {
-            let model = {
-                email: login,
-                password: password,
-                osCpu: getOS(),
-                app: getBrowser(),
-                fingerPrint: _fingerprint
-            };
-            $.ajax({
-                url: "/api/authentication/auth",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(model),
-                dataType: "json",
-                success: function (data) {
-                    if (data.isSuccessful) {
-                        let result = JSON.parse(data.data);
-                        localStorage.setItem("MAT", result.Tokens.AccessToken);
-                        localStorage.setItem("MRT", result.Tokens.RefreshToken);
-                        localStorage.setItem("IV", result.IVBase64);
-                        console.log(result.EncryptedPrivateKey);
-                        updateTokenTime(result.Tokens.GenerationTime);
-                        onSuccess();
-                    } else {
-                        onFailed();
+        login: function (login, password) {
+            return new Promise(function (resolve, reject) {
+                let model = {
+                    email: login,
+                    password: password,
+                    osCpu: getOS(),
+                    app: getBrowser(),
+                    fingerPrint: _fingerprint
+                };
+                $.ajax({
+                    url: "/api/authentication/auth",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(model),
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.isSuccessful) {
+                            let result = JSON.parse(data.data);
+                            localStorage.setItem("MAT", result.Tokens.AccessToken);
+                            localStorage.setItem("MRT", result.Tokens.RefreshToken);
+                            localStorage.setItem("IV", result.IVBase64);
+                            console.log(result.EncryptedPrivateKey);
+                            updateTokenTime(result.Tokens.GenerationTime);
+                            resolve();
+                        } else {
+                            reject(data.errorMessages);
+                        }
+                    }
+                });
+            });
+        },
+
+        registration: function (nickname, email, password, confirmPassword) {
+            return new Promise(function (resolve, reject) {
+                if (!isEmptyOrSpaces(nickname) && !isEmptyOrSpaces(email) && !isEmptyOrSpaces(password) && !isEmptyOrSpaces(confirmPassword)) {
+                    if (password === confirmPassword) {
+                        let model = {
+                            nickname: nickname,
+                            email: email,
+                            password: password,
+                            confirmPassword: confirmPassword
+                        };
+                        $.ajax({
+                            url: "/api/account/registration",
+                            type: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify(model),
+                            dataType: "json",
+                            success: function (data) {
+                                if (data.isSuccessful) {
+                                    resolve();
+                                }
+                                else {
+                                    reject(data.errorMessages);
+                                }
+                            }
+                        });
                     }
                 }
             });
         },
 
-        registration: function(nickname, email, password, confirmPassword, onSuccess, onFailed) {
-            if (!isEmptyOrSpaces(nickname) && !isEmptyOrSpaces(email) && !isEmptyOrSpaces(password) && !isEmptyOrSpaces(confirmPassword)) {
-                if (password === confirmPassword) {
-                    let model = {
-                        nickname: nickname,
-                        email: email,
-                        password: password,
-                        confirmPassword: confirmPassword
-                    };
-                    $.ajax({
-                        url: "/api/account/registration",
-                        type: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify(model),
-                        dataType: "json",
-                        success: function (data) {
-                            if (data.isSuccessful) {
-                                onSuccess();
-                            }
-                            else {
-                                onFailed(data);
-                            }
-                        }
-                    });
-                }
-            }
-        },
-
-        logOut: function() {
-            sendRequest(new MaelstormRequest("/api/user/logout", null, "GET"));
+        logOut: function () {
+            sendRequest(new MaelstormRequest("/api/user/logout", "GET"));
             localStorage.clear();
         },
 
-        getDialog: function(interlocutorId, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId, handler));
-        },            
-
-        getSessions: function(handler) {
-            sendRequest(new MaelstormRequest("/api/user/getsessions", handler, "GET"));
+        getDialog: function (interlocutorId) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId)).then(dialog => {
+                    resolve(dialog);
+                }, error => {
+                    reject(error);
+                });
+            });
         },
 
-        closeSession: function(sessionId, banDevice) {
+        getSessions: function () {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/user/getsessions", "GET")).then(sessions => {
+                    resolve(sessions);
+                }, error => {
+                    reject(error);
+                });
+            });
+        },
+
+        closeSession: function (sessionId, banDevice) {
             let data = { sessionId: sessionId, banDevice: banDevice };
-            sendRequest(new MaelstormRequest("/api/user/closeSession", null, "POST", data));
+            sendRequest(new MaelstormRequest("/api/user/closeSession", "POST", data));
         },
 
-        getOnlineStatuses: function(ids, handler) {
-            if (ids.length === 0) return;
-            sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", handler, "POST", ids));
+        getOnlineStatuses: function (ids) {
+            return new Promise(function (resolve, reject) {
+                if (ids.length === 0) reject();
+                sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", "POST", ids)).then(statuses => {
+                    resolve(statuses);
+                }, error => {
+                    reject(error);
+                });
+            });
         },
 
-        findByNickname: function (nickname, handler) {
-            sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname, handler));
+        findByNickname: function (nickname) {
+            return new Promise(function(resolve, reject){
+                sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname).then(user => {
+                    resolve(user);
+                }, error => {
+                    reject(error);
+                }));
+            });
         },
 
-        getUserInfo: function (userId, handler) {
-            sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId, handler));
+        getUserInfo: function (userId) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId).then(user => {
+                    resolve(user);
+                }, error => {
+                    reject(error);
+                }));
+            });           
         }
     };
 })();

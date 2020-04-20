@@ -5,14 +5,12 @@ let accountModule = (function () {
 
     let login = function () {
         if (_guiManager.getLoginForm().isDataValid()) {
-            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword(),
-                () => {                    
-                    _guiManager.hideAllForms();
-                    _onLogin();
-                },
-                () => {                    
-                    alert("Login failed");
-                });
+            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword()).then(() => {
+                _guiManager.hideAllForms();
+                _onLogin();
+            }, error => {
+                console.log(error);
+            });               
         }   
     };
 
@@ -21,9 +19,11 @@ let accountModule = (function () {
             _api.registration(_guiManager.getRegForm().getLogin(),
                 _guiManager.getRegForm().getEmail(),
                 _guiManager.getRegForm().getPassword(),
-                _guiManager.getRegForm().getPasswordConfirm(),
-                () => { _guiManager.openLogin(); },
-                (data) => { /*onRegistrationFailed(data);*/ });
+                _guiManager.getRegForm().getPasswordConfirm()).then(() => {
+                    _guiManager.openLogin();
+                }, error => {
+                    console.log(error);
+                });                
         }  
     };
 
@@ -140,11 +140,11 @@ let accountGuiModule = (function () {
         }
     };
 })();
-var cryptoModule = (function () {
-    var _encoding;
+let cryptoModule = (function () {
+    let _encoding;
 
-    var validatePassphrase = function (passphrase, length) {
-        var requiredLength = length / 8;
+    let validatePassphrase = function (passphrase, length) {
+        let requiredLength = length / 8;
         if (passphrase.length < requiredLength)
             passphrase = passphrase + passphrase.substring(0, requiredLength - passphrase.length);
         else if (passphrase.length > requiredLength)
@@ -163,7 +163,7 @@ var cryptoModule = (function () {
 
         genereateAesKeyByPassPhrase: function(passphrase, length) {
             passphrase = validatePassphrase(passphrase, length);
-            var keyBytes = getBytes(passphrase);
+            let keyBytes = getBytes(passphrase);
             return window.crypto.subtle.importKey(
                 "raw",
                 keyBytes,
@@ -174,7 +174,7 @@ var cryptoModule = (function () {
         },
 
         encryptAes: function(aesKey, iv, plainText) {
-            var dataBytes = _encoding.getBytes(plainText);
+            let dataBytes = _encoding.getBytes(plainText);
             return window.crypto.subtle.encrypt({
                 name: "AES-CBC",                
                 iv: iv,
@@ -183,7 +183,7 @@ var cryptoModule = (function () {
         },
 
         decryptAes: function(aesKey, iv, encryptedDataBase64) {
-            var encryptedBytes = _encoding.base64ToArray(encryptedDataBase64);
+            let encryptedBytes = _encoding.base64ToArray(encryptedDataBase64);
             return window.crypto.subtle.decrypt({
                 name: "AES-CBC",
                 iv: iv,
@@ -275,11 +275,11 @@ let dialogModule = (function () {
     };  
 
     let uploadUnreadedMessages = function () {
-        _api.getUnreadedMessages(dialogContext.id, _uploadCount, unreadedMessagesHandler);
+        _api.getUnreadedMessages(dialogContext.id, _uploadCount).then(messages => { unreadedMessagesHandler(messages); }, error => { console.log(error); });
     };
 
     let uploadReadedMessages = function () {
-        _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount, readedMessagesHandler);
+        _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount).then(messages => { readedMessagesHandler(messages); }, error => { console.log(error); });
     };
 
     let createDialog = function (serverDialog) {      
@@ -343,7 +343,7 @@ let dialogModule = (function () {
     };
 
     var updateInterlocutorStatus = function () {
-        _api.getOnlineStatuses([dialogContext.interlocutorId], function (statuses) {
+        _api.getOnlineStatuses([dialogContext.interlocutorId]).then(statuses => {
             _guiManager.getDialogStatusDiv().innerText = statuses[0].isOnline ? "online" : "offline";
         });
     };
@@ -623,14 +623,14 @@ let messageModule = (function () {
         setText: setText
     };
 })();
-var dialogsModule = (function () {  
-    var _api;
-    var _guiManager;    
-    var _dialog;
-    var openedDialog;
-    var dialogs;               
+let dialogsModule = (function () {  
+    let _api;
+    let _guiManager;    
+    let _dialog;
+    let openedDialog;
+    let dialogs;               
 
-    var removeDialogs = function () {        
+    let removeDialogs = function () {        
         while (_guiManager.getDialogsContainer().firstChild) {
             _guiManager.getDialogsContainer().firstChild.remove();
         }
@@ -639,14 +639,14 @@ var dialogsModule = (function () {
         openedDialog = null;
     };             
 
-    var addDialog = function (dialog) {        
+    let addDialog = function (dialog) {        
         dialog.element.onclick = function () { openDialog(dialog); };
         _guiManager.getDialogsContainer().appendChild(dialog.element);
         _guiManager.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
         dialogs.push(dialog);        
     };
 
-    var openDialog = function (dialog) {
+    let openDialog = function (dialog) {
         if (openedDialog === null || openedDialog.id !== dialog.id) {
             if (openedDialog !== null) {
                 openedDialog.messagesPanel.style.display = "none";
@@ -657,8 +657,8 @@ var dialogsModule = (function () {
         }
     };
 
-    var openOrCreateDialog = function (userInfo) {
-        var dialog = getDialogByInterlocutorId(userInfo.id);
+    let openOrCreateDialog = function (userInfo) {
+        let dialog = getDialogByInterlocutorId(userInfo.id);
         if (dialog !== null && dialog !== undefined) {
             openDialog(dialog);
         } else {
@@ -670,7 +670,7 @@ var dialogsModule = (function () {
         }
     };
 
-    var getDialogByInterlocutorId = function (interlocutorId) {
+    let getDialogByInterlocutorId = function (interlocutorId) {
         return dialogs.find(function (dialog) { return dialog.interlocutorId === interlocutorId; });
     };
 
@@ -695,7 +695,7 @@ var dialogsModule = (function () {
 
         updateDialogs: function (dialogs) {
             removeDialogs();
-            for (var i = 0; i < dialogs.length; i++) {                
+            for (let i = 0; i < dialogs.length; i++) {                
                 addDialog(dialogs[i]);
             }
             dialogsStackNumber++;
@@ -707,7 +707,7 @@ var dialogsModule = (function () {
         openOrCreateDialog: openOrCreateDialog,
 
         isDialogUploaded: function (interlocutorId) {
-            var dialog = getDialogByInterlocutorId(interlocutorId);
+            let dialog = getDialogByInterlocutorId(interlocutorId);
             return dialog !== null && dialog !== undefined;
         },
 
@@ -715,9 +715,9 @@ var dialogsModule = (function () {
     };
 })();
 
-var dialogsGuiModule = (function () {
+let dialogsGuiModule = (function () {
 
-    var dialogsContainer,
+    let dialogsContainer,
         messagesPanelsContainer,
         uploadingInfo,        
         dark;        
@@ -750,14 +750,14 @@ var dialogsGuiModule = (function () {
         }
     };
 })();
-var userModule = (function () {
-    var _api;
-    var _guiManager;  
-    var _dialogs;
-    var prevSearch;
-    var openedUserInfo;
+let userModule = (function () {
+    let _api;
+    let _guiManager;  
+    let _dialogs;
+    let prevSearch;
+    let openedUserInfo;
 
-    var getUserInfo = function (userId) {
+    let getUserInfo = function (userId) {
         _api.getUserInfo(userId, function (userInfo) {
             openedUserInfo = userInfo;
             _guiManager.setUserInfo(userInfo);
@@ -765,17 +765,17 @@ var userModule = (function () {
         });
     };
 
-    var createUserFoundElement = function (user) {
-        var box = document.createElement("div");
+    let createUserFoundElement = function (user) {
+        let box = document.createElement("div");
         box.classList.add("userPreviewInner");
         box.onclick = function () {
             getUserInfo(user.id);            
         };
-        var imageBox = document.createElement("div");
+        let imageBox = document.createElement("div");
         imageBox.style.backgroundImage = "url('/images/" + user.miniAvatar + "')";
         imageBox.classList.add("userPreviewAvatar");
         box.appendChild(imageBox);
-        var nicknameBox = document.createElement("div");
+        let nicknameBox = document.createElement("div");
         nicknameBox.textContent = user.nickname;
         nicknameBox.classList.add("userPreviewNickname");
         box.appendChild(nicknameBox);
@@ -783,13 +783,13 @@ var userModule = (function () {
         return box;        
     };
 
-    var findUserByNickname = function () {
-        var nickname = _guiManager.getUserFindValue();
+    let findUserByNickname = function () {
+        let nickname = _guiManager.getUserFindValue();
         if (nickname !== prevSearch) {
             _api.findByNickname(nickname, function (users) {
                 _guiManager.clearUserResultsInnner();
                 if (users.length > 0) {
-                    for (var i = 0; i < users.length; i++) {
+                    for (let i = 0; i < users.length; i++) {
                         _guiManager.appendUserFound(createUserFoundElement(users[i]));
                     }
                 } else {
@@ -816,18 +816,18 @@ var userModule = (function () {
     };
 })();
 
-var userGuiModule = (function () {
-    var userFindTextBox;
-    var userResultsInner;
-    var findUserBtn;
-    var userInfoPanel;
-    var userInfoNicknameBox;
-    var userInfoAvatarBox;
-    var userInfoStatusBox;
-    var userInfoOnlineStatusBox;
-    var userInfoOpenDialog;
-    var closeUserInfoBtn;
-    var dark;          
+let userGuiModule = (function () {
+    let userFindTextBox;
+    let userResultsInner;
+    let findUserBtn;
+    let userInfoPanel;
+    let userInfoNicknameBox;
+    let userInfoAvatarBox;
+    let userInfoStatusBox;
+    let userInfoOnlineStatusBox;
+    let userInfoOpenDialog;
+    let closeUserInfoBtn;
+    let dark;          
 
     return {
         init: function () {
@@ -894,38 +894,38 @@ var userGuiModule = (function () {
         }        
     };
 })();
-var sessionModule = (function () {
-    var _api;
-    var _guiManager;        
+let sessionModule = (function () {
+    let _api;
+    let _guiManager;        
 
-    var closeSession = function (sessionId) {
+    let closeSession = function (sessionId) {
         _api.closeSession(sessionId, false);        
     };
 
-    var banSession = function (sessionId) {
+    let banSession = function (sessionId) {
         _api.closeSession(sessionId, true);
     };
 
-    var uploadSessions = function () {
+    let uploadSessions = function () {
         _api.getSessions(function (sessions) {
             _guiManager.clearSessionsContainer();
-            for (var i = 0; i < sessions.length; i++) {
+            for (let i = 0; i < sessions.length; i++) {
                 _guiManager.appendSession(createSessionDiv(sessions[i]));
             }
         });
     };
 
-    var createElement = function (element, className = "", inner = "") {
-        var newElement = document.createElement(element);
+    let createElement = function (element, className = "", inner = "") {
+        let newElement = document.createElement(element);
         newElement.classList.add(className);
         newElement.innerText = inner;
         return newElement;
     };
 
-    var createSessionDiv = function (session) {
-        var sessionDate = new Date(session.session.createdAt);
-        var dateString = sessionDate.getDate() + "." + (sessionDate.getMonth() + 1) + "." + sessionDate.getFullYear();
-        var container = createElement("div", "sessionContainer"),
+    let createSessionDiv = function (session) {
+        let sessionDate = new Date(session.session.createdAt);
+        let dateString = sessionDate.getDate() + "." + (sessionDate.getMonth() + 1) + "." + sessionDate.getFullYear();
+        let container = createElement("div", "sessionContainer"),
             imageBox = createElement("div", "sessionImage"),
             mainInfo = createElement("div", "sessionMainInfo"),
             info = createElement("div", "sessionInfo"),
@@ -976,11 +976,11 @@ var sessionModule = (function () {
     };
 })();
 
-var sessionGuiModule = (function () {
-    var sessionsContainer;
-    var loadSessionsBtn;    
+let sessionGuiModule = (function () {
+    let sessionsContainer;
+    let loadSessionsBtn;    
 
-    var clearSessionsContainer = function () {
+    let clearSessionsContainer = function () {
         while (sessionsContainer.firstChild) {
             sessionsContainer.removeChild(sessionsContainer.firstChild);
         }
@@ -1000,112 +1000,134 @@ var sessionGuiModule = (function () {
     };
 })();
 class MaelstormRequest {
-    constructor(url, handler, type, data) {
-        this.url = url;
-        this.handler = handler;
+    constructor(url, type, data) {
+        this.url = url;        
         this.type = (type === undefined ? "GET" : type);
         this.data = data;
     }
 }
 
-var apiModule = (function () {
-    var _fingerprint;
+let apiModule = (function () {
+    let _fingerprint;
 
-    var accessTokenGenerationTime;
+    let accessTokenGenerationTime;
 
-    var areTokensValid = function () {
-        var token = localStorage.getItem("MAT");
-        var refreshToken = localStorage.getItem("MRT");
+    let areTokensValid = function () {
+        let token = localStorage.getItem("MAT");
+        let refreshToken = localStorage.getItem("MRT");
         return token !== null && refreshToken !== null && token !== undefined && refreshToken !== undefined && token !== "" && refreshToken !== "";
     };
 
-    var updateTokenTime = function (time) {
-        var value = new Date(time).getTime();
+    let updateTokenTime = function (time) {
+        let value = new Date(time).getTime();
         localStorage.setItem("ATGT", value);
         accessTokenGenerationTime = value;
     };
 
-    var isTokenExpired = function () {
+    let isTokenExpired = function () {
         return new Date().getTime() - accessTokenGenerationTime > 300000;
     };
 
-    var sendRequest = function (request) {
-        if (!isTokenExpired()) {
-            $.ajax({
-                url: request.url,
-                type: request.type,
-                contentType: "application/json",
-                dataType: "json",
-                data: request.type === "POST" ? JSON.stringify(request.data) : null,
-                beforeSend: function (xhr) {
-                    var token = localStorage.getItem("MAT");
-                    if (token !== undefined) {
-                        xhr.setRequestHeader("Authorization", "Bearer " + token);
+    let sendRequest = function (request) {
+        return new Promise(function (resolve, reject) {
+            if (!isTokenExpired()) {
+                $.ajax({
+                    url: request.url,
+                    type: request.type,
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: request.type === "POST" ? JSON.stringify(request.data) : null,
+                    beforeSend: function (xhr) {
+                        let token = localStorage.getItem("MAT");
+                        if (token !== undefined) {
+                            xhr.setRequestHeader("Authorization", "Bearer " + token);
+                        }
+                    },
+                    success: function (data) {
+                        resolve(data);
+                    },
+                    error: function (error) {
+                        reject(error);
+                    },
+                    statusCode: {
+                        401: function (xhr) {
+                            if (xhr.getResponseHeader("Token-Expired")) {
+                                refreshToken().then(() => {
+                                    sendRequest(request).then(() => {
+                                        resolve();
+                                    }, error => {
+                                        reject(error);
+                                    });
+                                }, error => {
+                                    console.log(error); reject(error);
+                                });
+                            } else {
+                                //
+                            }
+                        }
                     }
-                },
-                success: function (data) {
-                    request.handler(data);
-                },
-                statusCode: {
-                    401: function (xhr) {
-                        if (xhr.getResponseHeader("Token-Expired")) {
-                            refreshToken(request);
+                });
+            } else {
+                refreshToken().then(() => {
+                    sendRequest(request).then(() => {
+                        resolve();
+                    }, error => {
+                        reject(error);
+                    });
+                }, error => {
+                    reject(error);
+                });
+            }
+        });        
+    };
+
+    let refreshToken = function () {
+        return new Promise(function (resolve, reject) {
+            let token = localStorage.getItem("MAT");
+            let refreshToken = localStorage.getItem("MRT");
+            if (areTokensValid() && isTokenExpired()) {
+                let refresh = JSON.stringify({
+                    token: token,
+                    refreshtoken: refreshToken,
+                    fingerPrint: _fingerprint
+                });
+                $.ajax({
+                    url: "/api/authentication/rfrshtkn",
+                    type: "POST",
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: refresh,
+                    success: function (data) {
+                        console.log(data);
+                        if (data.isSuccessful) {
+                            let tokens = JSON.parse(data.data);
+                            localStorage.setItem("MAT", tokens.AccessToken);
+                            localStorage.setItem("MRT", tokens.RefreshToken);
+                            updateTokenTime(tokens.GenerationTime);
+                            resolve();
                         } else {
+                            localStorage.removeItem("MAT");
+                            localStorage.removeItem("MRT");
+                            reject(new Error("Token refreshing error: " + data.errorMessages.join(' ')))                                                        
                             //
                         }
                     }
-                }
-            });
-        } else {
-            refreshToken(request);
-        }
+                });
+            }
+        });        
     };
 
-    var refreshToken = function (request) {
-        var token = localStorage.getItem("MAT");
-        var refreshToken = localStorage.getItem("MRT");
-        if (areTokensValid() && isTokenExpired()) {
-            var refresh = JSON.stringify({
-                token: token,
-                refreshtoken: refreshToken,
-                fingerPrint: _fingerprint
-            });
-            $.ajax({
-                url: "/api/authentication/rfrshtkn",
-                type: "POST",
-                contentType: "application/json",
-                dataType: "json",
-                data: refresh,
-                success: function (data) {
-                    console.log(data);
-                    if (data.isSuccessful) {
-                        var tokens = JSON.parse(data.data);
-                        localStorage.setItem("MAT", tokens.AccessToken);
-                        localStorage.setItem("MRT", tokens.RefreshToken);
-                        updateTokenTime(tokens.GenerationTime);
-                        sendRequest(request);
-                    } else {
-                        console.log("Token refreshing error: " + data.errorMessages.join(' '));
-                        localStorage.removeItem("MAT");
-                        localStorage.removeItem("MRT");
-                        //
-                    }
-                }
-            });
-        }
-    };
-
-    var isEmptyOrSpaces = function (str) {
+    let isEmptyOrSpaces = function (str) {
         return str === null || str.match(/^ *$/) !== null;
     }; 
 
-    var getOS = function () {
-        var userAgent = window.navigator.userAgent;
-        var platform = window.navigator.platform;
-        var macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
-        var windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
-        var iosPlatforms = ['iPhone', 'iPad', 'iPod'];
-        var os = "Unknown";
+    let getOS = function () {
+        let userAgent = window.navigator.userAgent;
+        let platform = window.navigator.platform;
+        let macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
+        let windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
+        let iosPlatforms = ['iPhone', 'iPad', 'iPod'];
+        let os = "Unknown";
 
         if (macosPlatforms.indexOf(platform) !== -1) {
             os = 'Mac OS';
@@ -1121,8 +1143,8 @@ var apiModule = (function () {
         return os;
     };
 
-    var getBrowser = function () {
-        var ua = navigator.userAgent,
+    let getBrowser = function () {
+        let ua = navigator.userAgent,
             tem,
             M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
         if (/trident/i.test(M[1])) {
@@ -1139,26 +1161,44 @@ var apiModule = (function () {
     };  
 
     return {
-        init: function(fingerprint) {
+        init: function (fingerprint) {
             _fingerprint = fingerprint;
             accessTokenGenerationTime = Number(localStorage.getItem("ATGT"));
         },
 
         areTokensValid: areTokensValid,
 
-        getDialogs: function(offset, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset+"&count="+count, handler));
+        getDialogs: function (offset, count) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset + "&count=" + count)).then(dialogs => {
+                    resolve(dialogs);
+                }, (error) => {
+                    reject(error);
+                });
+            });
         },
 
-        getReadedMessages: function(dialogId, offset, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, handler, "GET"));
+        getReadedMessages: function (dialogId, offset, count) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {
+                    resolve(messages);
+                }, error => {
+                    reject(error);
+                });
+            })
         },
 
-        getUnreadedMessages: function(dialogId, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&count=" + count, handler, "GET"));
+        getUnreadedMessages: function (dialogId, count) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {
+                    resolve(messages);
+                }, error => {
+                    reject(error);
+                });
+            })
         },
 
-        sendDialogMessage: function(message, onSuccessful) {
+        sendDialogMessage: function (message, onSuccessful) {
             if (message.targetId !== 0) {
                 if (!isEmptyOrSpaces(message.text)) {
                     if (message.text.length > 1 && message.text.length < 4096) {
@@ -1175,103 +1215,137 @@ var apiModule = (function () {
             }
         },
 
-        login: function(login, password, onSuccess, onFailed) {
-            var model = {
-                email: login,
-                password: password,
-                osCpu: getOS(),
-                app: getBrowser(),
-                fingerPrint: _fingerprint
-            };
-            $.ajax({
-                url: "/api/authentication/auth",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(model),
-                dataType: "json",
-                success: function (data) {
-                    if (data.isSuccessful) {
-                        var result = JSON.parse(data.data);
-                        localStorage.setItem("MAT", result.Tokens.AccessToken);
-                        localStorage.setItem("MRT", result.Tokens.RefreshToken);
-                        localStorage.setItem("IV", result.IVBase64);
-                        console.log(result.EncryptedPrivateKey);
-                        updateTokenTime(result.Tokens.GenerationTime);
-                        onSuccess();
-                    } else {
-                        onFailed();
+        login: function (login, password) {
+            return new Promise(function (resolve, reject) {
+                let model = {
+                    email: login,
+                    password: password,
+                    osCpu: getOS(),
+                    app: getBrowser(),
+                    fingerPrint: _fingerprint
+                };
+                $.ajax({
+                    url: "/api/authentication/auth",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(model),
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.isSuccessful) {
+                            let result = JSON.parse(data.data);
+                            localStorage.setItem("MAT", result.Tokens.AccessToken);
+                            localStorage.setItem("MRT", result.Tokens.RefreshToken);
+                            localStorage.setItem("IV", result.IVBase64);
+                            console.log(result.EncryptedPrivateKey);
+                            updateTokenTime(result.Tokens.GenerationTime);
+                            resolve();
+                        } else {
+                            reject(data.errorMessages);
+                        }
+                    }
+                });
+            });
+        },
+
+        registration: function (nickname, email, password, confirmPassword) {
+            return new Promise(function (resolve, reject) {
+                if (!isEmptyOrSpaces(nickname) && !isEmptyOrSpaces(email) && !isEmptyOrSpaces(password) && !isEmptyOrSpaces(confirmPassword)) {
+                    if (password === confirmPassword) {
+                        let model = {
+                            nickname: nickname,
+                            email: email,
+                            password: password,
+                            confirmPassword: confirmPassword
+                        };
+                        $.ajax({
+                            url: "/api/account/registration",
+                            type: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify(model),
+                            dataType: "json",
+                            success: function (data) {
+                                if (data.isSuccessful) {
+                                    resolve();
+                                }
+                                else {
+                                    reject(data.errorMessages);
+                                }
+                            }
+                        });
                     }
                 }
             });
         },
 
-        registration: function(nickname, email, password, confirmPassword, onSuccess, onFailed) {
-            if (!isEmptyOrSpaces(nickname) && !isEmptyOrSpaces(email) && !isEmptyOrSpaces(password) && !isEmptyOrSpaces(confirmPassword)) {
-                if (password === confirmPassword) {
-                    var model = {
-                        nickname: nickname,
-                        email: email,
-                        password: password,
-                        confirmPassword: confirmPassword
-                    };
-                    $.ajax({
-                        url: "/api/account/registration",
-                        type: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify(model),
-                        dataType: "json",
-                        success: function (data) {
-                            if (data.isSuccessful) {
-                                onSuccess();
-                            }
-                            else {
-                                onFailed(data);
-                            }
-                        }
-                    });
-                }
-            }
-        },
-
-        logOut: function() {
-            sendRequest(new MaelstormRequest("/api/user/logout", null, "GET"));
+        logOut: function () {
+            sendRequest(new MaelstormRequest("/api/user/logout", "GET"));
             localStorage.clear();
         },
 
-        getDialog: function(interlocutorId, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId, handler));
-        },            
-
-        getSessions: function(handler) {
-            sendRequest(new MaelstormRequest("/api/user/getsessions", handler, "GET"));
+        getDialog: function (interlocutorId) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId)).then(dialog => {
+                    resolve(dialog);
+                }, error => {
+                    reject(error);
+                });
+            });
         },
 
-        closeSession: function(sessionId, banDevice) {
-            var data = { sessionId: sessionId, banDevice: banDevice };
-            sendRequest(new MaelstormRequest("/api/user/closeSession", null, "POST", data));
+        getSessions: function () {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/user/getsessions", "GET")).then(sessions => {
+                    resolve(sessions);
+                }, error => {
+                    reject(error);
+                });
+            });
         },
 
-        getOnlineStatuses: function(ids, handler) {
-            if (ids.length === 0) return;
-            sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", handler, "POST", ids));
+        closeSession: function (sessionId, banDevice) {
+            let data = { sessionId: sessionId, banDevice: banDevice };
+            sendRequest(new MaelstormRequest("/api/user/closeSession", "POST", data));
         },
 
-        findByNickname: function (nickname, handler) {
-            sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname, handler));
+        getOnlineStatuses: function (ids) {
+            return new Promise(function (resolve, reject) {
+                if (ids.length === 0) reject();
+                sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", "POST", ids)).then(statuses => {
+                    resolve(statuses);
+                }, error => {
+                    reject(error);
+                });
+            });
         },
 
-        getUserInfo: function (userId, handler) {
-            sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId, handler));
+        findByNickname: function (nickname) {
+            return new Promise(function(resolve, reject){
+                sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname).then(user => {
+                    resolve(user);
+                }, error => {
+                    reject(error);
+                }));
+            });
+        },
+
+        getUserInfo: function (userId) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId).then(user => {
+                    resolve(user);
+                }, error => {
+                    reject(error);
+                }));
+            });           
         }
     };
 })();
-var dateModule = (function () {    
-    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sem", "Okt", "Nov", "Dec"];
+let dateModule = (function () {    
+    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sem", "Okt", "Nov", "Dec"];
 
     return {
         getDate: function (date) {
-            var currentDate = new Date();
-            var dateString = "";
+            let currentDate = new Date();
+            let dateString = "";
             if (date.toDateString() !== currentDate.toDateString()) {
                 if (date === currentDate.getDate() - 1) {
                     dateString = "Tomorrow";
@@ -1282,31 +1356,31 @@ var dateModule = (function () {
                     }
                 }
             } else {
-                var minutes = date.getMinutes().toString();
+                let minutes = date.getMinutes().toString();
                 dateString = date.getHours() + ":" + (minutes.length === 2 ? minutes : "0" + minutes);
             }
             return dateString;
         }
     };
 })();
-var signalRModule = (function () {
-    var url = "/messageHub";
-    var connection;
-    var timeToReconnect;
-    var tryReconnectingCount;
-    var isClosedByClient;
-    var pingTime;
-    var _api;
-    var _fingerprint;
-    var _dialogs;
-    var _connectionGui;
-    var _accountGui;    
+let signalRModule = (function () {
+    let url = "/messageHub";
+    let connection;
+    let timeToReconnect;
+    let tryReconnectingCount;
+    let isClosedByClient;
+    let pingTime;
+    let _api;
+    let _fingerprint;
+    let _dialogs;
+    let _connectionGui;
+    let _accountGui;    
 
-    var auth = function () {
+    let auth = function () {
         connection.invoke("Authorize", localStorage.getItem("MAT"), _fingerprint);
     };   
 
-    var startConnection = function () {
+    let startConnection = function () {
         if (connection !== null && _fingerprint !== "" && connection.connectionState !== 1) {
             connecting();
             connection.start()
@@ -1325,7 +1399,7 @@ var signalRModule = (function () {
         }
     };
 
-    var initHandlers = function () {
+    let initHandlers = function () {
         connection.onclose(() => {
             if (isClosedByClient || _fingerprint === "") return;
             console.log("lost connection");
@@ -1338,9 +1412,9 @@ var signalRModule = (function () {
         });
 
         connection.on("RecieveMessage", function (serverMessage) {
-            var sm = JSON.parse(serverMessage);
-            var message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
-            var dialog = _dialogs.getDialogById(message.dialogId);
+            let sm = JSON.parse(serverMessage);
+            let message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
+            let dialog = _dialogs.getDialogById(message.dialogId);
             if (dialog !== undefined && dialog !== null) {
                 dialog.addNewMessage(message);
             } else {
@@ -1352,10 +1426,10 @@ var signalRModule = (function () {
         });
 
         connection.on("MessageWasReaded", function (dialogId, messageId) {
-            var dialog = _dialogs.getDialogById(dialogId);
+            let dialog = _dialogs.getDialogById(dialogId);
             if (dialog !== undefined) {
-                var messages = dialog.messages;
-                for (var i = messages.length; i > 0; i--) {
+                let messages = dialog.messages;
+                for (let i = messages.length; i > 0; i--) {
                     if (messages[i].id === messageId) {
                         SetAsReaded(messages[i].element.firstChild);//!!
                         console.log("man read: " + messages[i].text);
@@ -1377,19 +1451,19 @@ var signalRModule = (function () {
         });
     };
 
-    var connected = function () {
+    let connected = function () {
         console.log("connected");
         tryReconnectingCount = -1;
         _connectionGui.showConnected();
         auth();        
     };
 
-    var connecting = function () {
+    let connecting = function () {
         console.log("connecting...");
         _connectionGui.showConnecting();        
     };
 
-    var disconnected = function () {
+    let disconnected = function () {
         console.log("disconnected");
         _connectionGui.showDisconnected();
     };
@@ -1423,12 +1497,12 @@ var signalRModule = (function () {
     };
 })();
 
-var connectionGuiModule = (function () {
-    var connectingInfo;
-    var connectedInfo;
-    var disconnectedInfo;
+let connectionGuiModule = (function () {
+    let connectingInfo;
+    let connectedInfo;
+    let disconnectedInfo;
 
-    var hideConnectInfo = function () {
+    let hideConnectInfo = function () {
         connectingInfo.style.display = "none";
         connectedInfo.style.display = "none";
     };
@@ -1460,8 +1534,8 @@ var connectionGuiModule = (function () {
         }
     };
 })();
-var settingsModule = (function () {
-    var _guiManager;
+let settingsModule = (function () {
+    let _guiManager;
     return {
         init: function (guiManager) {
             _guiManager = guiManager;
@@ -1470,16 +1544,16 @@ var settingsModule = (function () {
     };
 })();
 
-var settingsGuiModule = (function () {
-    var settingsPanel;
-    var settingPanelSlider;
-    var settingsContainers;
-    var isPanelOpened = false;
-    var hideWidth;
+let settingsGuiModule = (function () {
+    let settingsPanel;
+    let settingPanelSlider;
+    let settingsContainers;
+    let isPanelOpened = false;
+    let hideWidth;
 
-    var initSettingsPanel = function () {
-        for (var i = 0; i < settingsContainers.length; i++) {
-            var inner = settingsContainers[i].children[1];
+    let initSettingsPanel = function () {
+        for (let i = 0; i < settingsContainers.length; i++) {
+            let inner = settingsContainers[i].children[1];
             settingsContainers[i].children[0].onclick = function () {
                 $(inner).slideToggle("slow");
             };
@@ -1510,33 +1584,35 @@ var settingsGuiModule = (function () {
         getSettingsPanelSlider: function () { return settingPanelSlider; }
     }
 })();
-var accountGui = accountGuiModule;
-var account = accountModule;
-var loginForm = loginFormModule;
-var regForm = registrationFormModule;
-var dialogs = dialogsModule;
-var dialog = dialogModule;
-var message = messageModule;
-var dialogsGui = dialogsGuiModule;
-var dialogGui = dialogGuiModule;
-var date = dateModule;
-var api = apiModule;
-var signalRConnection = signalRModule;
-var connectionGui = connectionGuiModule;
-var user = userModule;
-var userGui = userGuiModule;
-var session = sessionModule;
-var sessionGui = sessionGuiModule;
-var settings = settingsModule;
-var settingsGui = settingsGuiModule;
-var crypto = cryptoModule;
+let accountGui = accountGuiModule;
+let account = accountModule;
+let loginForm = loginFormModule;
+let regForm = registrationFormModule;
+let dialogs = dialogsModule;
+let dialog = dialogModule;
+let message = messageModule;
+let dialogsGui = dialogsGuiModule;
+let dialogGui = dialogGuiModule;
+let date = dateModule;
+let api = apiModule;
+let signalRConnection = signalRModule;
+let connectionGui = connectionGuiModule;
+let user = userModule;
+let userGui = userGuiModule;
+let session = sessionModule;
+let sessionGui = sessionGuiModule;
+let settings = settingsModule;
+let settingsGui = settingsGuiModule;
+let crypto = cryptoModule;
 
 function init() {
     dialogsGui.showUploading();
-    api.getDialogs(dialogs.getDialogsOffset(), 20, (data) => {
+    api.getDialogs(dialogs.getDialogsOffset(), 20).then(data => {
         signalRConnection.startConnection();
-        dialogs.updateDialogs(dialog.createDialogs(data));        
+        dialogs.updateDialogs(dialog.createDialogs(data));
         dialogsGui.hideUploading();
+    }, error => {
+        console.log(error);
     });
 }
 
@@ -1560,8 +1636,8 @@ function initModules(fingerprint) {
 
 function main() {
     Fingerprint2.get(function(components) {
-        var values = components.map(function (component) { return component.value; });
-        var fingerprint = Fingerprint2.x64hash128(values.join(''), 31);
+        let values = components.map(function (component) { return component.value; });
+        let fingerprint = Fingerprint2.x64hash128(values.join(''), 31);
         initModules(fingerprint);        
         
         if (api.areTokensValid()) {

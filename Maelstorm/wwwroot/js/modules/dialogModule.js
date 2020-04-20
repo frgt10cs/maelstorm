@@ -81,11 +81,11 @@
     };  
 
     let uploadUnreadedMessages = function () {
-        _api.getUnreadedMessages(dialogContext.id, _uploadCount, unreadedMessagesHandler);
+        _api.getUnreadedMessages(dialogContext.id, _uploadCount).then(messages => { unreadedMessagesHandler(messages); }, error => { console.log(error); });
     };
 
     let uploadReadedMessages = function () {
-        _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount, readedMessagesHandler);
+        _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount).then(messages => { readedMessagesHandler(messages); }, error => { console.log(error); });
     };
 
     let createDialog = function (serverDialog) {      
@@ -149,7 +149,7 @@
     };
 
     var updateInterlocutorStatus = function () {
-        _api.getOnlineStatuses([dialogContext.interlocutorId], function (statuses) {
+        _api.getOnlineStatuses([dialogContext.interlocutorId]).then(statuses => {
             _guiManager.getDialogStatusDiv().innerText = statuses[0].isOnline ? "online" : "offline";
         });
     };
