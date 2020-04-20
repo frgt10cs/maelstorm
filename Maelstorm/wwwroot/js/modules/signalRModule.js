@@ -1,21 +1,21 @@
-﻿var signalRModule = (function () {
-    var url = "/messageHub";
-    var connection;
-    var timeToReconnect;
-    var tryReconnectingCount;
-    var isClosedByClient;
-    var pingTime;
-    var _api;
-    var _fingerprint;
-    var _dialogs;
-    var _connectionGui;
-    var _accountGui;    
+﻿let signalRModule = (function () {
+    let url = "/messageHub";
+    let connection;
+    let timeToReconnect;
+    let tryReconnectingCount;
+    let isClosedByClient;
+    let pingTime;
+    let _api;
+    let _fingerprint;
+    let _dialogs;
+    let _connectionGui;
+    let _accountGui;    
 
-    var auth = function () {
+    let auth = function () {
         connection.invoke("Authorize", localStorage.getItem("MAT"), _fingerprint);
     };   
 
-    var startConnection = function () {
+    let startConnection = function () {
         if (connection !== null && _fingerprint !== "" && connection.connectionState !== 1) {
             connecting();
             connection.start()
@@ -34,7 +34,7 @@
         }
     };
 
-    var initHandlers = function () {
+    let initHandlers = function () {
         connection.onclose(() => {
             if (isClosedByClient || _fingerprint === "") return;
             console.log("lost connection");
@@ -47,9 +47,9 @@
         });
 
         connection.on("RecieveMessage", function (serverMessage) {
-            var sm = JSON.parse(serverMessage);
-            var message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
-            var dialog = _dialogs.getDialogById(message.dialogId);
+            let sm = JSON.parse(serverMessage);
+            let message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
+            let dialog = _dialogs.getDialogById(message.dialogId);
             if (dialog !== undefined && dialog !== null) {
                 dialog.addNewMessage(message);
             } else {
@@ -61,10 +61,10 @@
         });
 
         connection.on("MessageWasReaded", function (dialogId, messageId) {
-            var dialog = _dialogs.getDialogById(dialogId);
+            let dialog = _dialogs.getDialogById(dialogId);
             if (dialog !== undefined) {
-                var messages = dialog.messages;
-                for (var i = messages.length; i > 0; i--) {
+                let messages = dialog.messages;
+                for (let i = messages.length; i > 0; i--) {
                     if (messages[i].id === messageId) {
                         SetAsReaded(messages[i].element.firstChild);//!!
                         console.log("man read: " + messages[i].text);
@@ -86,19 +86,19 @@
         });
     };
 
-    var connected = function () {
+    let connected = function () {
         console.log("connected");
         tryReconnectingCount = -1;
         _connectionGui.showConnected();
         auth();        
     };
 
-    var connecting = function () {
+    let connecting = function () {
         console.log("connecting...");
         _connectionGui.showConnecting();        
     };
 
-    var disconnected = function () {
+    let disconnected = function () {
         console.log("disconnected");
         _connectionGui.showDisconnected();
     };
@@ -132,12 +132,12 @@
     };
 })();
 
-var connectionGuiModule = (function () {
-    var connectingInfo;
-    var connectedInfo;
-    var disconnectedInfo;
+let connectionGuiModule = (function () {
+    let connectingInfo;
+    let connectedInfo;
+    let disconnectedInfo;
 
-    var hideConnectInfo = function () {
+    let hideConnectInfo = function () {
         connectingInfo.style.display = "none";
         connectedInfo.style.display = "none";
     };

@@ -1,23 +1,23 @@
-var accountGui = accountGuiModule;
-var account = accountModule;
-var loginForm = loginFormModule;
-var regForm = registrationFormModule;
-var dialogs = dialogsModule;
-var dialog = dialogModule;
-var message = messageModule;
-var dialogsGui = dialogsGuiModule;
-var dialogGui = dialogGuiModule;
-var date = dateModule;
-var api = apiModule;
-var signalRConnection = signalRModule;
-var connectionGui = connectionGuiModule;
-var user = userModule;
-var userGui = userGuiModule;
-var session = sessionModule;
-var sessionGui = sessionGuiModule;
-var settings = settingsModule;
-var settingsGui = settingsGuiModule;
-var crypto = cryptoModule;
+let accountGui = accountGuiModule;
+let account = accountModule;
+let loginForm = loginFormModule;
+let regForm = registrationFormModule;
+let dialogs = dialogsModule;
+let dialog = dialogModule;
+let message = messageModule;
+let dialogsGui = dialogsGuiModule;
+let dialogGui = dialogGuiModule;
+let date = dateModule;
+let api = apiModule;
+let signalRConnection = signalRModule;
+let connectionGui = connectionGuiModule;
+let user = userModule;
+let userGui = userGuiModule;
+let session = sessionModule;
+let sessionGui = sessionGuiModule;
+let settings = settingsModule;
+let settingsGui = settingsGuiModule;
+let crypto = cryptoModule;
 
 function init() {
     dialogsGui.showUploading();
@@ -48,8 +48,8 @@ function initModules(fingerprint) {
 
 function main() {
     Fingerprint2.get(function(components) {
-        var values = components.map(function (component) { return component.value; });
-        var fingerprint = Fingerprint2.x64hash128(values.join(''), 31);
+        let values = components.map(function (component) { return component.value; });
+        let fingerprint = Fingerprint2.x64hash128(values.join(''), 31);
         initModules(fingerprint);        
         
         if (api.areTokensValid()) {

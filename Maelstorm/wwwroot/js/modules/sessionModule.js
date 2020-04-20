@@ -1,35 +1,35 @@
-﻿var sessionModule = (function () {
-    var _api;
-    var _guiManager;        
+﻿let sessionModule = (function () {
+    let _api;
+    let _guiManager;        
 
-    var closeSession = function (sessionId) {
+    let closeSession = function (sessionId) {
         _api.closeSession(sessionId, false);        
     };
 
-    var banSession = function (sessionId) {
+    let banSession = function (sessionId) {
         _api.closeSession(sessionId, true);
     };
 
-    var uploadSessions = function () {
+    let uploadSessions = function () {
         _api.getSessions(function (sessions) {
             _guiManager.clearSessionsContainer();
-            for (var i = 0; i < sessions.length; i++) {
+            for (let i = 0; i < sessions.length; i++) {
                 _guiManager.appendSession(createSessionDiv(sessions[i]));
             }
         });
     };
 
-    var createElement = function (element, className = "", inner = "") {
-        var newElement = document.createElement(element);
+    let createElement = function (element, className = "", inner = "") {
+        let newElement = document.createElement(element);
         newElement.classList.add(className);
         newElement.innerText = inner;
         return newElement;
     };
 
-    var createSessionDiv = function (session) {
-        var sessionDate = new Date(session.session.createdAt);
-        var dateString = sessionDate.getDate() + "." + (sessionDate.getMonth() + 1) + "." + sessionDate.getFullYear();
-        var container = createElement("div", "sessionContainer"),
+    let createSessionDiv = function (session) {
+        let sessionDate = new Date(session.session.createdAt);
+        let dateString = sessionDate.getDate() + "." + (sessionDate.getMonth() + 1) + "." + sessionDate.getFullYear();
+        let container = createElement("div", "sessionContainer"),
             imageBox = createElement("div", "sessionImage"),
             mainInfo = createElement("div", "sessionMainInfo"),
             info = createElement("div", "sessionInfo"),
@@ -80,11 +80,11 @@
     };
 })();
 
-var sessionGuiModule = (function () {
-    var sessionsContainer;
-    var loadSessionsBtn;    
+let sessionGuiModule = (function () {
+    let sessionsContainer;
+    let loadSessionsBtn;    
 
-    var clearSessionsContainer = function () {
+    let clearSessionsContainer = function () {
         while (sessionsContainer.firstChild) {
             sessionsContainer.removeChild(sessionsContainer.firstChild);
         }

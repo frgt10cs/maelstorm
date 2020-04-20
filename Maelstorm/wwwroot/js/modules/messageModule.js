@@ -1,20 +1,20 @@
-﻿var messageModule = (function () {           
+﻿let messageModule = (function () {           
 
-    var setElement = function (message, isFromOther) {
-        var mesBlock = document.createElement("div");
+    let setElement = function (message, isFromOther) {
+        let mesBlock = document.createElement("div");
         mesBlock.className = "messageContainer mt-2 overflow-hidden";
         mesBlock.id = message.id;
 
-        var messageDiv = document.createElement("div");
+        let messageDiv = document.createElement("div");
         messageDiv.className = "message text-white px-2 py-1 mw-75 rounded d-inline-block float-right bg-dark-6";
 
-        var messageText = document.createElement("div");
+        let messageText = document.createElement("div");
         message.className = "messageText text-break";
         messageText.innerText = message.text;
 
         messageDiv.appendChild(messageText);
         if (!isFromOther) {
-            var statusDiv = document.createElement("div");
+            let statusDiv = document.createElement("div");
             statusDiv.className = "messageStatus float-right";
             messageDiv.appendChild(statusDiv);
             message.statusDiv = statusDiv;
@@ -25,12 +25,12 @@
         message.element = mesBlock;
     };
 
-    var setStatus = function (message, status) {
+    let setStatus = function (message, status) {
         message.status = status;
         updateStatus(message);
     };
 
-    var updateStatus = function (message) {        
+    let updateStatus = function (message) {        
         switch (message.status) {
             case -1:
                 message.statusDiv.style.backgroundImage = "url(/images/notConfirmed.png)";
@@ -45,7 +45,7 @@
     };
 
     // more
-    var setText = function (message, text) {
+    let setText = function (message, text) {
         if (!isEmptyOrSpaces(text)) {
             text = text.trim();
             text = text.replace(/\s\s+/g, ' ');
@@ -53,7 +53,7 @@
         }
     };
 
-    var isEmptyOrSpaces = function (str) {
+    let isEmptyOrSpaces = function (str) {
         return str === null || str.match(/^ *$/) !== null;
     };
 

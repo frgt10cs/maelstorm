@@ -1,8 +1,8 @@
-﻿var cryptoModule = (function () {
-    var _encoding;
+﻿let cryptoModule = (function () {
+    let _encoding;
 
-    var validatePassphrase = function (passphrase, length) {
-        var requiredLength = length / 8;
+    let validatePassphrase = function (passphrase, length) {
+        let requiredLength = length / 8;
         if (passphrase.length < requiredLength)
             passphrase = passphrase + passphrase.substring(0, requiredLength - passphrase.length);
         else if (passphrase.length > requiredLength)
@@ -21,7 +21,7 @@
 
         genereateAesKeyByPassPhrase: function(passphrase, length) {
             passphrase = validatePassphrase(passphrase, length);
-            var keyBytes = getBytes(passphrase);
+            let keyBytes = getBytes(passphrase);
             return window.crypto.subtle.importKey(
                 "raw",
                 keyBytes,
@@ -32,7 +32,7 @@
         },
 
         encryptAes: function(aesKey, iv, plainText) {
-            var dataBytes = _encoding.getBytes(plainText);
+            let dataBytes = _encoding.getBytes(plainText);
             return window.crypto.subtle.encrypt({
                 name: "AES-CBC",                
                 iv: iv,
@@ -41,7 +41,7 @@
         },
 
         decryptAes: function(aesKey, iv, encryptedDataBase64) {
-            var encryptedBytes = _encoding.base64ToArray(encryptedDataBase64);
+            let encryptedBytes = _encoding.base64ToArray(encryptedDataBase64);
             return window.crypto.subtle.decrypt({
                 name: "AES-CBC",
                 iv: iv,

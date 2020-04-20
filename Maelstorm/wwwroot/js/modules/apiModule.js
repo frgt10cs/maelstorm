@@ -7,28 +7,28 @@
     }
 }
 
-var apiModule = (function () {
-    var _fingerprint;
+let apiModule = (function () {
+    let _fingerprint;
 
-    var accessTokenGenerationTime;
+    let accessTokenGenerationTime;
 
-    var areTokensValid = function () {
-        var token = localStorage.getItem("MAT");
-        var refreshToken = localStorage.getItem("MRT");
+    let areTokensValid = function () {
+        let token = localStorage.getItem("MAT");
+        let refreshToken = localStorage.getItem("MRT");
         return token !== null && refreshToken !== null && token !== undefined && refreshToken !== undefined && token !== "" && refreshToken !== "";
     };
 
-    var updateTokenTime = function (time) {
-        var value = new Date(time).getTime();
+    let updateTokenTime = function (time) {
+        let value = new Date(time).getTime();
         localStorage.setItem("ATGT", value);
         accessTokenGenerationTime = value;
     };
 
-    var isTokenExpired = function () {
+    let isTokenExpired = function () {
         return new Date().getTime() - accessTokenGenerationTime > 300000;
     };
 
-    var sendRequest = function (request) {
+    let sendRequest = function (request) {
         if (!isTokenExpired()) {
             $.ajax({
                 url: request.url,
@@ -37,7 +37,7 @@ var apiModule = (function () {
                 dataType: "json",
                 data: request.type === "POST" ? JSON.stringify(request.data) : null,
                 beforeSend: function (xhr) {
-                    var token = localStorage.getItem("MAT");
+                    let token = localStorage.getItem("MAT");
                     if (token !== undefined) {
                         xhr.setRequestHeader("Authorization", "Bearer " + token);
                     }
@@ -60,11 +60,11 @@ var apiModule = (function () {
         }
     };
 
-    var refreshToken = function (request) {
-        var token = localStorage.getItem("MAT");
-        var refreshToken = localStorage.getItem("MRT");
+    let refreshToken = function (request) {
+        let token = localStorage.getItem("MAT");
+        let refreshToken = localStorage.getItem("MRT");
         if (areTokensValid() && isTokenExpired()) {
-            var refresh = JSON.stringify({
+            let refresh = JSON.stringify({
                 token: token,
                 refreshtoken: refreshToken,
                 fingerPrint: _fingerprint
@@ -78,7 +78,7 @@ var apiModule = (function () {
                 success: function (data) {
                     console.log(data);
                     if (data.isSuccessful) {
-                        var tokens = JSON.parse(data.data);
+                        let tokens = JSON.parse(data.data);
                         localStorage.setItem("MAT", tokens.AccessToken);
                         localStorage.setItem("MRT", tokens.RefreshToken);
                         updateTokenTime(tokens.GenerationTime);
@@ -94,17 +94,17 @@ var apiModule = (function () {
         }
     };
 
-    var isEmptyOrSpaces = function (str) {
+    let isEmptyOrSpaces = function (str) {
         return str === null || str.match(/^ *$/) !== null;
     }; 
 
-    var getOS = function () {
-        var userAgent = window.navigator.userAgent;
-        var platform = window.navigator.platform;
-        var macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
-        var windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
-        var iosPlatforms = ['iPhone', 'iPad', 'iPod'];
-        var os = "Unknown";
+    let getOS = function () {
+        let userAgent = window.navigator.userAgent;
+        let platform = window.navigator.platform;
+        let macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
+        let windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
+        let iosPlatforms = ['iPhone', 'iPad', 'iPod'];
+        let os = "Unknown";
 
         if (macosPlatforms.indexOf(platform) !== -1) {
             os = 'Mac OS';
@@ -120,8 +120,8 @@ var apiModule = (function () {
         return os;
     };
 
-    var getBrowser = function () {
-        var ua = navigator.userAgent,
+    let getBrowser = function () {
+        let ua = navigator.userAgent,
             tem,
             M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
         if (/trident/i.test(M[1])) {
@@ -175,7 +175,7 @@ var apiModule = (function () {
         },
 
         login: function(login, password, onSuccess, onFailed) {
-            var model = {
+            let model = {
                 email: login,
                 password: password,
                 osCpu: getOS(),
@@ -190,7 +190,7 @@ var apiModule = (function () {
                 dataType: "json",
                 success: function (data) {
                     if (data.isSuccessful) {
-                        var result = JSON.parse(data.data);
+                        let result = JSON.parse(data.data);
                         localStorage.setItem("MAT", result.Tokens.AccessToken);
                         localStorage.setItem("MRT", result.Tokens.RefreshToken);
                         localStorage.setItem("IV", result.IVBase64);
@@ -207,7 +207,7 @@ var apiModule = (function () {
         registration: function(nickname, email, password, confirmPassword, onSuccess, onFailed) {
             if (!isEmptyOrSpaces(nickname) && !isEmptyOrSpaces(email) && !isEmptyOrSpaces(password) && !isEmptyOrSpaces(confirmPassword)) {
                 if (password === confirmPassword) {
-                    var model = {
+                    let model = {
                         nickname: nickname,
                         email: email,
                         password: password,
@@ -246,7 +246,7 @@ var apiModule = (function () {
         },
 
         closeSession: function(sessionId, banDevice) {
-            var data = { sessionId: sessionId, banDevice: banDevice };
+            let data = { sessionId: sessionId, banDevice: banDevice };
             sendRequest(new MaelstormRequest("/api/user/closeSession", null, "POST", data));
         },
 

@@ -1,9 +1,9 @@
-﻿var accountModule = (function () {
-    var _api;
-    var _guiManager;    
-    var _onLogin;
+﻿let accountModule = (function () {
+    let _api;
+    let _guiManager;    
+    let _onLogin;
 
-    var login = function () {
+    let login = function () {
         if (_guiManager.getLoginForm().isDataValid()) {
             _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword(),
                 () => {                    
@@ -16,7 +16,7 @@
         }   
     };
 
-    var registration = function () {
+    let registration = function () {
         if (_guiManager.getRegForm().isDataValid()) {
             _api.registration(_guiManager.getRegForm().getLogin(),
                 _guiManager.getRegForm().getEmail(),
@@ -27,7 +27,7 @@
         }  
     };
 
-    var logout = function () {
+    let logout = function () {
         _api.logOut();
         _guiManager.openLogin();
     };
@@ -44,10 +44,10 @@
     };
 })();
 
-var loginFormModule = (function () {
+let loginFormModule = (function () {
 
-    var form;
-    var loginField,
+    let form;
+    let loginField,
         passwordField,
         loginBtn;      
 
@@ -67,9 +67,9 @@ var loginFormModule = (function () {
     };
 }());
 
-var registrationFormModule = (function () {
-    var form;
-    var loginField,
+let registrationFormModule = (function () {
+    let form;
+    let loginField,
         emailField,
         passwordField,
         passwordConfirmField,
@@ -95,21 +95,21 @@ var registrationFormModule = (function () {
     };
 })();
 
-var accountGuiModule = (function () {
-    var _loginForm;
-    var _regForm;
-    var logoutBtn;
-    var openLoginBtn,
+let accountGuiModule = (function () {
+    let _loginForm;
+    let _regForm;
+    let logoutBtn;
+    let openLoginBtn,
         openRegistrationBtn,                
         dark;
 
-    var openRegistration = function () {
+    let openRegistration = function () {
         dark.style.display = "block";
         _loginForm.hide();
         _regForm.open();
     };
 
-    var openLogin = function () {
+    let openLogin = function () {
         dark.style.display = "block";
         _regForm.hide();
         _loginForm.open();

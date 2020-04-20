@@ -1,11 +1,11 @@
-﻿var dialogsModule = (function () {  
-    var _api;
-    var _guiManager;    
-    var _dialog;
-    var openedDialog;
-    var dialogs;               
+﻿let dialogsModule = (function () {  
+    let _api;
+    let _guiManager;    
+    let _dialog;
+    let openedDialog;
+    let dialogs;               
 
-    var removeDialogs = function () {        
+    let removeDialogs = function () {        
         while (_guiManager.getDialogsContainer().firstChild) {
             _guiManager.getDialogsContainer().firstChild.remove();
         }
@@ -14,14 +14,14 @@
         openedDialog = null;
     };             
 
-    var addDialog = function (dialog) {        
+    let addDialog = function (dialog) {        
         dialog.element.onclick = function () { openDialog(dialog); };
         _guiManager.getDialogsContainer().appendChild(dialog.element);
         _guiManager.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
         dialogs.push(dialog);        
     };
 
-    var openDialog = function (dialog) {
+    let openDialog = function (dialog) {
         if (openedDialog === null || openedDialog.id !== dialog.id) {
             if (openedDialog !== null) {
                 openedDialog.messagesPanel.style.display = "none";
@@ -32,8 +32,8 @@
         }
     };
 
-    var openOrCreateDialog = function (userInfo) {
-        var dialog = getDialogByInterlocutorId(userInfo.id);
+    let openOrCreateDialog = function (userInfo) {
+        let dialog = getDialogByInterlocutorId(userInfo.id);
         if (dialog !== null && dialog !== undefined) {
             openDialog(dialog);
         } else {
@@ -45,7 +45,7 @@
         }
     };
 
-    var getDialogByInterlocutorId = function (interlocutorId) {
+    let getDialogByInterlocutorId = function (interlocutorId) {
         return dialogs.find(function (dialog) { return dialog.interlocutorId === interlocutorId; });
     };
 
@@ -70,7 +70,7 @@
 
         updateDialogs: function (dialogs) {
             removeDialogs();
-            for (var i = 0; i < dialogs.length; i++) {                
+            for (let i = 0; i < dialogs.length; i++) {                
                 addDialog(dialogs[i]);
             }
             dialogsStackNumber++;
@@ -82,7 +82,7 @@
         openOrCreateDialog: openOrCreateDialog,
 
         isDialogUploaded: function (interlocutorId) {
-            var dialog = getDialogByInterlocutorId(interlocutorId);
+            let dialog = getDialogByInterlocutorId(interlocutorId);
             return dialog !== null && dialog !== undefined;
         },
 
@@ -90,9 +90,9 @@
     };
 })();
 
-var dialogsGuiModule = (function () {
+let dialogsGuiModule = (function () {
 
-    var dialogsContainer,
+    let dialogsContainer,
         messagesPanelsContainer,
         uploadingInfo,        
         dark;        

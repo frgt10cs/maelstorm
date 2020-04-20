@@ -1,11 +1,11 @@
-﻿var userModule = (function () {
-    var _api;
-    var _guiManager;  
-    var _dialogs;
-    var prevSearch;
-    var openedUserInfo;
+﻿let userModule = (function () {
+    let _api;
+    let _guiManager;  
+    let _dialogs;
+    let prevSearch;
+    let openedUserInfo;
 
-    var getUserInfo = function (userId) {
+    let getUserInfo = function (userId) {
         _api.getUserInfo(userId, function (userInfo) {
             openedUserInfo = userInfo;
             _guiManager.setUserInfo(userInfo);
@@ -13,17 +13,17 @@
         });
     };
 
-    var createUserFoundElement = function (user) {
-        var box = document.createElement("div");
+    let createUserFoundElement = function (user) {
+        let box = document.createElement("div");
         box.classList.add("userPreviewInner");
         box.onclick = function () {
             getUserInfo(user.id);            
         };
-        var imageBox = document.createElement("div");
+        let imageBox = document.createElement("div");
         imageBox.style.backgroundImage = "url('/images/" + user.miniAvatar + "')";
         imageBox.classList.add("userPreviewAvatar");
         box.appendChild(imageBox);
-        var nicknameBox = document.createElement("div");
+        let nicknameBox = document.createElement("div");
         nicknameBox.textContent = user.nickname;
         nicknameBox.classList.add("userPreviewNickname");
         box.appendChild(nicknameBox);
@@ -31,13 +31,13 @@
         return box;        
     };
 
-    var findUserByNickname = function () {
-        var nickname = _guiManager.getUserFindValue();
+    let findUserByNickname = function () {
+        let nickname = _guiManager.getUserFindValue();
         if (nickname !== prevSearch) {
             _api.findByNickname(nickname, function (users) {
                 _guiManager.clearUserResultsInnner();
                 if (users.length > 0) {
-                    for (var i = 0; i < users.length; i++) {
+                    for (let i = 0; i < users.length; i++) {
                         _guiManager.appendUserFound(createUserFoundElement(users[i]));
                     }
                 } else {
@@ -64,18 +64,18 @@
     };
 })();
 
-var userGuiModule = (function () {
-    var userFindTextBox;
-    var userResultsInner;
-    var findUserBtn;
-    var userInfoPanel;
-    var userInfoNicknameBox;
-    var userInfoAvatarBox;
-    var userInfoStatusBox;
-    var userInfoOnlineStatusBox;
-    var userInfoOpenDialog;
-    var closeUserInfoBtn;
-    var dark;          
+let userGuiModule = (function () {
+    let userFindTextBox;
+    let userResultsInner;
+    let findUserBtn;
+    let userInfoPanel;
+    let userInfoNicknameBox;
+    let userInfoAvatarBox;
+    let userInfoStatusBox;
+    let userInfoOnlineStatusBox;
+    let userInfoOpenDialog;
+    let closeUserInfoBtn;
+    let dark;          
 
     return {
         init: function () {

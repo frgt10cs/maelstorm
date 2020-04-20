@@ -1,9 +1,9 @@
-var accountModule = (function () {
-    var _api;
-    var _guiManager;    
-    var _onLogin;
+let accountModule = (function () {
+    let _api;
+    let _guiManager;    
+    let _onLogin;
 
-    var login = function () {
+    let login = function () {
         if (_guiManager.getLoginForm().isDataValid()) {
             _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword(),
                 () => {                    
@@ -16,7 +16,7 @@ var accountModule = (function () {
         }   
     };
 
-    var registration = function () {
+    let registration = function () {
         if (_guiManager.getRegForm().isDataValid()) {
             _api.registration(_guiManager.getRegForm().getLogin(),
                 _guiManager.getRegForm().getEmail(),
@@ -27,7 +27,7 @@ var accountModule = (function () {
         }  
     };
 
-    var logout = function () {
+    let logout = function () {
         _api.logOut();
         _guiManager.openLogin();
     };
@@ -44,10 +44,10 @@ var accountModule = (function () {
     };
 })();
 
-var loginFormModule = (function () {
+let loginFormModule = (function () {
 
-    var form;
-    var loginField,
+    let form;
+    let loginField,
         passwordField,
         loginBtn;      
 
@@ -67,9 +67,9 @@ var loginFormModule = (function () {
     };
 }());
 
-var registrationFormModule = (function () {
-    var form;
-    var loginField,
+let registrationFormModule = (function () {
+    let form;
+    let loginField,
         emailField,
         passwordField,
         passwordConfirmField,
@@ -95,21 +95,21 @@ var registrationFormModule = (function () {
     };
 })();
 
-var accountGuiModule = (function () {
-    var _loginForm;
-    var _regForm;
-    var logoutBtn;
-    var openLoginBtn,
+let accountGuiModule = (function () {
+    let _loginForm;
+    let _regForm;
+    let logoutBtn;
+    let openLoginBtn,
         openRegistrationBtn,                
         dark;
 
-    var openRegistration = function () {
+    let openRegistration = function () {
         dark.style.display = "block";
         _loginForm.hide();
         _regForm.open();
     };
 
-    var openLogin = function () {
+    let openLogin = function () {
         dark.style.display = "block";
         _regForm.hide();
         _loginForm.open();
@@ -192,25 +192,25 @@ var cryptoModule = (function () {
         }       
     }
 })();
-var dialogModule = (function () {
-    var _api;
-    var _date;
-    var _guiManager;   
-    var _uploadCount;
-    var _message;
-    var onNewMessage;
-    var dialogContext;   
+let dialogModule = (function () {
+    let _api;
+    let _date;
+    let _guiManager;   
+    let _uploadCount;
+    let _message;
+    let onNewMessage;
+    let dialogContext;   
 
-    var appendMessageToBegin = function (message) {
+    let appendMessageToBegin = function (message) {
         dialogContext.messagesPanel.prepend(message.element);
     };
 
-    var appendMessageToEnd = function (message) {
+    let appendMessageToEnd = function (message) {
         dialogContext.messagesPanel.appendChild(message.element);
     };
 
-    var createMessagesPanel = function () {
-        var element = document.createElement("div");
+    let createMessagesPanel = function () {
+        let element = document.createElement("div");
         element.classList.add("conversationMessages");
         element.classList.add("hideScroll");
         element.style.display = "none";
@@ -220,7 +220,7 @@ var dialogModule = (function () {
         return element;
     };
 
-    var onMessagesPanelScroll = function () {
+    let onMessagesPanelScroll = function () {
         if (!dialogContext.uploadingBlocked) {
             if (dialogContext.messagesPanel.scrollTop < 10 && !dialogContext.allReadedUpload) {
                 console.log("old upl");
@@ -236,14 +236,14 @@ var dialogModule = (function () {
         }
     };  
 
-    var isMessageFromOther = function (message) {
+    let isMessageFromOther = function (message) {
         return dialogContext.interlocutorId === message.authorId;
     };
 
-    var unreadedMessagesHandler = function (messages) {
+    let unreadedMessagesHandler = function (messages) {
         if (messages !== null && messages !== undefined && messages.length > 0) {
             if (messages.length < _uploadCount) dialogContext.allUnreadedUpload = true;
-            for (var i = 0; i < messages.length; i++) {
+            for (let i = 0; i < messages.length; i++) {
                 _message.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToEnd(messages[i]);
                 dialogContext.unreadedMessages.push(messages[i]);
@@ -255,12 +255,12 @@ var dialogModule = (function () {
         dialogContext.uploadingBlocked = false;
     };
 
-    var readedMessagesHandler = function (messages) {
+    let readedMessagesHandler = function (messages) {
         if (messages !== null && messages !== undefined && messages.length > 0) {
             if (messages.length < _uploadCount) dialogContext.allReadedUpload = true;
             dialogContext.readedMessagesOffset += messages.length;
-            var resultScrollTop = 0;
-            for (var i = 0; i < messages.length; i++) {
+            let resultScrollTop = 0;
+            for (let i = 0; i < messages.length; i++) {
                 _message.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToBegin(messages[i]);
                 dialogContext.messages.unshift(messages[i]);
@@ -274,15 +274,15 @@ var dialogModule = (function () {
         dialogContext.uploadingBlocked = false;
     };  
 
-    var uploadUnreadedMessages = function () {
+    let uploadUnreadedMessages = function () {
         _api.getUnreadedMessages(dialogContext.id, _uploadCount, unreadedMessagesHandler);
     };
 
-    var uploadReadedMessages = function () {
+    let uploadReadedMessages = function () {
         _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount, readedMessagesHandler);
     };
 
-    var createDialog = function (serverDialog) {      
+    let createDialog = function (serverDialog) {      
         serverDialog.isPanelOpened = false;
         serverDialog.unreadedMessages = [];
         serverDialog.messages = [];
@@ -296,27 +296,27 @@ var dialogModule = (function () {
         return serverDialog;
     };
 
-    var firstDialogMessagesUploading = function () {
+    let firstDialogMessagesUploading = function () {
         uploadReadedMessages();
     };
 
-    var createMessage = function () {
-        var message = {};
+    let createMessage = function () {
+        let message = {};
         _message.setText(message, _guiManager.getMessageText());        
         message.targetId = dialogContext.interlocutorId;
-        var id = dialogContext.unconfirmedMessages.length;
+        let id = dialogContext.unconfirmedMessages.length;
         message.dateOfSending = new Date();
         message.status = -1;
         message.bindId = id;
         return message;
     };
 
-    var sendMessage = function (message) {       
+    let sendMessage = function (message) {       
         addNewMessage(message);
         dialogContext.unconfirmedMessages.push(message);  
         _api.sendDialogMessage(message, (result) => {
-            var info = JSON.parse(result.data);
-            var confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
+            let info = JSON.parse(result.data);
+            let confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
             confirmedMessage.id = info.id;
             confirmedMessage.element.id = info.id;
             confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
@@ -324,9 +324,9 @@ var dialogModule = (function () {
         });              
     };
 
-    var addNewMessage = function (message) {
+    let addNewMessage = function (message) {
         if (dialogContext.isPanelOpened) {            
-            var isFromOther = isMessageFromOther(message);
+            let isFromOther = isMessageFromOther(message);
             _message.setElement(message, isFromOther);            
             if (isFromOther) {
                 dialogContext.unreadedMessages.push(message);
@@ -336,7 +336,7 @@ var dialogModule = (function () {
             }
             appendMessageToEnd(message);
         }        
-        var previewText = dialogContext.element.lastElementChild.children[1].lastElementChild.lastElementChild;
+        let previewText = dialogContext.element.lastElementChild.children[1].lastElementChild.lastElementChild;
         previewText.innerText = message.text;
         dialogContext.element.lastElementChild.lastElementChild.innerText = _date.getDate(new Date(message.dateOfSending));
         onNewMessage(dialogContext);
@@ -381,7 +381,7 @@ var dialogModule = (function () {
 
         createDialogs: function (serverDialogs) {
             var dialogs = [];
-            for (var i = 0; i < serverDialogs.length; i++) {
+            for (let i = 0; i < serverDialogs.length; i++) {
                 dialogs.push(createDialog(serverDialogs[i]));
             }
             return dialogs;
@@ -401,14 +401,14 @@ var dialogModule = (function () {
     };
 })();
 
-var dialogGuiModule = (function () {
+let dialogGuiModule = (function () {
     let _date;
     let dialogTitleDiv;
     let dialogStatusDiv;
     let messageSendBtn;
     let messageTextBox;    
 
-    var smallDeviceMenuInit = function () {
+    let smallDeviceMenuInit = function () {
         let dialogListContainer = document.getElementById("dialogListContainer");
         let openedDialogContainer = document.getElementById("openedDialogContainer");
 
@@ -552,23 +552,23 @@ class Dialog {
         this.messagesPanel.appendChild(message.element);
     }       
 }
-var messageModule = (function () {           
+let messageModule = (function () {           
 
-    var setElement = function (message, isFromOther) {
-        var mesBlock = document.createElement("div");
+    let setElement = function (message, isFromOther) {
+        let mesBlock = document.createElement("div");
         mesBlock.className = "messageContainer mt-2 overflow-hidden";
         mesBlock.id = message.id;
 
-        var messageDiv = document.createElement("div");
+        let messageDiv = document.createElement("div");
         messageDiv.className = "message text-white px-2 py-1 mw-75 rounded d-inline-block float-right bg-dark-6";
 
-        var messageText = document.createElement("div");
+        let messageText = document.createElement("div");
         message.className = "messageText text-break";
         messageText.innerText = message.text;
 
         messageDiv.appendChild(messageText);
         if (!isFromOther) {
-            var statusDiv = document.createElement("div");
+            let statusDiv = document.createElement("div");
             statusDiv.className = "messageStatus float-right";
             messageDiv.appendChild(statusDiv);
             message.statusDiv = statusDiv;
@@ -579,12 +579,12 @@ var messageModule = (function () {
         message.element = mesBlock;
     };
 
-    var setStatus = function (message, status) {
+    let setStatus = function (message, status) {
         message.status = status;
         updateStatus(message);
     };
 
-    var updateStatus = function (message) {        
+    let updateStatus = function (message) {        
         switch (message.status) {
             case -1:
                 message.statusDiv.style.backgroundImage = "url(/images/notConfirmed.png)";
@@ -599,7 +599,7 @@ var messageModule = (function () {
     };
 
     // more
-    var setText = function (message, text) {
+    let setText = function (message, text) {
         if (!isEmptyOrSpaces(text)) {
             text = text.trim();
             text = text.replace(/\s\s+/g, ' ');
@@ -607,7 +607,7 @@ var messageModule = (function () {
         }
     };
 
-    var isEmptyOrSpaces = function (str) {
+    let isEmptyOrSpaces = function (str) {
         return str === null || str.match(/^ *$/) !== null;
     };
 
