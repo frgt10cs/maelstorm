@@ -234,10 +234,10 @@ let apiModule = (function () {
                             let result = JSON.parse(data.data);
                             localStorage.setItem("MAT", result.Tokens.AccessToken);
                             localStorage.setItem("MRT", result.Tokens.RefreshToken);
-                            localStorage.setItem("IV", result.IVBase64);
-                            console.log(result.EncryptedPrivateKey);
+                            localStorage.setItem("IV", result.IVBase64);                                                        
                             updateTokenTime(result.Tokens.GenerationTime);
-                            resolve();
+                            console.log(result);
+                            resolve({ encryptedPrivateKey: result.EncryptedPrivateKey, IV: result.IVBase64 });
                         } else {
                             reject(data.errorMessages);
                         }

@@ -1,5 +1,5 @@
 ﻿let cryptoModule = (function () {
-    let _encoding;
+    let _encoding;    
 
     let validatePassphrase = function (passphrase, length) {
         let requiredLength = length / 8;
@@ -8,6 +8,19 @@
         else if (passphrase.length > requiredLength)
             passphrase = passphrase.substring(0, requiredLength);
         return passphrase;
+    }
+
+    let validateKeyBytes = function (keyBytes, keyLengthRequired) {
+        if (keyBytes.length < keyLengthRequired) {
+            let diff = keyLengthRequired - keyBytes.length;
+            for (let i = 0; i <= diff; i++) {
+
+            }
+
+        } else if (keyBytes.length > keyLengthRequired) {
+            keyBytes.slice(0, keyLengthRequired);
+        }
+        return keyBytes;
     }
 
     return {
@@ -20,8 +33,9 @@
         },
 
         genereateAesKeyByPassPhrase: function(passphrase, length) {
-            passphrase = validatePassphrase(passphrase, length);
-            let keyBytes = getBytes(passphrase);
+            passphrase = validatePassphrase(passphrase, length);            
+            let keyBytes = _encoding.getBytes(passphrase);
+            console.log(keyBytes);
             return window.crypto.subtle.importKey(
                 "raw",
                 keyBytes,
@@ -47,6 +61,6 @@
                 iv: iv,
             },
             aesKey, encryptedBytes);
-        }       
+        },        
     }
 })();

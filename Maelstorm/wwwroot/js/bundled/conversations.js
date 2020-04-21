@@ -1,12 +1,32 @@
 let accountModule = (function () {
     let _api;
-    let _guiManager;    
+    let _guiManager;        
+    let _crypto;
+    let _encoding;
+    let userAESKey;
+    let privateKey;
+    let IV;
     let _onLogin;
 
     let login = function () {
         if (_guiManager.getLoginForm().isDataValid()) {
-            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword()).then(() => {
+            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword()).then(keyData => {
+                console.log(keyData);
                 _guiManager.hideAllForms();
+                IV = _encoding.base64ToArray(keyData.IV);                
+                _crypto.genereateAesKeyByPassPhrase(_guiManager.getLoginForm().getPassword(), 128)
+                    .then(aesKey => {
+                        userAESKey = aesKey;
+                        return aesKey;
+                    })
+                    .then(aesKey => {
+                        return _crypto.decryptAes(aesKey, IV, keyData.encryptedPrivateKey);
+                    }) 
+                    .then(key => {
+                        privateKey = key; console.log(key);
+                    }, error => {
+                        console.log(error);
+                    });
                 _onLogin();
             }, error => {
                 console.log(error);
@@ -33,14 +53,20 @@ let accountModule = (function () {
     };
 
     return {
-        init: function (api, guiManager, onLogin) {
+        init: function (api, guiManager, crypto, encoding, onLogin) {
             _api = api;
             _guiManager = guiManager;
+            _crypto = crypto;
+            _encoding = encoding;
             _guiManager.getLoginForm().getSubmitButton().onclick = login;
             _guiManager.getRegForm().getSubmitButton().onclick = registration;
-            _guiManager.getLogoutBtn().onclick = logout;
+            _guiManager.getLogoutBtn().onclick = logout;    
             _onLogin = onLogin;
-        }
+        },
+
+        getPrivateKey: function () {
+            return privateKey;
+        }       
     };
 })();
 
@@ -140,8 +166,39 @@ let accountGuiModule = (function () {
         }
     };
 })();
+let encodingModule = (function () {
+    return {
+        getBytes: function (string) {
+            return new TextEncoder("utf-8").encode(string);            
+        },
+
+        getString: function (uintArray) {
+            return new TextDecoder("utf-8").decode(uintArray);
+        },
+
+        arrayToBase64: function (buffer) {
+            let binary = '';
+            let bytes = new Uint8Array(buffer);
+            let len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        },
+
+        base64ToArray: function(base64) {
+            let binaryString = window.atob(base64);
+            let len = binaryString.length;
+            let bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+        return new Uint8Array(bytes.buffer);
+        }    
+    }
+})();
 let cryptoModule = (function () {
-    let _encoding;
+    let _encoding;    
 
     let validatePassphrase = function (passphrase, length) {
         let requiredLength = length / 8;
@@ -150,6 +207,19 @@ let cryptoModule = (function () {
         else if (passphrase.length > requiredLength)
             passphrase = passphrase.substring(0, requiredLength);
         return passphrase;
+    }
+
+    let validateKeyBytes = function (keyBytes, keyLengthRequired) {
+        if (keyBytes.length < keyLengthRequired) {
+            let diff = keyLengthRequired - keyBytes.length;
+            for (let i = 0; i <= diff; i++) {
+
+            }
+
+        } else if (keyBytes.length > keyLengthRequired) {
+            keyBytes.slice(0, keyLengthRequired);
+        }
+        return keyBytes;
     }
 
     return {
@@ -162,8 +232,9 @@ let cryptoModule = (function () {
         },
 
         genereateAesKeyByPassPhrase: function(passphrase, length) {
-            passphrase = validatePassphrase(passphrase, length);
-            let keyBytes = getBytes(passphrase);
+            passphrase = validatePassphrase(passphrase, length);            
+            let keyBytes = _encoding.getBytes(passphrase);
+            console.log(keyBytes);
             return window.crypto.subtle.importKey(
                 "raw",
                 keyBytes,
@@ -189,7 +260,7 @@ let cryptoModule = (function () {
                 iv: iv,
             },
             aesKey, encryptedBytes);
-        }       
+        },        
     }
 })();
 let dialogModule = (function () {
@@ -1235,10 +1306,10 @@ let apiModule = (function () {
                             let result = JSON.parse(data.data);
                             localStorage.setItem("MAT", result.Tokens.AccessToken);
                             localStorage.setItem("MRT", result.Tokens.RefreshToken);
-                            localStorage.setItem("IV", result.IVBase64);
-                            console.log(result.EncryptedPrivateKey);
+                            localStorage.setItem("IV", result.IVBase64);                                                        
                             updateTokenTime(result.Tokens.GenerationTime);
-                            resolve();
+                            console.log(result);
+                            resolve({ encryptedPrivateKey: result.EncryptedPrivateKey, IV: result.IVBase64 });
                         } else {
                             reject(data.errorMessages);
                         }
@@ -1604,6 +1675,7 @@ let sessionGui = sessionGuiModule;
 let settings = settingsModule;
 let settingsGui = settingsGuiModule;
 let crypto = cryptoModule;
+let encoding = encodingModule;
 
 function init() {
     dialogsGui.showUploading();
@@ -1619,7 +1691,7 @@ function init() {
 function initModules(fingerprint) {
     api.init(fingerprint);
     accountGui.init(loginForm, regForm);
-    account.init(api, accountGui, init);
+    account.init(api, accountGui, crypto, encoding, init);
     dialogsGui.init();
     dialogGui.init(date);
     dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);
@@ -1631,7 +1703,8 @@ function initModules(fingerprint) {
     userGui.init();
     user.init(api, userGui, dialogs);
     settingsGui.init();
-    settings.init(settingsGui);    
+    settings.init(settingsGui);
+    cryptoModule.init(encoding);
 }
 
 function main() {

@@ -18,6 +18,7 @@ let sessionGui = sessionGuiModule;
 let settings = settingsModule;
 let settingsGui = settingsGuiModule;
 let crypto = cryptoModule;
+let encoding = encodingModule;
 
 function init() {
     dialogsGui.showUploading();
@@ -33,7 +34,7 @@ function init() {
 function initModules(fingerprint) {
     api.init(fingerprint);
     accountGui.init(loginForm, regForm);
-    account.init(api, accountGui, init);
+    account.init(api, accountGui, crypto, encoding, init);
     dialogsGui.init();
     dialogGui.init(date);
     dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);
@@ -45,7 +46,8 @@ function initModules(fingerprint) {
     userGui.init();
     user.init(api, userGui, dialogs);
     settingsGui.init();
-    settings.init(settingsGui);    
+    settings.init(settingsGui);
+    cryptoModule.init(encoding);
 }
 
 function main() {

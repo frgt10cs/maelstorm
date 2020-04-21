@@ -1,19 +1,11 @@
-﻿let encoding = (function () {
+﻿let encodingModule = (function () {
     return {
         getBytes: function (string) {
-            string = btoa(unescape(encodeURIComponent(string))),
-                charList = string.split(''),
-                uintArray = [];
-            for (let i = 0; i < charList.length; i++) {
-                uintArray.push(charList[i].charCodeAt(0));
-            }
-            return new Uint8Array(uintArray);
+            return new TextEncoder("utf-8").encode(string);            
         },
 
         getString: function (uintArray) {
-            let encodedString = String.fromCharCode.apply(null, uintArray),
-                decodedString = decodeURIComponent(escape(atob(encodedString)));
-            return decodedString;
+            return new TextDecoder("utf-8").decode(uintArray);
         },
 
         arrayToBase64: function (buffer) {
