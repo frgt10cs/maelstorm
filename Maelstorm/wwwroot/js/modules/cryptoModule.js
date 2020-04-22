@@ -8,20 +8,7 @@
         else if (passphrase.length > requiredLength)
             passphrase = passphrase.substring(0, requiredLength);
         return passphrase;
-    }
-
-    let validateKeyBytes = function (keyBytes, keyLengthRequired) {
-        if (keyBytes.length < keyLengthRequired) {
-            let diff = keyLengthRequired - keyBytes.length;
-            for (let i = 0; i <= diff; i++) {
-
-            }
-
-        } else if (keyBytes.length > keyLengthRequired) {
-            keyBytes.slice(0, keyLengthRequired);
-        }
-        return keyBytes;
-    }
+    }   
 
     return {
         init: function (encoding) {
@@ -34,8 +21,7 @@
 
         genereateAesKeyByPassPhrase: function(passphrase, length) {
             passphrase = validatePassphrase(passphrase, length);            
-            let keyBytes = _encoding.getBytes(passphrase);
-            console.log(keyBytes);
+            let keyBytes = _encoding.getBytes(passphrase);            
             return window.crypto.subtle.importKey(
                 "raw",
                 keyBytes,

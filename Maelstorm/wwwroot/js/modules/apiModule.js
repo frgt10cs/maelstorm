@@ -8,6 +8,9 @@
 
 let apiModule = (function () {
     let _fingerprint;
+    let _crypto;
+    let userPrivateKey;    
+    let userAesKey;
 
     let accessTokenGenerationTime;
 
@@ -160,8 +163,10 @@ let apiModule = (function () {
     };  
 
     return {
-        init: function (fingerprint) {
+        init: function (fingerprint, crypto, encoding) {
             _fingerprint = fingerprint;
+            _crypto = crypto;
+            _encoding = encoding;
             accessTokenGenerationTime = Number(localStorage.getItem("ATGT"));
         },
 
@@ -189,7 +194,7 @@ let apiModule = (function () {
 
         getUnreadedMessages: function (dialogId, count) {
             return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {
+                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {                    
                     resolve(messages);
                 }, error => {
                     reject(error);
@@ -233,11 +238,19 @@ let apiModule = (function () {
                         if (data.isSuccessful) {
                             let result = JSON.parse(data.data);
                             localStorage.setItem("MAT", result.Tokens.AccessToken);
-                            localStorage.setItem("MRT", result.Tokens.RefreshToken);
-                            localStorage.setItem("IV", result.IVBase64);                                                        
+                            localStorage.setItem("MRT", result.Tokens.RefreshToken);                                                                                    
                             updateTokenTime(result.Tokens.GenerationTime);
-                            console.log(result);
-                            resolve({ encryptedPrivateKey: result.EncryptedPrivateKey, IV: result.IVBase64 });
+                            let IV = _encoding.base64ToArray(result.IVBase64);
+                            _crypto.genereateAesKeyByPassPhrase(password, 128)
+                                .then(aesKey => {
+                                    userAesKey = aesKey;
+                                    console.log(aesKey);
+                                    return _crypto.decryptAes(aesKey, IV, result.EncryptedPrivateKey);
+                                }, error => { reject(error); })
+                                .then(privateKey => {
+                                    userPrivateKey = privateKey;
+                                    resolve();
+                                }, error => { reject(error); });                            
                         } else {
                             reject(data.errorMessages);
                         }

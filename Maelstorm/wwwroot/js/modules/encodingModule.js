@@ -1,5 +1,9 @@
 ﻿let encodingModule = (function () {
     return {
+        init: function () {
+
+        },
+
         getBytes: function (string) {
             return new TextEncoder("utf-8").encode(string);            
         },

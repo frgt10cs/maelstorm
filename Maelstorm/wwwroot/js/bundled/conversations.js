@@ -1,36 +1,18 @@
 let accountModule = (function () {
     let _api;
-    let _guiManager;        
-    let _crypto;
-    let _encoding;
-    let userAESKey;
-    let privateKey;
-    let IV;
+    let _guiManager;         
+    let privateKey;    
     let _onLogin;
 
     let login = function () {
         if (_guiManager.getLoginForm().isDataValid()) {
-            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword()).then(keyData => {
-                console.log(keyData);
-                _guiManager.hideAllForms();
-                IV = _encoding.base64ToArray(keyData.IV);                
-                _crypto.genereateAesKeyByPassPhrase(_guiManager.getLoginForm().getPassword(), 128)
-                    .then(aesKey => {
-                        userAESKey = aesKey;
-                        return aesKey;
-                    })
-                    .then(aesKey => {
-                        return _crypto.decryptAes(aesKey, IV, keyData.encryptedPrivateKey);
-                    }) 
-                    .then(key => {
-                        privateKey = key; console.log(key);
-                    }, error => {
-                        console.log(error);
-                    });
-                _onLogin();
-            }, error => {
-                console.log(error);
-            });               
+            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword())
+                .then(() => {                    
+                    _guiManager.hideAllForms();                    
+                    _onLogin();
+                }, error => {
+                    console.log(error);
+                });               
         }   
     };
 
@@ -53,11 +35,9 @@ let accountModule = (function () {
     };
 
     return {
-        init: function (api, guiManager, crypto, encoding, onLogin) {
+        init: function (api, guiManager, onLogin) {
             _api = api;
-            _guiManager = guiManager;
-            _crypto = crypto;
-            _encoding = encoding;
+            _guiManager = guiManager;            
             _guiManager.getLoginForm().getSubmitButton().onclick = login;
             _guiManager.getRegForm().getSubmitButton().onclick = registration;
             _guiManager.getLogoutBtn().onclick = logout;    
@@ -168,6 +148,10 @@ let accountGuiModule = (function () {
 })();
 let encodingModule = (function () {
     return {
+        init: function () {
+
+        },
+
         getBytes: function (string) {
             return new TextEncoder("utf-8").encode(string);            
         },
@@ -207,20 +191,7 @@ let cryptoModule = (function () {
         else if (passphrase.length > requiredLength)
             passphrase = passphrase.substring(0, requiredLength);
         return passphrase;
-    }
-
-    let validateKeyBytes = function (keyBytes, keyLengthRequired) {
-        if (keyBytes.length < keyLengthRequired) {
-            let diff = keyLengthRequired - keyBytes.length;
-            for (let i = 0; i <= diff; i++) {
-
-            }
-
-        } else if (keyBytes.length > keyLengthRequired) {
-            keyBytes.slice(0, keyLengthRequired);
-        }
-        return keyBytes;
-    }
+    }   
 
     return {
         init: function (encoding) {
@@ -233,8 +204,7 @@ let cryptoModule = (function () {
 
         genereateAesKeyByPassPhrase: function(passphrase, length) {
             passphrase = validatePassphrase(passphrase, length);            
-            let keyBytes = _encoding.getBytes(passphrase);
-            console.log(keyBytes);
+            let keyBytes = _encoding.getBytes(passphrase);            
             return window.crypto.subtle.importKey(
                 "raw",
                 keyBytes,
@@ -1080,6 +1050,9 @@ class MaelstormRequest {
 
 let apiModule = (function () {
     let _fingerprint;
+    let _crypto;
+    let userPrivateKey;    
+    let userAesKey;
 
     let accessTokenGenerationTime;
 
@@ -1232,8 +1205,10 @@ let apiModule = (function () {
     };  
 
     return {
-        init: function (fingerprint) {
+        init: function (fingerprint, crypto, encoding) {
             _fingerprint = fingerprint;
+            _crypto = crypto;
+            _encoding = encoding;
             accessTokenGenerationTime = Number(localStorage.getItem("ATGT"));
         },
 
@@ -1261,7 +1236,7 @@ let apiModule = (function () {
 
         getUnreadedMessages: function (dialogId, count) {
             return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {
+                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {                    
                     resolve(messages);
                 }, error => {
                     reject(error);
@@ -1305,11 +1280,19 @@ let apiModule = (function () {
                         if (data.isSuccessful) {
                             let result = JSON.parse(data.data);
                             localStorage.setItem("MAT", result.Tokens.AccessToken);
-                            localStorage.setItem("MRT", result.Tokens.RefreshToken);
-                            localStorage.setItem("IV", result.IVBase64);                                                        
+                            localStorage.setItem("MRT", result.Tokens.RefreshToken);                                                                                    
                             updateTokenTime(result.Tokens.GenerationTime);
-                            console.log(result);
-                            resolve({ encryptedPrivateKey: result.EncryptedPrivateKey, IV: result.IVBase64 });
+                            let IV = _encoding.base64ToArray(result.IVBase64);
+                            _crypto.genereateAesKeyByPassPhrase(password, 128)
+                                .then(aesKey => {
+                                    userAesKey = aesKey;
+                                    console.log(aesKey);
+                                    return _crypto.decryptAes(aesKey, IV, result.EncryptedPrivateKey);
+                                }, error => { reject(error); })
+                                .then(privateKey => {
+                                    userPrivateKey = privateKey;
+                                    resolve();
+                                }, error => { reject(error); });                            
                         } else {
                             reject(data.errorMessages);
                         }
@@ -1655,56 +1638,37 @@ let settingsGuiModule = (function () {
         getSettingsPanelSlider: function () { return settingPanelSlider; }
     }
 })();
-let accountGui = accountGuiModule;
-let account = accountModule;
-let loginForm = loginFormModule;
-let regForm = registrationFormModule;
-let dialogs = dialogsModule;
-let dialog = dialogModule;
-let message = messageModule;
-let dialogsGui = dialogsGuiModule;
-let dialogGui = dialogGuiModule;
-let date = dateModule;
 let api = apiModule;
-let signalRConnection = signalRModule;
-let connectionGui = connectionGuiModule;
-let user = userModule;
-let userGui = userGuiModule;
-let session = sessionModule;
-let sessionGui = sessionGuiModule;
-let settings = settingsModule;
-let settingsGui = settingsGuiModule;
-let crypto = cryptoModule;
-let encoding = encodingModule;
 
 function init() {
-    dialogsGui.showUploading();
-    api.getDialogs(dialogs.getDialogsOffset(), 20).then(data => {
-        signalRConnection.startConnection();
-        dialogs.updateDialogs(dialog.createDialogs(data));
-        dialogsGui.hideUploading();
+    dialogsGuiModule.showUploading();
+    api.getDialogs(dialogsModule.getDialogsOffset(), 20).then(data => {
+        signalRModule.startConnection();
+        dialogsModule.updateDialogs(dialogModule.createDialogs(data));
+        dialogsGuiModule.hideUploading();
     }, error => {
         console.log(error);
     });
 }
 
 function initModules(fingerprint) {
-    api.init(fingerprint);
-    accountGui.init(loginForm, regForm);
-    account.init(api, accountGui, crypto, encoding, init);
-    dialogsGui.init();
-    dialogGui.init(date);
-    dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);
-    dialogs.init(api, dialogsGui, dialog);
-    connectionGui.init();
-    signalRConnection.init(api, fingerprint, dialogs, connectionGui, accountGui);
-    sessionGui.init();
-    session.init(api, sessionGui);
-    userGui.init();
-    user.init(api, userGui, dialogs);
-    settingsGui.init();
-    settings.init(settingsGui);
-    cryptoModule.init(encoding);
+    encodingModule.init();
+    cryptoModule.init(encodingModule);
+    api.init(fingerprint, cryptoModule, encodingModule);    
+    accountGuiModule.init(loginFormModule, registrationFormModule);
+    accountModule.init(api, accountGuiModule, init);
+    dialogsGuiModule.init();
+    dialogGuiModule.init(dateModule);
+    dialogModule.init(api, dialogGuiModule, messageModule, dateModule, 20, dialogsGuiModule.toTheTop);
+    dialogsModule.init(api, dialogsGuiModule, dialogModule);
+    connectionGuiModule.init();
+    signalRModule.init(api, fingerprint, dialogsModule, connectionGuiModule, accountGuiModule);
+    sessionGuiModule.init();
+    sessionModule.init(api, sessionGuiModule);
+    userGuiModule.init();
+    userModule.init(api, userGuiModule, dialogsModule);
+    settingsGuiModule.init();
+    settingsModule.init(settingsGuiModule);    
 }
 
 function main() {
@@ -1716,7 +1680,7 @@ function main() {
         if (api.areTokensValid()) {
             init();
         } else {
-            accountGui.openLogin();
+            accountGuiModule.openLogin();
         }
     });
 }

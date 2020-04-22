@@ -14,3 +14,4 @@ double rfrshtkn
 on rfrrsh error
 validation parameters on api
 onlogin ??
+minifcation same names 

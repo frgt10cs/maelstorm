@@ -1,30 +1,14 @@
 ﻿let accountModule = (function () {
     let _api;
-    let _guiManager;        
-    let _crypto;
-    let _encoding;
-    let userAESKey;
-    let privateKey;
-    let IV;
+    let _guiManager;         
+    let privateKey;    
     let _onLogin;
 
     let login = function () {
         if (_guiManager.getLoginForm().isDataValid()) {
             _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword())
-                .then(keyData => {
-                    console.log(keyData);
-                    _guiManager.hideAllForms();
-                    IV = _encoding.base64ToArray(keyData.IV);                
-                    _crypto.genereateAesKeyByPassPhrase(_guiManager.getLoginForm().getPassword(), 128)
-                        .then(aesKey => {
-                            userAESKey = aesKey;
-                            return _crypto.decryptAes(aesKey, IV, keyData.encryptedPrivateKey);
-                        })                     
-                        .then(key => {
-                            privateKey = key; console.log(key);
-                        }, error => {
-                            console.log(error);
-                        });
+                .then(() => {                    
+                    _guiManager.hideAllForms();                    
                     _onLogin();
                 }, error => {
                     console.log(error);
@@ -51,11 +35,9 @@
     };
 
     return {
-        init: function (api, guiManager, crypto, encoding, onLogin) {
+        init: function (api, guiManager, onLogin) {
             _api = api;
-            _guiManager = guiManager;
-            _crypto = crypto;
-            _encoding = encoding;
+            _guiManager = guiManager;            
             _guiManager.getLoginForm().getSubmitButton().onclick = login;
             _guiManager.getRegForm().getSubmitButton().onclick = registration;
             _guiManager.getLogoutBtn().onclick = logout;    
