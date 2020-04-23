@@ -242,9 +242,8 @@ let apiModule = (function () {
                             updateTokenTime(result.Tokens.GenerationTime);
                             let IV = _encoding.base64ToArray(result.IVBase64);
                             _crypto.genereateAesKeyByPassPhrase(password, 128)
-                                .then(aesKey => {
-                                    userAesKey = aesKey;
-                                    console.log(aesKey);
+                                .then(function(aesKey) {
+                                    userAesKey = aesKey;                                    
                                     return _crypto.decryptAes(aesKey, IV, result.EncryptedPrivateKey);
                                 }, error => { reject(error); })
                                 .then(privateKey => {

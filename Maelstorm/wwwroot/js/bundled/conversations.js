@@ -1284,7 +1284,7 @@ let apiModule = (function () {
                             updateTokenTime(result.Tokens.GenerationTime);
                             let IV = _encoding.base64ToArray(result.IVBase64);
                             _crypto.genereateAesKeyByPassPhrase(password, 128)
-                                .then(aesKey => {
+                                .then(function(aesKey) {
                                     userAesKey = aesKey;
                                     console.log(aesKey);
                                     return _crypto.decryptAes(aesKey, IV, result.EncryptedPrivateKey);
