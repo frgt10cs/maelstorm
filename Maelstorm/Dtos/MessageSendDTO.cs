@@ -21,6 +21,10 @@ namespace Maelstorm.Dtos
         [MinLength(2)]
         [Required]        
         public string Text { get; set; }
+        
+        [StringLength(24)]
+        [Required]
+        public string IVBase64 { get; set; }
 
         [Required]
         [Range(0, int.MaxValue)]

@@ -1,8 +1,5 @@
 ﻿using Maelstorm.Dtos;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Maelstorm.Entities
 {
@@ -17,6 +14,7 @@ namespace Maelstorm.Entities
         public bool IsVisibleForAuthor { get; set; }
         public bool IsVisibleForOther { get; set; }
         public string Text { get; set; }
+        public string IVBase64 { get; set; }
         public int ReplyId { get; set; }        
 
         public DialogMessage()
@@ -31,6 +29,7 @@ namespace Maelstorm.Entities
             TargetId = model.TargetId;
             DateOfSending = DateTime.Now;
             Text = model.Text;
+            IVBase64 = model.IVBase64;
             ReplyId = model.ReplyId;            
             Status = 0;
             IsVisibleForAuthor = true;

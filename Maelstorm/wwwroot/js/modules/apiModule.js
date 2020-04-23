@@ -162,6 +162,14 @@ let apiModule = (function () {
         return M.join(' ');
     };  
 
+    //let decryptMessages = function (dialogKey, messages) {
+    //    let promises = [];
+    //    for (let i = 0; i < messages.length; i++) {
+    //        promises.push(_crypto.decryptAes(dialogKey, messages[i].IV, messages[i]));
+    //    }
+    //    return Promise.all(promises);                    
+    //}
+
     return {
         init: function (fingerprint, crypto, encoding) {
             _fingerprint = fingerprint;
@@ -194,7 +202,8 @@ let apiModule = (function () {
 
         getUnreadedMessages: function (dialogId, count) {
             return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {                    
+                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {   
+                    
                     resolve(messages);
                 }, error => {
                     reject(error);
