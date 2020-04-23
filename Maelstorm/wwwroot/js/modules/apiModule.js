@@ -246,7 +246,7 @@ let apiModule = (function () {
                                     userAesKey = aesKey;                                    
                                     return _crypto.decryptAes(aesKey, IV, result.EncryptedPrivateKey);
                                 }, error => { reject(error); })
-                                .then(privateKey => {
+                                .then(function(privateKey) {
                                     userPrivateKey = privateKey;
                                     resolve();
                                 }, error => { reject(error); });                            
