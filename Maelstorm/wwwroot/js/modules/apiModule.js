@@ -135,6 +135,19 @@ let apiModule = (function () {
         return M.join(' ');
     };  
 
+    let getErrorsFromJQXHR = function (JQXHR) {        
+        let errorTypes = Object.keys(JQXHR.responseJSON.errors);
+        let errors = [];
+        for (let errorTypeIndex in errorTypes) {       
+            let errorType = JQXHR.responseJSON.errors[errorTypes[errorTypeIndex]];
+            for (let errorIndex in errorType) {
+                errors.push(errorType[errorIndex]);
+            }
+        }
+        console.log(errors);
+        return errors;
+    }
+
     //let decryptMessages = function (dialogKey, messages) {
     //    let promises = [];
     //    for (let i = 0; i < messages.length; i++) {
@@ -165,21 +178,17 @@ let apiModule = (function () {
             return await sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET"));            
         },
 
-        sendDialogMessage: function (message, onSuccessful) {
-            if (message.targetId !== 0) {
+        sendDialogMessage: async function (message) {
+            if (message.targetId > 0) {
                 if (!isEmptyOrSpaces(message.text)) {
                     if (message.text.length > 1 && message.text.length < 4096) {
-                        sendRequest(new MaelstormRequest("/api/dialog/sendmessage",
-                            function (data) {
-                                console.log(data);
-                                if (data.isSuccessful) {
-                                    onSuccessful(data);
-                                }
-                            },
-                            "POST", message));
+                        return await  sendRequest(new MaelstormRequest("/api/dialog/sendmessage", "POST", message));
                     }
+                    throw new Error("Invalid message length");
                 }
+                throw new Error("Text is empty");
             }
+            throw new Error("Invalid target id");
         },
 
         login: async function (login, password) {
@@ -190,7 +199,13 @@ let apiModule = (function () {
                 app: getBrowser(),
                 fingerPrint: _fingerprint
             };
-            let loginResult = await sendAjaxRequest(new MaelstormRequest("/api/authentication/auth", "POST", model));
+            let loginResult;
+            try {
+                loginResult = await sendAjaxRequest(new MaelstormRequest("/api/authentication/auth", "POST", model));
+            }
+            catch (error) {
+                throw new Error(getErrorsFromJQXHR(error));
+            }
             if (loginResult.isSuccessful) {
                 let result = JSON.parse(loginResult.data);
                 localStorage.setItem("MAT", result.Tokens.AccessToken);
@@ -199,31 +214,9 @@ let apiModule = (function () {
                 let IV = _encoding.base64ToArray(result.IVBase64);
                 userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, 128);
                 userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
-            } else {
-                console.log(loginResult);
-                throw new Error(loginResult.errorMessages[0]);
-            }
-            //$.ajax({
-            //    url: "/api/authentication/auth",
-            //    type: "POST",
-            //    contentType: "application/json",
-            //    data: JSON.stringify(model),
-            //    dataType: "json",                
-            //}).done(async function (data) {
-            //    if (data.isSuccessful) {
-            //        let result = JSON.parse(data.data);
-            //        localStorage.setItem("MAT", result.Tokens.AccessToken);
-            //        localStorage.setItem("MRT", result.Tokens.RefreshToken);
-            //        updateTokenTime(result.Tokens.GenerationTime);
-            //        let IV = _encoding.base64ToArray(result.IVBase64);
-            //        userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, 128);
-            //        userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
-            //    } else {
-            //        throw new Error(data.errorMessages[0]);
-            //    }
-            //}).fail(function (jqXHR, textStatus, errorThrown) {
-            //    throw new Error(textStatus);
-            //});
+            } else {              
+                throw new Error(loginResult.errorMessages);
+            }            
         },
 
         registration: async function (nickname, email, password, confirmPassword) {
@@ -263,24 +256,12 @@ let apiModule = (function () {
             localStorage.clear();
         },
 
-        getDialog: function (interlocutorId) {
-            return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId)).then(dialog => {
-                    resolve(dialog);
-                }, error => {
-                    reject(error);
-                });
-            });
+        getDialog: async function (interlocutorId) {
+            return await sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId));            
         },
 
-        getSessions: function () {
-            return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/user/getsessions", "GET")).then(sessions => {
-                    resolve(sessions);
-                }, error => {
-                    reject(error);
-                });
-            });
+        getSessions: async function () {
+            return await sendRequest(new MaelstormRequest("/api/user/getsessions", "GET"));            
         },
 
         closeSession: function (sessionId, banDevice) {
@@ -288,35 +269,22 @@ let apiModule = (function () {
             sendRequest(new MaelstormRequest("/api/user/closeSession", "POST", data));
         },
 
-        getOnlineStatuses: function (ids) {
-            return new Promise(function (resolve, reject) {
-                if (ids.length === 0) reject();
-                sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", "POST", ids)).then(statuses => {
-                    resolve(statuses);
-                }, error => {
-                    reject(error);
-                });
-            });
+        getOnlineStatuses: async function (ids) {
+            if (ids.length !== 0)
+                return await sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", "POST", ids));
+            throw new Error("Ids is empty");            
         },
 
-        findByNickname: function (nickname) {
-            return new Promise(function(resolve, reject){
-                sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname).then(user => {
-                    resolve(user);
-                }, error => {
-                    reject(error);
-                }));
-            });
+        findByNickname: async function (nickname) {
+            if (!isEmptyOrSpaces(nickname))
+                return await sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname));
+            throw new error("Nickname is empty");
         },
 
-        getUserInfo: function (userId) {
-            return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId).then(user => {
-                    resolve(user);
-                }, error => {
-                    reject(error);
-                }));
-            });           
+        getUserInfo: async function (userId) {
+            if (userId > 0)
+                return await sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId));
+            throw new Error("Invalid user id");            
         }
     };
 })();

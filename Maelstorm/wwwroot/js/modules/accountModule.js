@@ -11,14 +11,9 @@
                 _guiManager.hideAllForms();
                 _onLogin();
             }
-            catch (error) {
-                if (error === "Wrong login or password") {
-                    _guiManager.getLoginForm().setLoginStatus(error);
-                }
-                else {                    
-                    _guiManager.getLoginForm().setLoginStatus("Connection error");
-                    console.log(error);
-                }
+            catch (errors) {                
+                console.log(errors);
+                _guiManager.getLoginForm().setLoginStatus(errors.message);                
             }
         }
         else {
