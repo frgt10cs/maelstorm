@@ -25,7 +25,6 @@
   {
     "outputFileName": "wwwroot/css/bundled/conversations.css",
     "inputFiles": [
-      //"wwwroot/css/dialogs.css",
       "wwwroot/css/user.css",
       "wwwroot/css/main.css",
       "wwwroot/css/forms.css",
@@ -35,5 +34,5 @@
       "enabled": true,
       "renameLocals": true
     }
-  }
+  }  
 ]

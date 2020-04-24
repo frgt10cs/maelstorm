@@ -27,6 +27,7 @@
     <div class="fLabel">
         Вход
     </div>
+    <div id="loginStatus"></div>
     <div>
         <input type="text" id="login" class="fInput" />
     </div>
@@ -44,6 +45,7 @@
     <div class="fLabel">
         Регистрация
     </div>
+    <div id="regStatus"></div>
     <div>
         <input type="text" id="regLogin" class="fInput" placeholder="login" />
     </div>
@@ -208,4 +210,17 @@
 <script src="~/lib/fingerprint/fingerprint2.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/signalr/dist/browser/signalr.js"></script>
-<script src="~/js/bundled/conversations.min.js"></script>
+<script src="~/js/modules/accountModule.js"></script>
+<script src="~/js/modules/encodingModule.js"></script>
+<script src="~/js/modules/cryptoModule.js"></script>
+<script src="~/js/modules/dialogModule.js"></script>
+<script src="~/js/models/dialog.js"></script>
+<script src="~/js/modules/messageModule.js"></script>
+<script src="~/js/modules/dialogsModule.js"></script>
+<script src="~/js/modules/userModule.js"></script>
+<script src="~/js/modules/sessionModule.js"></script>
+<script src="~/js/modules/apiModule.js"></script>
+<script src="~/js/modules/dateModule.js"></script>
+<script src="~/js/modules/signalRModule.js"></script>
+<script src="~/js/modules/settingsModule.js"></script>
+<script src="~/js/main.js"></script>

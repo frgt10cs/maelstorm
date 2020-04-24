@@ -4,28 +4,40 @@ let accountModule = (function () {
     let privateKey;    
     let _onLogin;
 
-    let login = function () {
+    let login = async function () {
         if (_guiManager.getLoginForm().isDataValid()) {
-            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword())
-                .then(() => {                    
-                    _guiManager.hideAllForms();                    
-                    _onLogin();
-                }, error => {
+            try {
+                await _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword());
+                _guiManager.hideAllForms();
+                _onLogin();
+            }
+            catch (error) {
+                if (error === "Wrong login or password") {
+                    _guiManager.getLoginForm().setLoginStatus(error);
+                }
+                else {                    
+                    _guiManager.getLoginForm().setLoginStatus("Connection error");
                     console.log(error);
-                });               
-        }   
+                }
+            }
+        }
+        else {
+            throw new Error("Invalid login or password");
+        }
     };
 
-    let registration = function () {
+    let registration = async function () {
         if (_guiManager.getRegForm().isDataValid()) {
-            _api.registration(_guiManager.getRegForm().getLogin(),
-                _guiManager.getRegForm().getEmail(),
-                _guiManager.getRegForm().getPassword(),
-                _guiManager.getRegForm().getPasswordConfirm()).then(() => {
-                    _guiManager.openLogin();
-                }, error => {
-                    console.log(error);
-                });                
+            try {
+                await _api.registration(_guiManager.getRegForm().getLogin(),
+                    _guiManager.getRegForm().getEmail(),
+                    _guiManager.getRegForm().getPassword(),
+                    _guiManager.getRegForm().getPasswordConfirm());
+                _guiManager.openLogin();
+            }
+            catch(error) {
+                _guiManager.getRegForm().setRegStatus(error);
+            }                     
         }  
     };
 
@@ -53,23 +65,26 @@ let accountModule = (function () {
 let loginFormModule = (function () {
 
     let form;
-    let loginField,
-        passwordField,
-        loginBtn;      
+    let loginTextBox,
+        passwordTextBox,
+        loginBtn,
+        statusDiv;
 
     return {
         init: function () {
             form = document.getElementById("loginForm");
-            loginField = document.getElementById("login");
-            passwordField = document.getElementById("password");
+            loginTextBox = document.getElementById("login");
+            passwordTextBox = document.getElementById("password");
             loginBtn = document.getElementById("loginBtn");
+            statusDiv = document.getElementById("loginStatus");
         },
-        getLogin: function () { return loginField.value; },
-        getPassword: function () { return passwordField.value; },
+        getLogin: function () { return loginTextBox.value; },
+        getPassword: function () { return passwordTextBox.value; },
         getSubmitButton: function () { return loginBtn; },
         hide: function () { form.style.display = "none"; },
         open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; }
+        isDataValid: function () { return true; },
+        setLoginStatus: function (value) { statusDiv.innerText = value; }
     };
 }());
 
@@ -79,7 +94,8 @@ let registrationFormModule = (function () {
         emailField,
         passwordField,
         passwordConfirmField,
-        regBtn;        
+        regBtn,
+        statusDiv;
 
     return {
         init: function () {
@@ -89,6 +105,7 @@ let registrationFormModule = (function () {
             passwordField = document.getElementById("regPassword");
             passwordConfirmField = document.getElementById("regPasswordConfirm");
             regBtn = document.getElementById("regBtn");
+            statusDiv = document.getElementById("regStatus");
         },
         getLogin: function () { return loginField.value; },
         getEmail: function () { return emailField.value; },
@@ -97,7 +114,8 @@ let registrationFormModule = (function () {
         getSubmitButton: function () { return regBtn; },
         hide: function () { form.style.display = "none"; },
         open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; }
+        isDataValid: function () { return true; },
+        setRegStatus: function (value) { statusDiv.innerText = value; }
     };
 })();
 
@@ -540,7 +558,6 @@ let dialogGuiModule = (function () {
     };
 })();
 class Dialog {
-
     constructor(serverDialog) {        
         this.id = serverDialog.id;
         this.title = serverDialog.title;
@@ -557,7 +574,8 @@ class Dialog {
         this.allUnreadedUploaded = false;
         this.uploadingBlocked = false;
         this.uploadCount = 20;
-        this.messagesPanel = this.createMessagesPanel();        
+        this.messagesPanel = this.createMessagesPanel();
+        this.aesKey = serverDialog.aesKey;
     }
 
     openDialog() {
@@ -1072,10 +1090,43 @@ let apiModule = (function () {
         return new Date().getTime() - accessTokenGenerationTime > 300000;
     };
 
-    let sendRequest = function (request) {
-        return new Promise(function (resolve, reject) {
-            if (!isTokenExpired()) {
-                $.ajax({
+    let request = function(){
+        return $.ajax({
+            url: request.url,
+            type: request.type,
+            contentType: "application/json",
+            dataType: "json",
+            data: request.type === "POST" ? JSON.stringify(request.data) : null,
+            beforeSend: function (xhr) {
+                let token = localStorage.getItem("MAT");
+                if (token !== undefined) {
+                    xhr.setRequestHeader("Authorization", "Bearer " + token);
+                }
+            },
+            statusCode: {
+                401: function (xhr) {
+                    if (xhr.getResponseHeader("Token-Expired")) {
+                        refreshToken().then(() => {
+                            sendRequest(request).then(() => {
+                                resolve();
+                            }, error => {
+                                reject(error);
+                            });
+                        }, error => {
+                            console.log(error); reject(error);
+                        });
+                    } else {
+                        //
+                    }
+                }
+            }
+        })
+    }
+
+    let sendRequest = async function (request) {
+        if (!isTokenExpired()) {
+            try {
+                let result = await $.ajax({
                     url: request.url,
                     type: request.type,
                     contentType: "application/json",
@@ -1087,78 +1138,78 @@ let apiModule = (function () {
                             xhr.setRequestHeader("Authorization", "Bearer " + token);
                         }
                     },
-                    success: function (data) {
-                        resolve(data);
-                    },
-                    error: function (error) {
-                        reject(error);
-                    },
                     statusCode: {
-                        401: function (xhr) {
+                        401: async function (xhr) {
                             if (xhr.getResponseHeader("Token-Expired")) {
-                                refreshToken().then(() => {
-                                    sendRequest(request).then(() => {
-                                        resolve();
-                                    }, error => {
-                                        reject(error);
-                                    });
-                                }, error => {
-                                    console.log(error); reject(error);
-                                });
+                                try {
+                                    let refreshResult = await refreshToken();
+                                    console.log(refreshResult);
+                                }
+                                catch (error) {
+                                    console.log(error);
+                                }                                
                             } else {
                                 //
                             }
                         }
                     }
                 });
-            } else {
-                refreshToken().then(() => {
-                    sendRequest(request).then(() => {
-                        resolve();
-                    }, error => {
-                        reject(error);
-                    });
-                }, error => {
-                    reject(error);
-                });
+                console.log(result);
+                return result;
             }
-        });        
+            catch (error) {
+                console.log(error);
+                throw new Error("");
+            }
+        } else {
+            //refreshToken().then(() => {
+            //    sendRequest(request).then(() => {
+            //        resolve();
+            //    }, error => {
+            //        reject(error);
+            //    });
+            //}, error => {
+            //    reject(error);
+            //});
+        }    
     };
 
-    let refreshToken = function () {
-        return new Promise(function (resolve, reject) {
-            let token = localStorage.getItem("MAT");
-            let refreshToken = localStorage.getItem("MRT");
-            if (areTokensValid() && isTokenExpired()) {
-                let refresh = JSON.stringify({
-                    token: token,
-                    refreshtoken: refreshToken,
-                    fingerPrint: _fingerprint
-                });
-                $.ajax({
+    let refreshToken = async function () {
+        let token = localStorage.getItem("MAT");
+        let refreshToken = localStorage.getItem("MRT");
+        if (areTokensValid() && isTokenExpired()) {
+            let refresh = JSON.stringify({
+                token: token,
+                refreshtoken: refreshToken,
+                fingerPrint: _fingerprint
+            });
+            try {
+                let result = await $.ajax({
                     url: "/api/authentication/rfrshtkn",
                     type: "POST",
                     contentType: "application/json",
                     dataType: "json",
-                    data: refresh,
-                    success: function (data) {
-                        console.log(data);
-                        if (data.isSuccessful) {
-                            let tokens = JSON.parse(data.data);
-                            localStorage.setItem("MAT", tokens.AccessToken);
-                            localStorage.setItem("MRT", tokens.RefreshToken);
-                            updateTokenTime(tokens.GenerationTime);
-                            resolve();
-                        } else {
-                            localStorage.removeItem("MAT");
-                            localStorage.removeItem("MRT");
-                            reject(new Error("Token refreshing error: " + data.errorMessages.join(' ')))                                                        
-                            //
-                        }
-                    }
+                    data: refresh
                 });
+                console.log(result);
+                if (result.isSuccessful) {
+                    let tokens = JSON.parse(result.data);
+                    localStorage.setItem("MAT", tokens.AccessToken);
+                    localStorage.setItem("MRT", tokens.RefreshToken);
+                    updateTokenTime(tokens.GenerationTime);
+                    resolve();
+                } else {
+                    localStorage.removeItem("MAT");
+                    localStorage.removeItem("MRT");
+                    reject(new Error("Token refreshing error: " + data.errorMessages.join(' ')))
+                    //
+                }
             }
-        });        
+            catch (error) {
+                console.log(error);
+                throw new Error(error);
+            }
+        }        
     };
 
     let isEmptyOrSpaces = function (str) {
@@ -1204,6 +1255,18 @@ let apiModule = (function () {
         return M.join(' ');
     };  
 
+    let loginRequest = function () {
+
+    };
+
+    //let decryptMessages = function (dialogKey, messages) {
+    //    let promises = [];
+    //    for (let i = 0; i < messages.length; i++) {
+    //        promises.push(_crypto.decryptAes(dialogKey, messages[i].IV, messages[i]));
+    //    }
+    //    return Promise.all(promises);                    
+    //}
+
     return {
         init: function (fingerprint, crypto, encoding) {
             _fingerprint = fingerprint;
@@ -1236,7 +1299,8 @@ let apiModule = (function () {
 
         getUnreadedMessages: function (dialogId, count) {
             return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {                    
+                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {   
+                    
                     resolve(messages);
                 }, error => {
                     reject(error);
@@ -1261,74 +1325,67 @@ let apiModule = (function () {
             }
         },
 
-        login: function (login, password) {
-            return new Promise(function (resolve, reject) {
-                let model = {
-                    email: login,
-                    password: password,
-                    osCpu: getOS(),
-                    app: getBrowser(),
-                    fingerPrint: _fingerprint
-                };
-                $.ajax({
-                    url: "/api/authentication/auth",
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify(model),
-                    dataType: "json",
-                    success: function (data) {
-                        if (data.isSuccessful) {
-                            let result = JSON.parse(data.data);
-                            localStorage.setItem("MAT", result.Tokens.AccessToken);
-                            localStorage.setItem("MRT", result.Tokens.RefreshToken);                                                                                    
-                            updateTokenTime(result.Tokens.GenerationTime);
-                            let IV = _encoding.base64ToArray(result.IVBase64);
-                            _crypto.genereateAesKeyByPassPhrase(password, 128)
-                                .then(function(aesKey) {
-                                    userAesKey = aesKey;
-                                    console.log(aesKey);
-                                    return _crypto.decryptAes(aesKey, IV, result.EncryptedPrivateKey);
-                                }, error => { reject(error); })
-                                .then(privateKey => {
-                                    userPrivateKey = privateKey;
-                                    resolve();
-                                }, error => { reject(error); });                            
-                        } else {
-                            reject(data.errorMessages);
-                        }
-                    }
-                });
+        login: async function (login, password) {
+            let model = {
+                email: login,
+                password: password,
+                osCpu: getOS(),
+                app: getBrowser(),
+                fingerPrint: _fingerprint
+            };
+            $.ajax({
+                url: "/api/authentication/auth",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(model),
+                dataType: "json",                
+            }).done(async function (data) {
+                if (data.isSuccessful) {
+                    let result = JSON.parse(data.data);
+                    localStorage.setItem("MAT", result.Tokens.AccessToken);
+                    localStorage.setItem("MRT", result.Tokens.RefreshToken);
+                    updateTokenTime(result.Tokens.GenerationTime);
+                    let IV = _encoding.base64ToArray(result.IVBase64);
+                    userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, 128);
+                    userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
+                } else {
+                    throw new Error(data.errorMessages[0]);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                throw new Error(textStatus);
             });
         },
 
-        registration: function (nickname, email, password, confirmPassword) {
-            return new Promise(function (resolve, reject) {
-                if (!isEmptyOrSpaces(nickname) && !isEmptyOrSpaces(email) && !isEmptyOrSpaces(password) && !isEmptyOrSpaces(confirmPassword)) {
-                    if (password === confirmPassword) {
-                        let model = {
-                            nickname: nickname,
-                            email: email,
-                            password: password,
-                            confirmPassword: confirmPassword
-                        };
-                        $.ajax({
-                            url: "/api/account/registration",
-                            type: "POST",
-                            contentType: "application/json",
-                            data: JSON.stringify(model),
-                            dataType: "json",
-                            success: function (data) {
-                                if (data.isSuccessful) {
-                                    resolve();
-                                }
-                                else {
-                                    reject(data.errorMessages);
-                                }
-                            }
-                        });
-                    }
+        registration: async function (nickname, email, password, confirmPassword) {
+            if (!isEmptyOrSpaces(nickname) && !isEmptyOrSpaces(email) && !isEmptyOrSpaces(password) && !isEmptyOrSpaces(confirmPassword)) {
+                if (password === confirmPassword) {
+                    let model = {
+                        nickname: nickname,
+                        email: email,
+                        password: password,
+                        confirmPassword: confirmPassword
+                    };
+                    $.ajax({
+                        url: "/api/account/registration",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(model),
+                        dataType: "json"
+                    }).done(function (data) {
+                        if (!data.isSuccessful) {
+                            throw new Error(data.errorMessages[0]);
+                        }
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        throw new Error(textStatus);
+                    });
                 }
-            });
+                else {
+                    throw new Error("Passwords are not same");
+                }
+            }
+            else {
+                throw new Error("Invalid data");
+            }
         },
 
         logOut: function () {

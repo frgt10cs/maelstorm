@@ -4,28 +4,40 @@
     let privateKey;    
     let _onLogin;
 
-    let login = function () {
+    let login = async function () {
         if (_guiManager.getLoginForm().isDataValid()) {
-            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword())
-                .then(() => {                    
-                    _guiManager.hideAllForms();                    
-                    _onLogin();
-                }, error => {
+            try {
+                await _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword());
+                _guiManager.hideAllForms();
+                _onLogin();
+            }
+            catch (error) {
+                if (error === "Wrong login or password") {
+                    _guiManager.getLoginForm().setLoginStatus(error);
+                }
+                else {                    
+                    _guiManager.getLoginForm().setLoginStatus("Connection error");
                     console.log(error);
-                });               
-        }   
+                }
+            }
+        }
+        else {
+            throw new Error("Invalid login or password");
+        }
     };
 
-    let registration = function () {
+    let registration = async function () {
         if (_guiManager.getRegForm().isDataValid()) {
-            _api.registration(_guiManager.getRegForm().getLogin(),
-                _guiManager.getRegForm().getEmail(),
-                _guiManager.getRegForm().getPassword(),
-                _guiManager.getRegForm().getPasswordConfirm()).then(() => {
-                    _guiManager.openLogin();
-                }, error => {
-                    console.log(error);
-                });                
+            try {
+                await _api.registration(_guiManager.getRegForm().getLogin(),
+                    _guiManager.getRegForm().getEmail(),
+                    _guiManager.getRegForm().getPassword(),
+                    _guiManager.getRegForm().getPasswordConfirm());
+                _guiManager.openLogin();
+            }
+            catch(error) {
+                _guiManager.getRegForm().setRegStatus(error);
+            }                     
         }  
     };
 
@@ -53,23 +65,26 @@
 let loginFormModule = (function () {
 
     let form;
-    let loginField,
-        passwordField,
-        loginBtn;      
+    let loginTextBox,
+        passwordTextBox,
+        loginBtn,
+        statusDiv;
 
     return {
         init: function () {
             form = document.getElementById("loginForm");
-            loginField = document.getElementById("login");
-            passwordField = document.getElementById("password");
+            loginTextBox = document.getElementById("login");
+            passwordTextBox = document.getElementById("password");
             loginBtn = document.getElementById("loginBtn");
+            statusDiv = document.getElementById("loginStatus");
         },
-        getLogin: function () { return loginField.value; },
-        getPassword: function () { return passwordField.value; },
+        getLogin: function () { return loginTextBox.value; },
+        getPassword: function () { return passwordTextBox.value; },
         getSubmitButton: function () { return loginBtn; },
         hide: function () { form.style.display = "none"; },
         open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; }
+        isDataValid: function () { return true; },
+        setLoginStatus: function (value) { statusDiv.innerText = value; }
     };
 }());
 
@@ -79,7 +94,8 @@ let registrationFormModule = (function () {
         emailField,
         passwordField,
         passwordConfirmField,
-        regBtn;        
+        regBtn,
+        statusDiv;
 
     return {
         init: function () {
@@ -89,6 +105,7 @@ let registrationFormModule = (function () {
             passwordField = document.getElementById("regPassword");
             passwordConfirmField = document.getElementById("regPasswordConfirm");
             regBtn = document.getElementById("regBtn");
+            statusDiv = document.getElementById("regStatus");
         },
         getLogin: function () { return loginField.value; },
         getEmail: function () { return emailField.value; },
@@ -97,7 +114,8 @@ let registrationFormModule = (function () {
         getSubmitButton: function () { return regBtn; },
         hide: function () { form.style.display = "none"; },
         open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; }
+        isDataValid: function () { return true; },
+        setRegStatus: function (value) { statusDiv.innerText = value; }
     };
 })();
 
