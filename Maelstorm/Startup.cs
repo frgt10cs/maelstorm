@@ -125,7 +125,7 @@ namespace Maelstorm
             {
                 option.Configuration = Configuration["Redis:Address"];
                 option.InstanceName = "maelstorm";
-            });
+            });            
 
             services.AddSignalR();
         }

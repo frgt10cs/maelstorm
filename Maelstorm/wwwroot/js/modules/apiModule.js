@@ -28,9 +28,19 @@ let apiModule = (function () {
 
     let isTokenExpired = function () {
         return new Date().getTime() - accessTokenGenerationTime > 300000;
-    };
+    };        
 
-    let request = function(){
+    let sendAjaxRequest = function (request) {        
+        return $.ajax({
+            url: request.url,
+            type: request.type,
+            contentType: "application/json",
+            dataType: "json",
+            data: request.type === "POST" ? JSON.stringify(request.data) : null            
+        });
+    }
+
+    let sendAjaxAuthRequest = function (request) {
         return $.ajax({
             url: request.url,
             type: request.type,
@@ -42,106 +52,36 @@ let apiModule = (function () {
                 if (token !== undefined) {
                     xhr.setRequestHeader("Authorization", "Bearer " + token);
                 }
-            },
-            statusCode: {
-                401: function (xhr) {
-                    if (xhr.getResponseHeader("Token-Expired")) {
-                        refreshToken().then(() => {
-                            sendRequest(request).then(() => {
-                                resolve();
-                            }, error => {
-                                reject(error);
-                            });
-                        }, error => {
-                            console.log(error); reject(error);
-                        });
-                    } else {
-                        //
-                    }
-                }
             }
-        })
-    }
-
-    let sendRequest = async function (request) {
-        if (!isTokenExpired()) {
-            try {
-                let result = await $.ajax({
-                    url: request.url,
-                    type: request.type,
-                    contentType: "application/json",
-                    dataType: "json",
-                    data: request.type === "POST" ? JSON.stringify(request.data) : null,
-                    beforeSend: function (xhr) {
-                        let token = localStorage.getItem("MAT");
-                        if (token !== undefined) {
-                            xhr.setRequestHeader("Authorization", "Bearer " + token);
-                        }
-                    },
-                    statusCode: {
-                        401: async function (xhr) {
-                            if (xhr.getResponseHeader("Token-Expired")) {
-                                try {
-                                    let refreshResult = await refreshToken();
-                                    console.log(refreshResult);
-                                }
-                                catch (error) {
-                                    console.log(error);
-                                }                                
-                            } else {
-                                //
-                            }
-                        }
-                    }
-                });
-                console.log(result);
-                return result;
-            }
-            catch (error) {
-                console.log(error);
-                throw new Error("");
-            }
-        } else {
-            //refreshToken().then(() => {
-            //    sendRequest(request).then(() => {
-            //        resolve();
-            //    }, error => {
-            //        reject(error);
-            //    });
-            //}, error => {
-            //    reject(error);
-            //});
-        }    
+        });
     };
+
+    let sendRequest = async function (requestParams) {
+        if (isTokenExpired()) {
+            await refreshToken();           
+        }        
+        return await sendAjaxAuthRequest(requestParams);
+    }
 
     let refreshToken = async function () {
         let token = localStorage.getItem("MAT");
         let refreshToken = localStorage.getItem("MRT");
         if (areTokensValid() && isTokenExpired()) {
-            let refresh = JSON.stringify({
+            let refreshDTO = {
                 token: token,
-                refreshtoken: refreshToken,
-                fingerPrint: _fingerprint
-            });
+                refreshToken: refreshToken,
+                fingerprint: _fingerprint
+            };
             try {
-                let result = await $.ajax({
-                    url: "/api/authentication/rfrshtkn",
-                    type: "POST",
-                    contentType: "application/json",
-                    dataType: "json",
-                    data: refresh
-                });
-                console.log(result);
+                let result = await sendAjaxRequest(new MaelstormRequest("/api/authentication/rfrshtkn", "POST", refreshDTO));                               
                 if (result.isSuccessful) {
                     let tokens = JSON.parse(result.data);
                     localStorage.setItem("MAT", tokens.AccessToken);
                     localStorage.setItem("MRT", tokens.RefreshToken);
-                    updateTokenTime(tokens.GenerationTime);
-                    resolve();
+                    updateTokenTime(tokens.GenerationTime);                    
                 } else {
                     localStorage.removeItem("MAT");
-                    localStorage.removeItem("MRT");
-                    reject(new Error("Token refreshing error: " + data.errorMessages.join(' ')))
+                    localStorage.removeItem("MRT");                    
                     //
                 }
             }
@@ -195,10 +135,6 @@ let apiModule = (function () {
         return M.join(' ');
     };  
 
-    let loginRequest = function () {
-
-    };
-
     //let decryptMessages = function (dialogKey, messages) {
     //    let promises = [];
     //    for (let i = 0; i < messages.length; i++) {
@@ -217,35 +153,16 @@ let apiModule = (function () {
 
         areTokensValid: areTokensValid,
 
-        getDialogs: function (offset, count) {
-            return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset + "&count=" + count)).then(dialogs => {
-                    resolve(dialogs);
-                }, (error) => {
-                    reject(error);
-                });
-            });
+        getDialogs: async function (offset, count) {
+            return await sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset + "&count=" + count));            
         },
 
-        getReadedMessages: function (dialogId, offset, count) {
-            return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {
-                    resolve(messages);
-                }, error => {
-                    reject(error);
-                });
-            })
+        getReadedMessages: async function (dialogId, offset, count) {
+            return await sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET"));            
         },
 
-        getUnreadedMessages: function (dialogId, count) {
-            return new Promise(function (resolve, reject) {
-                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {   
-                    
-                    resolve(messages);
-                }, error => {
-                    reject(error);
-                });
-            })
+        getUnreadedMessages: async function (dialogId, count) {
+            return await sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET"));            
         },
 
         sendDialogMessage: function (message, onSuccessful) {
@@ -273,27 +190,40 @@ let apiModule = (function () {
                 app: getBrowser(),
                 fingerPrint: _fingerprint
             };
-            $.ajax({
-                url: "/api/authentication/auth",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(model),
-                dataType: "json",                
-            }).done(async function (data) {
-                if (data.isSuccessful) {
-                    let result = JSON.parse(data.data);
-                    localStorage.setItem("MAT", result.Tokens.AccessToken);
-                    localStorage.setItem("MRT", result.Tokens.RefreshToken);
-                    updateTokenTime(result.Tokens.GenerationTime);
-                    let IV = _encoding.base64ToArray(result.IVBase64);
-                    userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, 128);
-                    userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
-                } else {
-                    throw new Error(data.errorMessages[0]);
-                }
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                throw new Error(textStatus);
-            });
+            let loginResult = await sendAjaxRequest(new MaelstormRequest("/api/authentication/auth", "POST", model));
+            if (loginResult.isSuccessful) {
+                let result = JSON.parse(loginResult.data);
+                localStorage.setItem("MAT", result.Tokens.AccessToken);
+                localStorage.setItem("MRT", result.Tokens.RefreshToken);
+                updateTokenTime(result.Tokens.GenerationTime);
+                let IV = _encoding.base64ToArray(result.IVBase64);
+                userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, 128);
+                userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
+            } else {
+                console.log(loginResult);
+                throw new Error(loginResult.errorMessages[0]);
+            }
+            //$.ajax({
+            //    url: "/api/authentication/auth",
+            //    type: "POST",
+            //    contentType: "application/json",
+            //    data: JSON.stringify(model),
+            //    dataType: "json",                
+            //}).done(async function (data) {
+            //    if (data.isSuccessful) {
+            //        let result = JSON.parse(data.data);
+            //        localStorage.setItem("MAT", result.Tokens.AccessToken);
+            //        localStorage.setItem("MRT", result.Tokens.RefreshToken);
+            //        updateTokenTime(result.Tokens.GenerationTime);
+            //        let IV = _encoding.base64ToArray(result.IVBase64);
+            //        userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, 128);
+            //        userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
+            //    } else {
+            //        throw new Error(data.errorMessages[0]);
+            //    }
+            //}).fail(function (jqXHR, textStatus, errorThrown) {
+            //    throw new Error(textStatus);
+            //});
         },
 
         registration: async function (nickname, email, password, confirmPassword) {
