@@ -12,13 +12,10 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
-using Maelstorm.Dtos;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -96,7 +93,7 @@ namespace Maelstorm.Services.Implementations
         public async Task<User> LoginAsync(AuthenticationDTO model)
         {
             User result = null;
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Nickname == model.Login);
             if (user != null)
             {
                 string hash = cryptoServ.GeneratePasswordHash(model.Password, user.Salt);
@@ -111,7 +108,7 @@ namespace Maelstorm.Services.Implementations
             }
             else
             {
-                logger.LogWarning("Login failed. Incorrect email. Email: " + model.Email);
+                logger.LogWarning("Login failed. Incorrect email. Login: " + model.Login);
             }
             return result;
         }

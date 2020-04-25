@@ -5,7 +5,8 @@
     let _onLogin;
 
     let login = async function () {
-        if (_guiManager.getLoginForm().isDataValid()) {
+        let validationResult = _guiManager.getLoginForm().getDataValidationResult();
+        if (validationResult.isSuccess) {
             try {
                 await _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword());
                 _guiManager.hideAllForms();
@@ -17,12 +18,13 @@
             }
         }
         else {
-            throw new Error("Invalid login or password");
+            
         }
     };
 
     let registration = async function () {
-        if (_guiManager.getRegForm().isDataValid()) {
+        let validationResult = _guiManager.getRegForm().getDataValidationResult();
+        if (validationResult.isSuccess) {
             try {
                 await _api.registration(_guiManager.getRegForm().getLogin(),
                     _guiManager.getRegForm().getEmail(),
@@ -57,16 +59,60 @@
     };
 })();
 
+let formValidationModule = (function () {
+    let isEmptyOrSpaces = function (str) {
+        return str === null || str.match(/^ *$/) !== null;
+    }; 
+
+    let validationResult = function (isSuccess, errorMessages) {
+        return { isSuccess: isSuccess, errorMessages: errorMessages }
+    }
+
+    return {
+        isEmailValid: function(email) {
+            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            if (re.test(String(email).toLowerCase())) {
+                if (email.length > 10 && email.length < 30)
+                    return validationResult(true);
+                return validationResult(false, ["Invalid email length"]);
+            }
+            return validationResult(false, ["Is not email"]);
+        },
+
+        isLoginValid: function (login) {           
+            if (!isEmptyOrSpaces(login)) {
+                if (login.length > 3 && login.length < 20) {
+                    return validationResult(true);
+                }
+                return validationResult(false, ["Invalid login length"]);
+            }
+            return validationResult(false, ["Login is empty"]);
+        },
+
+        isPasswordValid(password) {
+            if (!isEmptyOrSpaces(password)) {
+                if (password.length > 3 && password.length < 20 ) {
+                    return validationResult(true);
+                }
+                return validationResult(false, ["Invalid password length"]);
+            }
+            return validationResult(false, ["Password is empty"]);
+        }        
+    }
+});
+
 let loginFormModule = (function () {
 
     let form;
     let loginTextBox,
         passwordTextBox,
         loginBtn,
-        statusDiv;
+        statusDiv;   
+    let _formValidation;
 
     return {
-        init: function () {
+        init: function (formValidationModule) {
+            _formValidation = formValidationModule;
             form = document.getElementById("loginForm");
             loginTextBox = document.getElementById("login");
             passwordTextBox = document.getElementById("password");
@@ -78,38 +124,59 @@ let loginFormModule = (function () {
         getSubmitButton: function () { return loginBtn; },
         hide: function () { form.style.display = "none"; },
         open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; },
+
+        getDataValidationResult: function () {
+            let validationResult = {isSuccess: true,  errorMessages: [] };
+            let validationResults = [_formValidation.isLoginValid(loginField.value), _formValidation.isPasswordsValid(passwordField.value)];
+            for (let i in validationResults) {
+                if (!validationResults[i])
+                    validationResult.errorMessages.concat(validationResults[i].errorMessages);
+            }
+            validationResult.isSuccess = validationResult.errorMessages.length === 0;
+        },
+
         setLoginStatus: function (value) { statusDiv.innerText = value; }
     };
 }());
 
 let registrationFormModule = (function () {
     let form;
-    let loginField,
-        emailField,
-        passwordField,
-        passwordConfirmField,
+    let loginTextBox,
+        emailTextBox,
+        passwordTextBox,
+        passwordConfirmTextBox,
         regBtn,
-        statusDiv;
+        statusDiv;    
+    let _formValidation;
 
     return {
-        init: function () {
+        init: function (formValidationModule) {
+            _formValidation = formValidationModule;
             form = document.getElementById("regForm");
-            loginField = document.getElementById("regLogin");
-            emailField = document.getElementById("regEmail");
-            passwordField = document.getElementById("regPassword");
-            passwordConfirmField = document.getElementById("regPasswordConfirm");
+            loginTextBox = document.getElementById("regLogin");
+            emailTextBox = document.getElementById("regEmail");
+            passwordTextBox = document.getElementById("regPassword");
+            passwordConfirmTextBox = document.getElementById("regPasswordConfirm");
             regBtn = document.getElementById("regBtn");
             statusDiv = document.getElementById("regStatus");
         },
-        getLogin: function () { return loginField.value; },
-        getEmail: function () { return emailField.value; },
-        getPassword: function () { return passwordField.value; },
-        getPasswordConfirm: function () { return passwordConfirmField.value; },
+        getLogin: function () { return loginTextBox.value; },
+        getEmail: function () { return emailTextBox.value; },
+        getPassword: function () { return passwordTextBox.value; },
+        getPasswordConfirm: function () { return passwordConfirmTextBox.value; },
         getSubmitButton: function () { return regBtn; },
         hide: function () { form.style.display = "none"; },
         open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; },
+        getDataValidationResult: function () {
+            let validationResult = { isSuccess: true, errorMessages: [] };
+            let validationResults = [_formValidation.isLoginValid(loginTextBox.value), _formValidation.isEmailValid(emailTextBox), _formValidation.isPasswordsValid(passwordTextBox.value),
+            _formValidation.isPasswordsValid(passwordConfirmTextBox.value)];
+            for (let i in validationResults) {
+                if (!validationResults[i])
+                    validationResult.errorMessages.concat(validationResults[i].errorMessages);
+            }
+            validationResult.isSuccess = validationResult.errorMessages.length === 0;        
+        },
         setRegStatus: function (value) { statusDiv.innerText = value; }
     };
 })();
@@ -140,11 +207,13 @@ let accountGuiModule = (function () {
         getLogoutBtn: function () { return logoutBtn; },
         openLogin: openLogin,
         openRegistration: openRegistration,
+
         hideAllForms: function () {
             dark.style.display = "none";
             _loginForm.hide();
             _regForm.hide();
         },
+
         init: function (loginForm, regForm) {
             openLoginBtn = document.getElementById("openLogin");
             openLoginBtn.onclick = function () { openLogin(); };
@@ -153,9 +222,9 @@ let accountGuiModule = (function () {
             logoutBtn = document.getElementById("logoutButton");            
             dark = document.getElementById("dark");
             _loginForm = loginForm;
-            _loginForm.init();
+            _loginForm.init(formValidationModule);
             _regForm = regForm;
-            _regForm.init();
+            _regForm.init(formValidationModule);
         }
     };
 })();

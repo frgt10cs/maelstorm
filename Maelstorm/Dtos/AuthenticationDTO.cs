@@ -8,12 +8,11 @@ namespace Maelstorm.Dtos
 {
     public class AuthenticationDTO
     {
-        [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Not email address")]
-        [MinLength(10, ErrorMessage = "Email is too short")]
-        [MaxLength(30, ErrorMessage = "Email is too long")]
+        [Required(ErrorMessage = "Login is required")]        
+        [MinLength(3, ErrorMessage = "Login is too short")]
+        [MaxLength(20, ErrorMessage = "Login is too long")]
         [DataType(DataType.EmailAddress)]
-        public string Email { get; set; }
+        public string Login { get; set; }
 
         [Required(ErrorMessage = "Password is required")]
         [MinLength(10, ErrorMessage = "Password is too short. Minimum length is 10")]
