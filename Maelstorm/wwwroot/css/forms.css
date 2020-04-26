@@ -52,6 +52,7 @@ select:-webkit-autofill:focus {
     text-decoration: underline;
 }
 
-.formStatus{
-    color: white;
+.formError {
+    color:#D82323;
+    padding-bottom:0.5rem;
 }
