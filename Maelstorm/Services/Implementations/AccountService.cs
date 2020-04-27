@@ -99,17 +99,27 @@ namespace Maelstorm.Services.Implementations
             {
                 DateOfRegistration = DateTime.Now,
                 Email = model.Email,
-                Nickname = model.Nickname,
-                Salt = cryptoService.GetRandomString(),
+                Nickname = model.Nickname,                
                 Role = 0,
                 Status = "Stupid status from community",
                 Image = "defaultUser.png",
                 PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey())                
             };
-            var iv = cryptoService.GenerateIV();
+            #region password generation
+            var passwordSalt = cryptoService.GenerateSalt();
+            user.PasswordSalt = Convert.ToBase64String(passwordSalt);
+            user.PasswordHash = Convert.ToBase64String(cryptoService.Pbkdf2(model.Password, passwordSalt));
+            #endregion
+
+            #region keys generation
+            var keySalt = cryptoService.GenerateSalt();
+            user.KeySalt = Convert.ToBase64String(keySalt);
+            var iv = cryptoService.GenerateIV();                        
             user.IVBase64 = Convert.ToBase64String(iv);
-            user.EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportRSAPrivateKey(), model.Password, iv));            
-            user.PasswordHash = cryptoService.GeneratePasswordHash(model.Password, user.Salt);
+            var userAesKey = cryptoService.Pbkdf2(model.Password, keySalt, 128);
+            user.EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportRSAPrivateKey(), userAesKey, iv));
+            #endregion
+
             return user;
         }
 
@@ -120,7 +130,7 @@ namespace Maelstorm.Services.Implementations
                 Action = action,
                 GenerationDate = DateTime.Now,
                 UserId = userId,
-                Value = cryptoService.GetRandomString()
+                Value = cryptoService.GetRandomBase64String()
             };
             return token;
         }       

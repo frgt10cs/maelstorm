@@ -22,7 +22,7 @@ namespace XApiTests.cs
                 Nickname = "loshok",
                 PasswordHash = "ksksksksksks",
                 Role = 0,
-                Salt = "1234",
+                PasswordSalt = "1234",
                 Status = "zhopa"
             });
             SaveChanges();            

@@ -83,7 +83,7 @@ namespace Maelstorm.Services.Implementations
                 SecondUserId = secondUserId,
                 IsClosed = isClosed                               
             };
-            string secret = cryptoService.GetRandomString();            
+            string secret = cryptoService.GetRandomBase64String(128);            
             rsa.ImportRSAPublicKey(Convert.FromBase64String(firstUser.PublicKey), out _);
             dialog.EncryptedFirstCryptoKey = Convert.ToBase64String(rsa.Encrypt(Encoding.UTF8.GetBytes(secret), RSAEncryptionPadding.OaepSHA256));
             rsa.ImportRSAPublicKey(Convert.FromBase64String(secondUser.PublicKey), out _);

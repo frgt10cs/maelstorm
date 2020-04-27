@@ -143,8 +143,7 @@ let apiModule = (function () {
             for (let errorIndex in errorType) {
                 errors.push(errorType[errorIndex]);
             }
-        }
-        console.log(errors);
+        }        
         return errors;
     }
 

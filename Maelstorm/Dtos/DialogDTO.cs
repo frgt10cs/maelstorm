@@ -14,6 +14,6 @@ namespace Maelstorm.Dtos
         public string LastMessageText { get; set; }
         public DateTime? LastMessageDate { get; set; }
         public string Image { get; set; }
-        public int InterlocutorId { get; set; }        
+        public int InterlocutorId { get; set; }         
     }
 }

@@ -20,19 +20,14 @@ namespace Maelstorm.Services.Implementations
             MainSalt = config["MainSalt"];
         }
 
-        public byte[] AesEncryptBytes(byte[] bytes, string key, byte[] iv, int keySize = 128)
-        {
-            int keyRequiredLength = keySize / 8;
-            if (key.Length > keyRequiredLength)
-                key = key.Substring(0, keyRequiredLength);
-            if (key.Length < keyRequiredLength)
-                key = key + key.Substring(0, keyRequiredLength - key.Length);
+        public byte[] AesEncryptBytes(byte[] bytes, byte[] key, byte[] iv, int keySize = 128)
+        {            
             byte[] result;
             using (Aes aes = Aes.Create())
             {
                 aes.KeySize = keySize;
                 aes.BlockSize = 128;
-                aes.Key = Encoding.UTF8.GetBytes(key);
+                aes.Key = key;
 
                 using (var encryptor = aes.CreateEncryptor(aes.Key, iv))
                 {
@@ -48,27 +43,32 @@ namespace Maelstorm.Services.Implementations
                 }
             }
             return result;
-        }           
-
-        public string GetRandomString()
-        {
-            byte[] randomNumber = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(randomNumber);
-            }
-            return Convert.ToBase64String(randomNumber);
         }
 
-        public string GeneratePasswordHash(string password, string salt)
+        public byte[] GenerateSalt(int size = 32)
         {
-            return Convert.ToBase64String(KeyDerivation.Pbkdf2(
+            var salt = new byte[size];
+            using (var random = new RNGCryptoServiceProvider())
+            {
+                random.GetNonZeroBytes(salt);
+            }
+            return salt;
+        }
+
+        public string GetRandomBase64String(int byteArraySize = 32)
+        {           
+            return Convert.ToBase64String(GenerateSalt(byteArraySize));
+        }
+
+        public byte[] Pbkdf2(string password, byte[] salt, int numBytes = 32)
+        {
+            return KeyDerivation.Pbkdf2(
                 password: password,
-                salt: Encoding.UTF8.GetBytes(salt + MainSalt),
+                salt: salt,
                 prf: KeyDerivationPrf.HMACSHA1,
-                iterationCount: 1000,
-                numBytesRequested: 256 / 8
-                ));
+                iterationCount: 10000,
+                numBytesRequested: numBytes
+                );
         }
 
         public byte[] GenerateIV()

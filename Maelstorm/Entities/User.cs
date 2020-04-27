@@ -10,7 +10,8 @@ namespace Maelstorm.Entities
         public string Email { get; set; }
         public string Nickname { get; set; }
         public string Image { get; set; }
-        public string Salt { get; set; }
+        public string PasswordSalt { get; set; }
+        public string KeySalt { get; set; }
         public string PasswordHash { get; set; }
         public byte Role { get; set; }
         public string Status { get; set; }

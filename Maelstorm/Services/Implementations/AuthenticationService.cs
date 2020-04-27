@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -54,7 +55,7 @@ namespace Maelstorm.Services.Implementations
                         session = new Session()
                         {
                             UserId = user.Id,
-                            SessionId = cryptoServ.GetRandomString(),
+                            SessionId = cryptoServ.GetRandomBase64String(),
                             FingerPrint = model.Fingerprint,
                             CreatedAt = DateTime.Now,
                             App = model.App,
@@ -75,7 +76,12 @@ namespace Maelstorm.Services.Implementations
                     session.IpAddress = ip;
                     session.RefreshToken = tokens.RefreshToken;
                     await context.SaveChangesAsync();
-                    var authResult = new AuthenticationResultDTO() { IVBase64 = user.IVBase64, EncryptedPrivateKey = user.EncryptedPrivateKey, Tokens = tokens };
+                    var authResult = new AuthenticationResultDTO() 
+                    {
+                        IVBase64 = user.IVBase64,
+                        KeySaltBase64 = user.KeySalt,
+                        EncryptedPrivateKey = user.EncryptedPrivateKey,
+                        Tokens = tokens };
                     result.Data = JsonConvert.SerializeObject(authResult);
                 }
                 else
@@ -96,7 +102,7 @@ namespace Maelstorm.Services.Implementations
             var user = await context.Users.FirstOrDefaultAsync(u => u.Nickname == model.Login);
             if (user != null)
             {
-                string hash = cryptoServ.GeneratePasswordHash(model.Password, user.Salt);
+                string hash = Convert.ToBase64String(cryptoServ.Pbkdf2(model.Password, Encoding.UTF8.GetBytes(user.PasswordSalt)));
                 if (hash == user.PasswordHash)
                 {
                     result = user;
@@ -172,7 +178,7 @@ namespace Maelstorm.Services.Implementations
             TokensDTO model = new TokensDTO()
             {
                 AccessToken = tokenHandler.WriteToken(token),
-                RefreshToken = cryptoServ.GetRandomString(),
+                RefreshToken = cryptoServ.GetRandomBase64String(),
                 GenerationTime = generationTime
             };
             return model;
