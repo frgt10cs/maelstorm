@@ -190,9 +190,9 @@ let apiModule = (function () {
             throw new Error("Invalid target id");
         },
 
-        login: async function (login, password) {
+        login: async function (login, password) {            
             let model = {
-                email: login,
+                login: login,
                 password: password,
                 osCpu: getOS(),
                 app: getBrowser(),
@@ -202,7 +202,7 @@ let apiModule = (function () {
             try {
                 loginResult = await sendAjaxRequest(new MaelstormRequest("/api/authentication/auth", "POST", model));
             }
-            catch (error) {
+            catch (error) {                
                 throw new Error(getErrorsFromJQXHR(error));
             }
             if (loginResult.isSuccessful) {
@@ -210,10 +210,11 @@ let apiModule = (function () {
                 localStorage.setItem("MAT", result.Tokens.AccessToken);
                 localStorage.setItem("MRT", result.Tokens.RefreshToken);
                 updateTokenTime(result.Tokens.GenerationTime);
-                let IV = _encoding.base64ToArray(result.IVBase64);
-                userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, 128);
+                let IV = _encoding.base64ToArray(result.IVBase64);  
+                
+                userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, _encoding.base64ToArray(result.KeySaltBase64), 128);
                 userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
-            } else {              
+            } else {                              
                 throw new Error(loginResult.errorMessages);
             }            
         },

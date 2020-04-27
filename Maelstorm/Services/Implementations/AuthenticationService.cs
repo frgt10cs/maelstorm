@@ -102,7 +102,7 @@ namespace Maelstorm.Services.Implementations
             var user = await context.Users.FirstOrDefaultAsync(u => u.Nickname == model.Login);
             if (user != null)
             {
-                string hash = Convert.ToBase64String(cryptoServ.Pbkdf2(model.Password, Encoding.UTF8.GetBytes(user.PasswordSalt)));
+                string hash = Convert.ToBase64String(cryptoServ.Pbkdf2(model.Password, Convert.FromBase64String(user.PasswordSalt)));
                 if (hash == user.PasswordHash)
                 {
                     result = user;

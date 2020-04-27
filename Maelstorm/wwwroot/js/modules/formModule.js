@@ -9,13 +9,14 @@
 
     return {
         isEmailValid: function (email) {
-            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-            if (re.test(String(email).toLowerCase())) {
-                if (email.length > 10 && email.length < 30)
+            if (email.length > 10 && email.length < 30) {
+                var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                if (re.test(String(email).toLowerCase())) {
                     return validationResult(true);
-                return validationResult(false, ["Invalid email length"]);
-            }
-            return validationResult(false, ["Is not email"]);
+                }
+                return validationResult(false, ["Is not email"]);
+            }                                        
+            return validationResult(false, ["Invalid email length"]);            
         },
 
         isLoginValid: function (login) {
@@ -125,12 +126,14 @@ let registrationFormModule = (function () {
 
         getDataValidationResult: function () {
             let validationResult = { isSuccess: true, errorMessages: [] };
-            let validationResults = [_formValidation.isLoginValid(loginTextBox.value), _formValidation.isEmailValid(emailTextBox), _formValidation.isPasswordValid(passwordTextBox.value),
+            let validationResults = [_formValidation.isLoginValid(loginTextBox.value), _formValidation.isEmailValid(emailTextBox.value), _formValidation.isPasswordValid(passwordTextBox.value),
             _formValidation.isPasswordValid(passwordConfirmTextBox.value)];
             for (let i in validationResults) {
                 if (!validationResults[i].isSuccess)
                     validationResult.errorMessages = validationResult.errorMessages.concat(validationResults[i].errorMessages);
             }
+            if (passwordTextBox.value !== passwordConfirmTextBox.value)
+                validationResult.errorMessages.push("passwords are not same");
             validationResult.isSuccess = validationResult.errorMessages.length === 0;
             return validationResult;
         },

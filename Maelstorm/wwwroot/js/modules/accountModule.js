@@ -13,8 +13,9 @@
                 _guiManager.hideAllForms();
                 _onLogin();
             }
-            catch (errors) {                
-                
+            catch (errors) {  
+                _guiManager.getLoginForm().clearErrors();
+                _guiManager.getLoginForm().addErrors([errors]);
             }
         }
         else {
@@ -34,12 +35,13 @@
                 _guiManager.getRegForm().clearErrors();
                 _guiManager.openLogin();
             }
-            catch (error) {
-               
+            catch (errors) {
+                _guiManager.getRegForm().clearErrors();
+                _guiManager.getRegForm().addErrors([errors]);
             }
         }
         else {
-            _guiManager.getLoginForm().clearErrors();
+            _guiManager.getRegForm().clearErrors();
             _guiManager.getRegForm().addErrors(validationResult.errorMessages);
         }
     };
