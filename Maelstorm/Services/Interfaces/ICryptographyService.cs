@@ -12,5 +12,6 @@ namespace Maelstorm.Services.Interfaces
         string GetRandomBase64String(int byteArraySize = 32);
         byte[] Pbkdf2(string password, byte[] salt, int numBytes = 32);
         byte[] GenerateIV();
+        byte[] PBKDF2_SHA256(string password, byte[] salt, int iterations, int hashByteSize);
     }
 }

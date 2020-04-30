@@ -213,6 +213,7 @@ let apiModule = (function () {
                 let IV = _encoding.base64ToArray(result.IVBase64);  
                 
                 userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, _encoding.base64ToArray(result.KeySaltBase64), 128);
+                console.log(await crypto.subtle.exportKey("raw", userAesKey));
                 userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
             } else {                              
                 throw new Error(loginResult.errorMessages);

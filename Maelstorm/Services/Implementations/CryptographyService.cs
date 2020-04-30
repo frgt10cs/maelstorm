@@ -8,6 +8,11 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Org.BouncyCastle;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -65,7 +70,7 @@ namespace Maelstorm.Services.Implementations
             return KeyDerivation.Pbkdf2(
                 password: password,
                 salt: salt,
-                prf: KeyDerivationPrf.HMACSHA1,
+                prf: KeyDerivationPrf.HMACSHA256,
                 iterationCount: 10000,
                 numBytesRequested: numBytes
                 );
@@ -76,6 +81,15 @@ namespace Maelstorm.Services.Implementations
             using var aes = Aes.Create();
             aes.GenerateIV();
             return aes.IV;
+        }
+
+        public byte[] PBKDF2_SHA256(string password, byte[] salt, int iterations, int hashByteSize)
+        {
+            var pdb = new Pkcs5S2ParametersGenerator(new Org.BouncyCastle.Crypto.Digests.Sha256Digest());
+            pdb.Init(PbeParametersGenerator.Pkcs5PasswordToBytes(password.ToCharArray()), salt,
+                         iterations);
+            var key = (KeyParameter)pdb.GenerateDerivedMacParameters(hashByteSize * 8);
+            return key.GetKey();
         }
     }
 }

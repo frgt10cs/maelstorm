@@ -28,7 +28,7 @@
                 "name": "PBKDF2",
                 salt: salt,
                 "iterations": 10000,
-                "hash": "SHA-1",
+                "hash": "SHA-256",
             },
             keyMaterial,
             { "name": "AES-CBC", "length": keyLength },
