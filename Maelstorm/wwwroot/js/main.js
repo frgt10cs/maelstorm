@@ -13,22 +13,15 @@ function init() {
 
 function initModules(fingerprint) {
     encodingModule.init();
-    cryptoModule.init(encodingModule);
-    api.init(fingerprint, cryptoModule, encodingModule);    
-    accountGuiModule.init(loginFormModule, registrationFormModule);
-    accountModule.init(api, accountGuiModule, init);
-    dialogsGuiModule.init();
-    dialogGuiModule.init(dateModule);
-    dialogModule.init(api, dialogGuiModule, messageModule, dateModule, 20, dialogsGuiModule.toTheTop);
-    dialogsModule.init(api, dialogsGuiModule, dialogModule);
-    connectionGuiModule.init();
-    signalRModule.init(api, fingerprint, dialogsModule, connectionGuiModule, accountGuiModule);
-    sessionGuiModule.init();
-    sessionModule.init(api, sessionGuiModule);
-    userGuiModule.init();
-    userModule.init(api, userGuiModule, dialogsModule);
-    settingsGuiModule.init();
-    settingsModule.init(settingsGuiModule);    
+    cryptoModule.init();
+    api.init(fingerprint);        
+    accountModule.init(init);        
+    dialogModule.init(20);
+    dialogsModule.init();    
+    signalRModule.init(fingerprint);    
+    sessionModule.init();    
+    userModule.init();    
+    settingsModule.init();    
 }
 
 function main() {

@@ -50,7 +50,7 @@ namespace Maelstorm.Services.Implementations
             return result;
         }
 
-        public byte[] GenerateSalt(int size = 32)
+        public byte[] GetRandomBytes(int size = 32)
         {
             var salt = new byte[size];
             using (var random = new RNGCryptoServiceProvider())
@@ -62,7 +62,7 @@ namespace Maelstorm.Services.Implementations
 
         public string GetRandomBase64String(int byteArraySize = 32)
         {           
-            return Convert.ToBase64String(GenerateSalt(byteArraySize));
+            return Convert.ToBase64String(GetRandomBytes(byteArraySize));
         }
 
         public byte[] Pbkdf2(string password, byte[] salt, int numBytes = 32)

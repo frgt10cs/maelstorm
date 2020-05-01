@@ -1,5 +1,4 @@
-﻿let cryptoModule = (function () {
-    let _encoding;    
+﻿let cryptoModule = (function () {      
 
     let validatePassphrase = function (passphrase, length) {
         let requiredLength = length / 8;
@@ -38,18 +37,20 @@
     }
 
     return {
-        init: function (encoding) {
-            _encoding = encoding;
+        init: function () {
+            
         },
 
-        generateIV: function() {
-
+        generateIV: function (size = 16) {
+            let array = new Uint32Array(size);
+            window.crypto.getRandomValues(array);
+            return array;
         },
 
         genereateAesKeyByPassPhrase: genereateAesKeyByPassPhrase,
 
         encryptAes: function(aesKey, iv, plainText) {
-            let dataBytes = _encoding.getBytes(plainText);
+            let dataBytes = encodingModule.getBytes(plainText);
             return window.crypto.subtle.encrypt({
                 name: "AES-CBC",                
                 iv: iv,
@@ -58,12 +59,16 @@
         },
 
         decryptAes: function(aesKey, iv, encryptedDataBase64) {
-            let encryptedBytes = _encoding.base64ToArray(encryptedDataBase64);            
+            let encryptedBytes = encodingModule.base64ToArray(encryptedDataBase64);            
             return window.crypto.subtle.decrypt({
                 name: "AES-CBC",
                 iv: iv,
             },
             aesKey, encryptedBytes);            
         },        
+
+        decryptRsa: function (encryptedDataBase64, privateKey) {
+
+        }
     }
 })();

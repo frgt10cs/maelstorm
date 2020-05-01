@@ -1,16 +1,12 @@
-﻿let userModule = (function () {
-    let _api;
-    let _guiManager;  
-    let _dialogs;
+﻿let userModule = (function () {    
     let prevSearch;
-    let openedUserInfo;
+    let openedUserInfo;   
 
-    let getUserInfo = function (userId) {
-        _api.getUserInfo(userId, function (userInfo) {
-            openedUserInfo = userInfo;
-            _guiManager.setUserInfo(userInfo);
-            _guiManager.showUserInfo();            
-        });
+    let getUserInfo = async function (userId) {
+        var userInfo = await api.getUserInfo(userId);
+        openedUserInfo = userInfo;
+        userGuiModule.setUserInfo(userInfo);
+        userGuiModule.showUserInfo();     
     };
 
     let createUserFoundElement = function (user) {
@@ -31,32 +27,30 @@
         return box;        
     };
 
-    let findUserByNickname = function () {
-        let nickname = _guiManager.getUserFindValue();
+    let findUserByNickname = async function () {
+        userGuiModule.get
+        let nickname = userGuiModule.getUserFindValue();
         if (nickname !== prevSearch) {
-            _api.findByNickname(nickname, function (users) {
-                _guiManager.clearUserResultsInnner();
-                if (users.length > 0) {
-                    for (let i = 0; i < users.length; i++) {
-                        _guiManager.appendUserFound(createUserFoundElement(users[i]));
-                    }
-                } else {
-                    _guiManager.setAsNotFound();
+            let users = await api.findByNickname(nickname);
+            userGuiModule.clearUserResultsInnner();
+            if (users.length > 0) {
+                for (let i = 0; i < users.length; i++) {
+                    userGuiModule.appendUserFound(createUserFoundElement(users[i]));
                 }
-            });
-        }
-        prevSearch = nickname;
+            } else {
+                userGuiModule.setAsNotFound();
+            }
+            prevSearch = nickname;
+        }        
     };
 
     return {
-        init: function (api, guiManager, dialogs) {
-            _api = api;
-            _guiManager = guiManager;
-            _dialogs = dialogs;
-            _guiManager.setFindUserFunc(findUserByNickname);
-            _guiManager.getUserInfoOpenDialog().onclick = function () {
-                _dialogs.openOrCreateDialog(openedUserInfo);
-                _guiManager.closeUserInfo();
+        init: function () {   
+            userGuiModule.init();
+            userGuiModule.setFindUserFunc(findUserByNickname);
+            userGuiModule.getUserInfoOpenDialog().onclick = function () {
+                dialogsModule.openOrCreateDialog(openedUserInfo);
+                userGuiModule.closeUserInfo();
             };
         },
 
@@ -77,6 +71,11 @@ let userGuiModule = (function () {
     let closeUserInfoBtn;
     let dark;          
 
+    closeUserInfo = function (){
+        dark.style.display = "none";
+        userInfoPanel.style.display = "none";
+    };  
+
     return {
         init: function () {
             userFindTextBox = document.getElementById("findUserValue");
@@ -90,6 +89,7 @@ let userGuiModule = (function () {
             userInfoOpenDialog = document.getElementById("userInfoOpenDialog");
             closeUserInfoBtn = document.getElementById("closeUserInfo");            
             dark = document.getElementById("dark");
+            closeUserInfoBtn.onclick = closeUserInfo;
         },
 
         getUserFindValue: function () { return userFindTextBox.value; },
@@ -100,7 +100,7 @@ let userGuiModule = (function () {
         //getUserInfoAvatarBox: function () { return userInfoAvatarBox; },
         //getUserInfoStatusBox: function () { return userInfoStatusBox; },
         //getUserInfoOnlineStatusBox: function () { return userInfoOnlineStatusBox; },
-        getUserInfoOpenDialog: function () { return userInfoOpenDialog; },
+        getUserInfoOpenDialog: function () { return userInfoOpenDialog; },        
 
         clearUserResultsInnner: function () {
             while (userResultsInner.lastChild) {
@@ -114,11 +114,17 @@ let userGuiModule = (function () {
 
         setAsNotFound: function () { userResultsInner.innerText = "Не найдено"; },          
 
-        setFindUserFunc: function (findFunc) {
-            findUserBtn.onclick = findFunc;
-            userFindTextBox.onkeydown = function (e) {
+        setFindUserFunc: function (findFuncAsync) {
+            findUserBtn.onclick = async function () {
+                findUserBtn.disabled = true;
+                await findFuncAsync();
+                findUserBtn.disabled = false;
+            };
+            userFindTextBox.onkeydown = async function (e) {
                 if (e.keyCode === 13) {
-                    findFunc();
+                    findUserBtn.disabled = true;
+                    await findFuncAsync();
+                    findUserBtn.disabled = false;
                     return false;
                 }
             };
@@ -136,9 +142,6 @@ let userGuiModule = (function () {
             userInfoPanel.style.display = "block";
         },
 
-        closeUserInfo: function () {
-            dark.style.display = "none";
-            userInfoPanel.style.display = "none";
-        }        
+        closeUserInfo: closeUserInfo
     };
 })();

@@ -9,6 +9,7 @@ namespace Maelstorm.Dtos
     public class DialogDTO
     {
         public int Id { get; set; }
+        public string EncryptedKey { get; set; }
         public string Title { get; set; }
         public long LastMessageNumber { get; set; }
         public string LastMessageText { get; set; }

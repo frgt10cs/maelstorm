@@ -106,13 +106,13 @@ namespace Maelstorm.Services.Implementations
                 PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey())                
             };
             #region password generation
-            var passwordSalt = cryptoService.GenerateSalt();
+            var passwordSalt = cryptoService.GetRandomBytes();
             user.PasswordSalt = Convert.ToBase64String(passwordSalt);
             user.PasswordHash = Convert.ToBase64String(cryptoService.Pbkdf2(model.Password, passwordSalt));
             #endregion
 
             #region keys generation
-            var keySalt = cryptoService.GenerateSalt();
+            var keySalt = cryptoService.GetRandomBytes();
             user.KeySalt = Convert.ToBase64String(keySalt);
             var iv = cryptoService.GenerateIV();                        
             user.IVBase64 = Convert.ToBase64String(iv);            

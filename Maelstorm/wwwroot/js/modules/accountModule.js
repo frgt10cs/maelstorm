@@ -1,63 +1,71 @@
-﻿let accountModule = (function () {
-    let _api;
-    let _guiManager;         
+﻿let accountModule = (function () {         
     let privateKey;    
     let _onLogin;
 
     let login = async function () {
-        let validationResult = _guiManager.getLoginForm().getDataValidationResult();
+        let validationResult = loginFormModule.getDataValidationResult();
         if (validationResult.isSuccess) {
             try {
-                await _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword());
-                _guiManager.getLoginForm().clearErrors();
-                _guiManager.hideAllForms();
+                let loginResult = await api.login(loginFormModule.getLogin(), loginFormModule.getPassword());
+                if (loginResult.isSuccessful) {
+                    let result = JSON.parse(loginResult.data);
+                    localStorage.setItem("MAT", result.Tokens.AccessToken);
+                    localStorage.setItem("MRT", result.Tokens.RefreshToken);
+                    updateTokenTime(result.Tokens.GenerationTime);
+                    let IV = encodingModule.base64ToArray(result.IVBase64);
+
+                    userAesKey = await cryptoModule.genereateAesKeyByPassPhrase(password, encodingModule.base64ToArray(result.KeySaltBase64), 128);                    
+                    let privateKey = await cryptoModule.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
+                    userAesKey = ...;
+                }
+                loginFormModule.clearErrors();
+                accountGuiModule.hideAllForms();
                 _onLogin();
             }
             catch (errors) {  
-                _guiManager.getLoginForm().clearErrors();
-                _guiManager.getLoginForm().addErrors([errors]);
+                loginFormModule.clearErrors();
+                loginFormModule.addErrors([errors]);
             }
         }
         else {
-            _guiManager.getLoginForm().clearErrors();
-            _guiManager.getLoginForm().addErrors(validationResult.errorMessages);
+            loginFormModule.clearErrors();
+            loginFormModule.addErrors(validationResult.errorMessages);
         }
     };
 
     let registration = async function () {
-        let validationResult = _guiManager.getRegForm().getDataValidationResult();
+        let validationResult = registrationFormModule.getDataValidationResult();
         if (validationResult.isSuccess) {
             try {
-                await _api.registration(_guiManager.getRegForm().getLogin(),
-                    _guiManager.getRegForm().getEmail(),
-                    _guiManager.getRegForm().getPassword(),
-                    _guiManager.getRegForm().getPasswordConfirm());
-                _guiManager.getRegForm().clearErrors();
-                _guiManager.openLogin();
+                await api.registration(registrationFormModule.getLogin(),
+                    registrationFormModule.getEmail(),
+                    registrationFormModule.getPassword(),
+                    registrationFormModule.getPasswordConfirm());
+                registrationFormModule.clearErrors();
+                accountGuiModule.openLogin();
             }
             catch (errors) {
-                _guiManager.getRegForm().clearErrors();
-                _guiManager.getRegForm().addErrors([errors]);
+                registrationFormModule.clearErrors();
+                registrationFormModule.addErrors([errors]);
             }
         }
         else {
-            _guiManager.getRegForm().clearErrors();
-            _guiManager.getRegForm().addErrors(validationResult.errorMessages);
+            registrationFormModule.clearErrors();
+            registrationFormModule.addErrors(validationResult.errorMessages);
         }
     };
 
     let logout = function () {
-        _api.logOut();
-        _guiManager.openLogin();
+        api.logOut();
+        accountGuiModule.openLogin();
     };
 
     return {
-        init: function (api, guiManager, onLogin) {
-            _api = api;
-            _guiManager = guiManager;            
-            _guiManager.getLoginForm().getSubmitButton().onclick = login;
-            _guiManager.getRegForm().getSubmitButton().onclick = registration;
-            _guiManager.getLogoutBtn().onclick = logout;    
+        init: function (onLogin) {
+            accountGuiModule.init();
+            loginFormModule.getSubmitButton().onclick = login;
+            registrationFormModule.getSubmitButton().onclick = registration;
+            accountGuiModule.getLogoutBtn().onclick = logout;    
             _onLogin = onLogin;
         },
 
@@ -89,30 +97,26 @@ let accountGuiModule = (function () {
         _loginForm.open();
     };
 
-    return {        
-        getLoginForm: function () { return _loginForm; },
-        getRegForm: function () { return _regForm; },
+    return {                
         getLogoutBtn: function () { return logoutBtn; },
         openLogin: openLogin,
         openRegistration: openRegistration,
 
         hideAllForms: function () {
             dark.style.display = "none";
-            _loginForm.hide();
-            _regForm.hide();
+            loginFormModule.hide();
+            registrationFormModule.hide();
         },
 
-        init: function (loginForm, regForm) {
+        init: function () {
             openLoginBtn = document.getElementById("openLogin");
             openLoginBtn.onclick = function () { openLogin(); };
             openRegistrationBtn = document.getElementById("openReg");
             openRegistrationBtn.onclick = function () { openRegistration(); };
             logoutBtn = document.getElementById("logoutButton");            
             dark = document.getElementById("dark");
-            _loginForm = loginForm;
-            _loginForm.init(formValidationModule);
-            _regForm = regForm;
-            _regForm.init(formValidationModule);
+            loginFormModule.init(formValidationModule)
+            registrationFormModule.init(formValidationModule);            
         }
     };
 })();

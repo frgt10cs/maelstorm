@@ -1,13 +1,10 @@
-﻿let dialogsModule = (function () {  
-    let _api;
-    let _guiManager;    
-    let _dialog;
+﻿let dialogsModule = (function () {              
     let openedDialog;
     let dialogs;               
 
     let removeDialogs = function () {        
-        while (_guiManager.getDialogsContainer().firstChild) {
-            _guiManager.getDialogsContainer().firstChild.remove();
+        while (dialogsGuiModule.getDialogsContainer().firstChild) {
+            dialogsGuiModule.getDialogsContainer().firstChild.remove();
         }
         dialogs = [];
         dialogsStackNumber = 1;
@@ -16,8 +13,8 @@
 
     let addDialog = function (dialog) {        
         dialog.element.onclick = function () { openDialog(dialog); };
-        _guiManager.getDialogsContainer().appendChild(dialog.element);
-        _guiManager.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
+        dialogsGuiModule.getDialogsContainer().appendChild(dialog.element);
+        dialogsGuiModule.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
         dialogs.push(dialog);        
     };
 
@@ -26,22 +23,21 @@
             if (openedDialog !== null) {
                 openedDialog.messagesPanel.style.display = "none";
             }
-            _dialog.setDialogContext(dialog);            
-            _dialog.openDialog();            
+            dialogModule.setDialogContext(dialog);            
+            dialogModule.openDialog();            
             openedDialog = dialog;
         }
     };
 
-    let openOrCreateDialog = function (userInfo) {
+    let openOrCreateDialog = async function (userInfo) {
         let dialog = getDialogByInterlocutorId(userInfo.id);
         if (dialog !== null && dialog !== undefined) {
             openDialog(dialog);
         } else {
-            _api.getDialog(userInfo.id, (dialog) => {                
-                dialog = _dialog.createDialog(dialog);
-                addDialog(dialog);
-                openDialog(dialog);
-            });
+            dialog = await api.getDialog(userInfo.id);
+            dialog = dialogModule.createDialog(dialog);
+            addDialog(dialog);
+            openDialog(dialog);
         }
     };
 
@@ -51,10 +47,8 @@
 
     return {
 
-        init: function (api, guiManager, dialogModule) {  
-            _api = api;
-            _guiManager = guiManager;  
-            _dialog = dialogModule;
+        init: function () {
+            dialogsGuiModule.init();
             openedDialog = null;
             dialogs = [];
             dialogsStackNumber = 1;            

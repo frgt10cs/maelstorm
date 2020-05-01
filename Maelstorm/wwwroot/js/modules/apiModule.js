@@ -1,4 +1,11 @@
-﻿class MaelstormRequest {
+﻿/**
+ * 
+ * Module which makes requests to server
+ * Just sending and recieving data according server's api
+ * 
+ **/
+
+class MaelstormRequest {
     constructor(url, type, data) {
         this.url = url;        
         this.type = (type === undefined ? "GET" : type);
@@ -7,8 +14,7 @@
 }
 
 let apiModule = (function () {
-    let _fingerprint;
-    let _crypto;
+    let _fingerprint;    
     let userPrivateKey;    
     let userAesKey;
 
@@ -147,19 +153,9 @@ let apiModule = (function () {
         return errors;
     }
 
-    //let decryptMessages = function (dialogKey, messages) {
-    //    let promises = [];
-    //    for (let i = 0; i < messages.length; i++) {
-    //        promises.push(_crypto.decryptAes(dialogKey, messages[i].IV, messages[i]));
-    //    }
-    //    return Promise.all(promises);                    
-    //}
-
     return {
-        init: function (fingerprint, crypto, encoding) {
-            _fingerprint = fingerprint;
-            _crypto = crypto;
-            _encoding = encoding;
+        init: function (fingerprint) {
+            _fingerprint = fingerprint;            
             accessTokenGenerationTime = Number(localStorage.getItem("ATGT"));
         },
 
@@ -197,27 +193,13 @@ let apiModule = (function () {
                 osCpu: getOS(),
                 app: getBrowser(),
                 fingerPrint: _fingerprint
-            };
-            let loginResult;
+            };            
             try {
-                loginResult = await sendAjaxRequest(new MaelstormRequest("/api/authentication/auth", "POST", model));
+                return await sendAjaxRequest(new MaelstormRequest("/api/authentication/auth", "POST", model));
             }
             catch (error) {                
                 throw new Error(getErrorsFromJQXHR(error));
-            }
-            if (loginResult.isSuccessful) {
-                let result = JSON.parse(loginResult.data);
-                localStorage.setItem("MAT", result.Tokens.AccessToken);
-                localStorage.setItem("MRT", result.Tokens.RefreshToken);
-                updateTokenTime(result.Tokens.GenerationTime);
-                let IV = _encoding.base64ToArray(result.IVBase64);  
-                
-                userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, _encoding.base64ToArray(result.KeySaltBase64), 128);
-                console.log(await crypto.subtle.exportKey("raw", userAesKey));
-                userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
-            } else {                              
-                throw new Error(loginResult.errorMessages);
-            }            
+            }                  
         },
 
         registration: async function (nickname, email, password, confirmPassword) {

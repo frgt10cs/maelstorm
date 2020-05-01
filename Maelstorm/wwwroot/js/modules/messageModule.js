@@ -1,4 +1,10 @@
-﻿let messageModule = (function () {           
+﻿/**
+ * 
+ * Operations with dialog messages
+ *
+ **/
+
+let messageModule = (function () {           
 
     let setElement = function (message, isFromOther) {
         let mesBlock = document.createElement("div");
@@ -44,14 +50,14 @@
         }
     };
 
-    // more
-    let setText = function (message, text) {
+    let validText = function (text) {
         if (!isEmptyOrSpaces(text)) {
             text = text.trim();
             text = text.replace(/\s\s+/g, ' ');
-            message.text = text;
+            return text;
         }
-    };
+        return "";
+    }    
 
     let isEmptyOrSpaces = function (str) {
         return str === null || str.match(/^ *$/) !== null;
@@ -66,6 +72,6 @@
         setElement: setElement,        
         setStatus: setStatus,
         updateStatus: updateStatus,
-        setText: setText
+        validText: validText
     };
 })();

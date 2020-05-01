@@ -83,11 +83,11 @@ namespace Maelstorm.Services.Implementations
                 SecondUserId = secondUserId,
                 IsClosed = isClosed                               
             };
-            string secret = cryptoService.GetRandomBase64String(128);            
+            byte[] secret = cryptoService.GetRandomBytes(16);
             rsa.ImportRSAPublicKey(Convert.FromBase64String(firstUser.PublicKey), out _);
-            dialog.EncryptedFirstCryptoKey = Convert.ToBase64String(rsa.Encrypt(Encoding.UTF8.GetBytes(secret), RSAEncryptionPadding.OaepSHA256));
+            dialog.EncryptedFirstCryptoKey = Convert.ToBase64String(rsa.Encrypt(secret, RSAEncryptionPadding.OaepSHA256));
             rsa.ImportRSAPublicKey(Convert.FromBase64String(secondUser.PublicKey), out _);
-            dialog.EncryptedSecondCryptoKey = Convert.ToBase64String(rsa.Encrypt(Encoding.UTF8.GetBytes(secret), RSAEncryptionPadding.OaepSHA256));
+            dialog.EncryptedSecondCryptoKey = Convert.ToBase64String(rsa.Encrypt(secret, RSAEncryptionPadding.OaepSHA256));
             return dialog;
         }
 
@@ -225,7 +225,9 @@ namespace Maelstorm.Services.Implementations
             User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user != null)
             {
-                string sqlQuery = "select Dialogs.Id as DialogId, Users.id as InterlocutorId, Users.Image as Image, Users.Nickname, m.Text, m.DateOfSending " +
+                string sqlQuery = "select Dialogs.Id as DialogId, " +
+                    "case when Dialogs.FirstUserId=@userId then Dialogs.EncryptedFirstCryptoKey else Dialogs.EncryptedSecondCryptoKey end as EncryptedKey, " +
+                    "Users.id as InterlocutorId, Users.Image as Image, Users.Nickname, m.Text, m.DateOfSending " +
                     "from Dialogs inner join " +
                     "(select DialogMessages.Id, DialogMessages.DialogId, DialogMessages.DateOfSending, DialogMessages.Text " +
                     "from DialogMessages inner join " +
@@ -260,11 +262,12 @@ namespace Maelstorm.Services.Implementations
                 models.Add(new DialogDTO()
                 {
                     Id = reader.GetInt32(0),
-                    InterlocutorId = reader.GetInt32(1),
-                    Image = reader.GetString(2),
-                    Title = reader.GetString(3),
-                    LastMessageText = reader.SafeGetString(4),
-                    LastMessageDate = reader.SafeGetDate(5)
+                    EncryptedKey = reader.GetString(1),
+                    InterlocutorId = reader.GetInt32(2),
+                    Image = reader.GetString(3),
+                    Title = reader.GetString(4),
+                    LastMessageText = reader.SafeGetString(5),
+                    LastMessageDate = reader.SafeGetDate(6)
                 });
             }
             return models;
@@ -319,16 +322,18 @@ namespace Maelstorm.Services.Implementations
                 User targetUser = await context.Users.FirstOrDefaultAsync(u => u.Id == interlocutorId);
                 if (targetUser != null)
                 {
-                    string sqlQuery = "select d.Id as Id, u.Id as InterlocutorId, u.Image as Image, u.Nickname as Title,  m.Text as LastMessageText, m.DateOfSending as LastMessageDate " +
-                    "from (select * from Dialogs where id = @dialogId) as d left join "+
-                    "(select DialogMessages.Id, DialogMessages.DialogId, DialogMessages.DateOfSending, DialogMessages.Text "+
-                    "from DialogMessages inner join "+
-                    "(select DialogId, max(DateOfSending) as DateOfSending from DialogMessages "+
-                    "where DialogId = @dialogId "+
-                    "group by DialogId) x "+
-                    "on DialogMessages.DateOfSending = x.DateOfSending and DialogMessages.DialogId = @dialogId) as m "+
-                    "on d.id = m.DialogId "+
-                    "inner join (select* from users where id = @interlocutorId) u on d.SecondUserId = u.Id or d.FirstUserId = u.Id";
+                    string sqlQuery = "select d.Id as Id," +
+                        "case when d.FirstUserId = @interlocutorId then d.EncryptedSecondCryptoKey else d.EncryptedFirstCryptoKey end as EncryptedKey, " +
+                        " u.Id as InterlocutorId, u.Image as Image, u.Nickname as Title,  m.Text as LastMessageText, m.DateOfSending as LastMessageDate " +
+                        "from (select * from Dialogs where id = @dialogId) as d left join "+
+                        "(select DialogMessages.Id, DialogMessages.DialogId, DialogMessages.DateOfSending, DialogMessages.Text "+
+                        "from DialogMessages inner join "+
+                        "(select DialogId, max(DateOfSending) as DateOfSending from DialogMessages "+
+                        "where DialogId = @dialogId "+
+                        "group by DialogId) x "+
+                        "on DialogMessages.DateOfSending = x.DateOfSending and DialogMessages.DialogId = @dialogId) as m "+
+                        "on d.id = m.DialogId "+
+                        "inner join (select* from users where id = @interlocutorId) u on d.SecondUserId = u.Id or d.FirstUserId = u.Id";
                     model = (await sqlService.ExecuteAsync(sqlQuery,
                         new DbParameter[] 
                         {

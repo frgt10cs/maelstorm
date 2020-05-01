@@ -1,9 +1,8 @@
 ﻿let settingsModule = (function () {
-    let _guiManager;
     return {
         init: function (guiManager) {
-            _guiManager = guiManager;
-            _guiManager.getSettingsPanelSlider().onclick = function () { _guiManager.changeSettingsOpenState(); };
+            settingsGuiModule.init();
+            settingsGuiModule.getSettingsPanelSlider().onclick = function () { settingsGuiModule.changeSettingsOpenState(); };
         }
     };
 })();

@@ -1,20 +1,18 @@
-﻿let sessionModule = (function () {
-    let _api;
-    let _guiManager;        
+﻿let sessionModule = (function () {          
 
     let closeSession = function (sessionId) {
-        _api.closeSession(sessionId, false);        
+        api.closeSession(sessionId, false);        
     };
 
     let banSession = function (sessionId) {
-        _api.closeSession(sessionId, true);
+        api.closeSession(sessionId, true);
     };
 
     let uploadSessions = function () {
-        _api.getSessions(function (sessions) {
-            _guiManager.clearSessionsContainer();
+        api.getSessions(function (sessions) {
+            sessionGuiModule.clearSessionsContainer();
             for (let i = 0; i < sessions.length; i++) {
-                _guiManager.appendSession(createSessionDiv(sessions[i]));
+                sessionGuiModule.appendSession(createSessionDiv(sessions[i]));
             }
         });
     };
@@ -68,10 +66,9 @@
     };
 
     return {
-        init: function (api, guiManager) {
-            _api = api;
-            _guiManager = guiManager;
-            _guiManager.setLoadSessionsFunc(uploadSessions);            
+        init: function () {      
+            sessionGuiModule.init();
+            sessionGuiModule.setLoadSessionsFunc(uploadSessions);            
         },
 
         uploadSessions: uploadSessions,                    
