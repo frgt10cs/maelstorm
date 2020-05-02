@@ -17,7 +17,7 @@ In development
 | Authentication |:heavy_check_mark:|
 | Token refresh |:exclamation:|
 | Messaging |:heavy_check_mark:|
-| End-to-end encryption |:hammer_and_wrench:|
+| End-to-end encryption |:heavy_check_mark:|
 | Document exchange|:clock2:|
 |Account settings|:clock2:|
 
