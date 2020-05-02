@@ -80,8 +80,10 @@ namespace Maelstorm.Services.Implementations
                     {
                         IVBase64 = user.IVBase64,
                         KeySaltBase64 = user.KeySalt,
+                        PublicKey = user.PublicKey,
                         EncryptedPrivateKey = user.EncryptedPrivateKey,
-                        Tokens = tokens };
+                        Tokens = tokens 
+                    };
                     result.Data = JsonConvert.SerializeObject(authResult);
                 }
                 else

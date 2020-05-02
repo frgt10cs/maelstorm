@@ -14,11 +14,15 @@ class MaelstormRequest {
 }
 
 let apiModule = (function () {
-    let _fingerprint;    
-    let userPrivateKey;    
-    let userAesKey;
+    let _fingerprint;      
 
     let accessTokenGenerationTime;
+
+    let setTokens = function (tokens) {
+        localStorage.setItem("MAT", tokens.AccessToken);
+        localStorage.setItem("MRT", tokens.RefreshToken);
+        updateTokenTime(tokens.GenerationTime);              
+    }
 
     let areTokensValid = function () {
         let token = localStorage.getItem("MAT");
@@ -82,9 +86,7 @@ let apiModule = (function () {
                 let result = await sendAjaxRequest(new MaelstormRequest("/api/authentication/rfrshtkn", "POST", refreshDTO));                               
                 if (result.isSuccessful) {
                     let tokens = JSON.parse(result.data);
-                    localStorage.setItem("MAT", tokens.AccessToken);
-                    localStorage.setItem("MRT", tokens.RefreshToken);
-                    updateTokenTime(tokens.GenerationTime);                    
+                    setTokens(tokens);
                 } else {
                     localStorage.removeItem("MAT");
                     localStorage.removeItem("MRT");                    
@@ -268,6 +270,8 @@ let apiModule = (function () {
             if (userId > 0)
                 return await sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId));
             throw new Error("Invalid user id");            
-        }
+        },
+
+        setTokens: setTokens
     };
 })();

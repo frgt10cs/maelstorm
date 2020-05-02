@@ -79,7 +79,7 @@
             localStorage.clear();
             isClosedByClient = true;
             connection.stop();
-            accountGuiManager.openLogin();
+            accountGuiModule.openLogin();
         });
     };
 

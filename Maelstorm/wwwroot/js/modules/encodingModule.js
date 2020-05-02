@@ -29,7 +29,16 @@
             for (let i = 0; i < len; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
             }
-        return new Uint8Array(bytes.buffer);
-        }    
+            return new Uint8Array(bytes.buffer);
+        },
+
+        base64UrlDecode: function (str) {
+            str = atob(str.replace(/-/g, '+').replace(/_/g, '/'));
+            var buffer = new Uint8Array(str.length);
+            for (var i = 0; i < str.length; ++i) {
+                buffer[i] = str.charCodeAt(i);
+            }
+            return buffer;
+        }
     }
 })();

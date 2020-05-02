@@ -1,26 +1,55 @@
 ﻿let accountModule = (function () {         
     let privateKey;    
-    let _onLogin;
+    let publicKey;
+    let _onLogin;    
 
     let login = async function () {
         let validationResult = loginFormModule.getDataValidationResult();
         if (validationResult.isSuccess) {
             try {
-                let loginResult = await api.login(loginFormModule.getLogin(), loginFormModule.getPassword());
+                let loginResult = await api.login(loginFormModule.getLogin(), loginFormModule.getPassword());                
                 if (loginResult.isSuccessful) {
-                    let result = JSON.parse(loginResult.data);
-                    localStorage.setItem("MAT", result.Tokens.AccessToken);
-                    localStorage.setItem("MRT", result.Tokens.RefreshToken);
-                    updateTokenTime(result.Tokens.GenerationTime);
+                    let result = JSON.parse(loginResult.data);                    
                     let IV = encodingModule.base64ToArray(result.IVBase64);
 
-                    userAesKey = await cryptoModule.genereateAesKeyByPassPhrase(password, encodingModule.base64ToArray(result.KeySaltBase64), 128);                    
-                    let privateKey = await cryptoModule.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
-                    userAesKey = ...;
+                    userAesKey = await cryptoModule.genereateAesKeyByPassPhrase(loginFormModule.getPassword(), encodingModule.base64ToArray(result.KeySaltBase64), 128);                     
+                    publicKey = await window.crypto.subtle.importKey(
+                        "spki",
+                        encodingModule.base64ToArray(result.PublicKey),
+                        {
+                            name: "RSA-OAEP",
+                            hash: "SHA-256"
+                        },
+                        true,
+                        ["encrypt"]
+                    );
+
+                    let publicKeyExport = await window.crypto.subtle.exportKey("jwk", publicKey);
+                    let exponent = encodingModule.base64UrlDecode(publicKeyExport.e);                    
+                
+                    let privateKeyBytes = await cryptoModule.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);                    
+                    privateKey = await window.crypto.subtle.importKey(
+                        "pkcs8",
+                        privateKeyBytes,
+                        {
+                            name: "RSA-OAEP",
+                            modulusLength: 2048,
+                            publicExponent: exponent,
+                            hash: "SHA-256",
+                        },
+                        false,
+                        ["decrypt"]
+                    );
+
+                    api.setTokens(result.Tokens);                    
+
+                    loginFormModule.clearErrors();
+                    accountGuiModule.hideAllForms();
+                    _onLogin();
                 }
-                loginFormModule.clearErrors();
-                accountGuiModule.hideAllForms();
-                _onLogin();
+                else {
+                    loginFormModule.addErrors([loginResult.errorMessages]);
+                }                
             }
             catch (errors) {  
                 loginFormModule.clearErrors();
@@ -76,8 +105,6 @@
 })();
 
 let accountGuiModule = (function () {
-    let _loginForm;
-    let _regForm;
     let logoutBtn;
     let openLoginBtn,
         openRegistrationBtn,                
@@ -85,16 +112,16 @@ let accountGuiModule = (function () {
 
     let openRegistration = function () {
         dark.style.display = "block";
-        _loginForm.hide();
-        _regForm.clearErrors();
-        _regForm.open();
+        loginFormModule.hide();
+        registrationFormModule.clearErrors();
+        registrationFormModule.open();
     };
 
     let openLogin = function () {
         dark.style.display = "block";
-        _regForm.hide();
-        _loginForm.clearErrors();
-        _loginForm.open();
+        registrationFormModule.hide();
+        loginFormModule.clearErrors();
+        loginFormModule.open();
     };
 
     return {                

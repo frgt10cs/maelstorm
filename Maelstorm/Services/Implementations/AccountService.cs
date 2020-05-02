@@ -94,7 +94,7 @@ namespace Maelstorm.Services.Implementations
         
         private User CreateUser(RegistrationDTO model)
         {
-            using var rsa = RSA.Create(2048);
+            using var rsa = RSA.Create(2048);            
             User user = new User()
             {
                 DateOfRegistration = DateTime.Now,
@@ -103,7 +103,7 @@ namespace Maelstorm.Services.Implementations
                 Role = 0,
                 Status = "Stupid status from community",
                 Image = "defaultUser.png",
-                PublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey())                
+                PublicKey = Convert.ToBase64String(rsa.ExportSubjectPublicKeyInfo())                
             };
             #region password generation
             var passwordSalt = cryptoService.GetRandomBytes();
@@ -116,9 +116,8 @@ namespace Maelstorm.Services.Implementations
             user.KeySalt = Convert.ToBase64String(keySalt);
             var iv = cryptoService.GenerateIV();                        
             user.IVBase64 = Convert.ToBase64String(iv);            
-            var userAesKey = cryptoService.PBKDF2_SHA256(model.Password, keySalt, 10000, 16);
-            Console.WriteLine(string.Join(' ', userAesKey));            
-            user.EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportRSAPrivateKey(), userAesKey, iv));            
+            var userAesKey = cryptoService.PBKDF2_SHA256(model.Password, keySalt, 10000, 16);               
+            user.EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportPkcs8PrivateKey(), userAesKey, iv));            
             #endregion
 
             return user;

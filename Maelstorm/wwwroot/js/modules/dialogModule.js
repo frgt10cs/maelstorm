@@ -98,7 +98,7 @@ let dialogModule = (function () {
         api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount).then(messages => { readedMessagesHandler(messages); }, error => { console.log(error); });
     };
 
-    let createDialog = function (serverDialog) {      
+    let createDialog = async function (serverDialog) {      
         serverDialog.isPanelOpened = false;
         serverDialog.unreadedMessages = [];
         serverDialog.messages = [];

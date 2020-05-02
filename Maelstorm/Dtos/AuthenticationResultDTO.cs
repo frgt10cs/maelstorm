@@ -9,6 +9,7 @@ namespace Maelstorm.Dtos
     {
         public string IVBase64 { get; set; }
         public string KeySaltBase64 { get; set; }
+        public string PublicKey { get; set; }
         public string EncryptedPrivateKey { get; set; }
         public TokensDTO Tokens { get; set; }
     }

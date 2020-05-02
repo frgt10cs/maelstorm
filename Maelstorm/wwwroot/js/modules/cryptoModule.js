@@ -69,6 +69,10 @@
 
         decryptRsa: function (encryptedDataBase64, privateKey) {
 
+        },
+
+        encryptRsa: function (plainText, publicKey) {
+
         }
     }
 })();
