@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Maelstorm.Extensions;
@@ -24,7 +24,7 @@ namespace Maelstorm.ControllersAPI
 
         [HttpPost]
         [ActionName("auth")]
-        public async Task<ActionResult<ServiceResult>> Authenticate([FromBody]AuthenticationViewModel model)
+        public async Task<ActionResult<ServiceResult>> Authenticate([FromBody]AuthenticationDTO model)
         {            
             ServiceResult result;
             if (ModelState.IsValid)
@@ -40,7 +40,7 @@ namespace Maelstorm.ControllersAPI
         
         [HttpPost]
         [ActionName("rfrshtkn")]
-        public async Task<ActionResult<ServiceResult>> RefreshToken([FromBody]RefreshTokenViewModel model)
+        public async Task<ActionResult<ServiceResult>> RefreshToken([FromBody]RefreshTokenDTO model)
         {
             ServiceResult result;
             if (ModelState.IsValid)

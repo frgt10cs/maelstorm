@@ -36,20 +36,21 @@ namespace Maelstorm
             services.AddOptions();
             services.Configure<JwtOptions>(Configuration);
 
-            services.AddDbContext<MaelstormRepository, MaelstormContext>();
+            services.AddDbContext<MaelstormContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("MaelstormDatabase"))); ;
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<IAccountService, AccountService>();            
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IDialogService, DialogService>();
-            //services.AddScoped<ISQLService, SQLService>();
-            services.AddScoped<ISQLService, SQLLiteService>();
+            services.AddScoped<ISQLService, SQLService>();
+            //services.AddScoped<ISQLService, SQLiteService>();
             services.AddScoped<IFinderService, FinderService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ISessionService, SessionService>();
-            services.AddScoped<ISignalRSessionService, SignalRSessionService>();            
+            services.AddScoped<ISignalRSessionService, SignalRSessionService>();
+            services.AddScoped<ICryptographyService, CryptographyService>();
 
             #region Jwt / session validation
 
@@ -124,7 +125,7 @@ namespace Maelstorm
             {
                 option.Configuration = Configuration["Redis:Address"];
                 option.InstanceName = "maelstorm";
-            });
+            });            
 
             services.AddSignalR();
         }
@@ -153,7 +154,7 @@ namespace Maelstorm
             app.Use(async (context, next) =>
             {
                 context.Response.Headers.Add("Content-Security-Policy",
-                    $"default-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com https://ajax.googleapis.com https://ajax.aspnetcdn.com https://stackpath.bootstrapcdn.com https://cdnjs.cloudflare.com https://code.jquery.com; base-uri 'self'; report-uri /event/cspreport");
+                    $"default-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com https://ajax.googleapis.com https://ajax.aspnetcdn.com https://stackpath.bootstrapcdn.com https://cdnjs.cloudflare.com https://code.jquery.com https://cdn.jsdelivr.net; base-uri 'self'; report-uri /event/cspreport");
                 context.Response.Headers.Add("x-xss-protection", "1; mode=block");
                 context.Response.Headers.Add("X-Frame-Options", "DENY");
                 context.Response.Headers.Add("X-Content-Type-Options", "nosniff");

@@ -1,5 +1,4 @@
 ﻿обработка неаутентификации по сигналу
-Дублирование сообщений
 Логирование не робит
 ip google chrome in session
 when update browser sessions changes                      -|?
@@ -8,7 +7,10 @@ local time
 rename login and reg forms
 rename controller methods(get/put)
 after devide - add in startup addControllers and maps
-isDatavlid in forms
 text valiation
 double rfrshtkn
 on rfrrsh error
+validation parameters on api
+onlogin ?
+foreign keys
+email already exist client error

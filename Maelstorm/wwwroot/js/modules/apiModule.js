@@ -1,110 +1,116 @@
-﻿class MaelstormRequest {
-    constructor(url, handler, type, data) {
-        this.url = url;
-        this.handler = handler;
+﻿/**
+ * 
+ * Module which makes requests to server
+ * Just sending and recieving data according server's api
+ * 
+ **/
+
+class MaelstormRequest {
+    constructor(url, type, data) {
+        this.url = url;        
         this.type = (type === undefined ? "GET" : type);
         this.data = data;
     }
 }
 
-var apiModule = (function () {
-    var _fingerprint;
+let apiModule = (function () {
+    let _fingerprint;      
 
-    var accessTokenGenerationTime;
+    let accessTokenGenerationTime;
 
-    var areTokensValid = function () {
-        var token = localStorage.getItem("MAT");
-        var refreshToken = localStorage.getItem("MRT");
+    let setTokens = function (tokens) {
+        localStorage.setItem("MAT", tokens.AccessToken);
+        localStorage.setItem("MRT", tokens.RefreshToken);
+        updateTokenTime(tokens.GenerationTime);              
+    }
+
+    let areTokensValid = function () {
+        let token = localStorage.getItem("MAT");
+        let refreshToken = localStorage.getItem("MRT");
         return token !== null && refreshToken !== null && token !== undefined && refreshToken !== undefined && token !== "" && refreshToken !== "";
     };
 
-    var updateTokenTime = function (time) {
-        var value = new Date(time).getTime();
+    let updateTokenTime = function (time) {
+        let value = new Date(time).getTime();
         localStorage.setItem("ATGT", value);
         accessTokenGenerationTime = value;
     };
 
-    var isTokenExpired = function () {
+    let isTokenExpired = function () {
         return new Date().getTime() - accessTokenGenerationTime > 300000;
-    };
+    };        
 
-    var sendRequest = function (request) {
-        if (!isTokenExpired()) {
-            $.ajax({
-                url: request.url,
-                type: request.type,
-                contentType: "application/json",
-                dataType: "json",
-                data: request.type === "POST" ? JSON.stringify(request.data) : null,
-                beforeSend: function (xhr) {
-                    var token = localStorage.getItem("MAT");
-                    if (token !== undefined) {
-                        xhr.setRequestHeader("Authorization", "Bearer " + token);
-                    }
-                },
-                success: function (data) {
-                    request.handler(data);
-                },
-                statusCode: {
-                    401: function (xhr) {
-                        if (xhr.getResponseHeader("Token-Expired")) {
-                            refreshToken(request);
-                        } else {
-                            //
-                        }
-                    }
+    let sendAjaxRequest = function (request) {        
+        return $.ajax({
+            url: request.url,
+            type: request.type,
+            contentType: "application/json",
+            dataType: "json",
+            data: request.type === "POST" ? JSON.stringify(request.data) : null            
+        });
+    }
+
+    let sendAjaxAuthRequest = function (request) {
+        return $.ajax({
+            url: request.url,
+            type: request.type,
+            contentType: "application/json",
+            dataType: "json",
+            data: request.type === "POST" ? JSON.stringify(request.data) : null,
+            beforeSend: function (xhr) {
+                let token = localStorage.getItem("MAT");
+                if (token !== undefined) {
+                    xhr.setRequestHeader("Authorization", "Bearer " + token);
                 }
-            });
-        } else {
-            refreshToken(request);
-        }
+            }
+        });
     };
 
-    var refreshToken = function (request) {
-        var token = localStorage.getItem("MAT");
-        var refreshToken = localStorage.getItem("MRT");
+    let sendRequest = async function (requestParams) {
+        if (isTokenExpired()) {
+            await refreshToken();           
+        }        
+        return await sendAjaxAuthRequest(requestParams);
+    }
+
+    let refreshToken = async function () {
+        let token = localStorage.getItem("MAT");
+        let refreshToken = localStorage.getItem("MRT");
         if (areTokensValid() && isTokenExpired()) {
-            var refresh = JSON.stringify({
+            let refreshDTO = {
                 token: token,
-                refreshtoken: refreshToken,
-                fingerPrint: _fingerprint
-            });
-            $.ajax({
-                url: "/api/authentication/rfrshtkn",
-                type: "POST",
-                contentType: "application/json",
-                dataType: "json",
-                data: refresh,
-                success: function (data) {
-                    console.log(data);
-                    if (data.isSuccessful) {
-                        var tokens = JSON.parse(data.data);
-                        localStorage.setItem("MAT", tokens.AccessToken);
-                        localStorage.setItem("MRT", tokens.RefreshToken);
-                        updateTokenTime(tokens.GenerationTime);
-                        sendRequest(request);
-                    } else {
-                        console.log("Token refreshing error: " + data.errorMessages.join(' '));
-                        localStorage.removeItem("MAT");
-                        localStorage.removeItem("MRT");
-                        //
-                    }
+                refreshToken: refreshToken,
+                fingerprint: _fingerprint
+            };
+            try {
+                let result = await sendAjaxRequest(new MaelstormRequest("/api/authentication/rfrshtkn", "POST", refreshDTO));                               
+                if (result.isSuccessful) {
+                    let tokens = JSON.parse(result.data);
+                    setTokens(tokens);
+                } else {
+                    localStorage.removeItem("MAT");
+                    localStorage.removeItem("MRT");                    
+                    //
                 }
-            });
-        }
+            }
+            catch (error) {
+                console.log(error);
+                throw new Error(error);
+            }
+        }        
     };
 
-    var isEmptyOrSpaces = function (str) {
+    let isEmptyOrSpaces = function (str) {
         return str === null || str.match(/^ *$/) !== null;
     }; 
 
-    var getOS = function () {
-        var userAgent = window.navigator.userAgent;
-        var platform = window.navigator.platform;
-        var macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
-        var windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
-        var iosPlatforms = ['iPhone', 'iPad', 'iPod'];
-        var os = "Unknown";
+    let getOS = function () {
+        let userAgent = window.navigator.userAgent;
+        let platform = window.navigator.platform;
+        let macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
+        let windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
+        let iosPlatforms = ['iPhone', 'iPad', 'iPod'];
+        let os = "Unknown";
 
         if (macosPlatforms.indexOf(platform) !== -1) {
             os = 'Mac OS';
@@ -120,8 +126,8 @@ var apiModule = (function () {
         return os;
     };
 
-    var getBrowser = function () {
-        var ua = navigator.userAgent,
+    let getBrowser = function () {
+        let ua = navigator.userAgent,
             tem,
             M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
         if (/trident/i.test(M[1])) {
@@ -137,75 +143,71 @@ var apiModule = (function () {
         return M.join(' ');
     };  
 
+    let getErrorsFromJQXHR = function (JQXHR) {        
+        let errorTypes = Object.keys(JQXHR.responseJSON.errors);
+        let errors = [];
+        for (let errorTypeIndex in errorTypes) {       
+            let errorType = JQXHR.responseJSON.errors[errorTypes[errorTypeIndex]];
+            for (let errorIndex in errorType) {
+                errors.push(errorType[errorIndex]);
+            }
+        }        
+        return errors;
+    }
+
     return {
-        init: function(fingerprint) {
-            _fingerprint = fingerprint;
+        init: function (fingerprint) {
+            _fingerprint = fingerprint;            
             accessTokenGenerationTime = Number(localStorage.getItem("ATGT"));
         },
 
         areTokensValid: areTokensValid,
 
-        getDialogs: function(stackNumber, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialogs?stackNumber=" + stackNumber, handler));
+        getDialogs: async function (offset, count) {
+            return await sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset + "&count=" + count));            
         },
 
-        getReadedMessages: function(dialogId, offset, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, handler, "GET"));
+        getReadedMessages: async function (dialogId, offset, count) {
+            return await sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET"));            
         },
 
-        getUnreadedMessages: function(dialogId, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&count=" + count, handler, "GET"));
+        getUnreadedMessages: async function (dialogId, offset, count) {
+            return await sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET"));            
         },
 
-        sendDialogMessage: function(message, onSuccessful) {
-            if (message.targetId !== 0) {
+        sendDialogMessage: async function (message) {
+            if (message.targetId > 0) {
                 if (!isEmptyOrSpaces(message.text)) {
                     if (message.text.length > 1 && message.text.length < 4096) {
-                        sendRequest(new MaelstormRequest("/api/dialog/sendmessage",
-                            function (data) {
-                                console.log(data);
-                                if (data.isSuccessful) {
-                                    onSuccessful(data);
-                                }
-                            },
-                            "POST", message));
+                        return await  sendRequest(new MaelstormRequest("/api/dialog/sendmessage", "POST", message));
                     }
+                    throw new Error("Invalid message length");
                 }
+                throw new Error("Text is empty");
             }
+            throw new Error("Invalid target id");
         },
 
-        login: function(login, password, onSuccess, onFailed) {
-            var model = {
-                email: login,
+        login: async function (login, password) {            
+            let model = {
+                login: login,
                 password: password,
                 osCpu: getOS(),
                 app: getBrowser(),
                 fingerPrint: _fingerprint
-            };
-            $.ajax({
-                url: "/api/authentication/auth",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(model),
-                dataType: "json",
-                success: function (data) {
-                    if (data.isSuccessful) {
-                        var tokens = JSON.parse(data.data);
-                        localStorage.setItem("MAT", tokens.AccessToken);
-                        localStorage.setItem("MRT", tokens.RefreshToken);
-                        updateTokenTime(tokens.GenerationTime);
-                        onSuccess();
-                    } else {
-                        onFailed();
-                    }
-                }
-            });
+            };            
+            try {
+                return await sendAjaxRequest(new MaelstormRequest("/api/authentication/auth", "POST", model));
+            }
+            catch (error) {                
+                throw new Error(getErrorsFromJQXHR(error));
+            }                  
         },
 
-        registration: function(nickname, email, password, confirmPassword, onSuccess, onFailed) {
+        registration: async function (nickname, email, password, confirmPassword) {
             if (!isEmptyOrSpaces(nickname) && !isEmptyOrSpaces(email) && !isEmptyOrSpaces(password) && !isEmptyOrSpaces(confirmPassword)) {
                 if (password === confirmPassword) {
-                    var model = {
+                    let model = {
                         nickname: nickname,
                         email: email,
                         password: password,
@@ -216,49 +218,60 @@ var apiModule = (function () {
                         type: "POST",
                         contentType: "application/json",
                         data: JSON.stringify(model),
-                        dataType: "json",
-                        success: function (data) {
-                            if (data.isSuccessful) {
-                                onSuccess();
-                            }
-                            else {
-                                onFailed(data);
-                            }
+                        dataType: "json"
+                    }).done(function (data) {
+                        if (!data.isSuccessful) {
+                            throw new Error(data.errorMessages[0]);
                         }
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        throw new Error(textStatus);
                     });
                 }
+                else {
+                    throw new Error("Passwords are not same");
+                }
+            }
+            else {
+                throw new Error("Invalid data");
             }
         },
 
-        logOut: function() {
-            sendRequest(new MaelstormRequest("/api/user/logout", null, "GET"));
+        logOut: function () {
+            sendRequest(new MaelstormRequest("/api/user/logout", "GET"));
             localStorage.clear();
         },
 
-        getDialog: function(interlocutorId, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId, handler));
-        },            
-
-        getSessions: function(handler) {
-            sendRequest(new MaelstormRequest("/api/user/getsessions", handler, "GET"));
+        getDialog: async function (interlocutorId) {
+            return await sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId));            
         },
 
-        closeSession: function(sessionId, banDevice) {
-            var data = { sessionId: sessionId, banDevice: banDevice };
-            sendRequest(new MaelstormRequest("/api/user/closeSession", null, "POST", data));
+        getSessions: async function () {
+            return await sendRequest(new MaelstormRequest("/api/user/getsessions", "GET"));            
         },
 
-        getOnlineStatuses: function(ids, handler) {
-            if (ids.length === 0) return;
-            sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", handler, "POST", ids));
+        closeSession: function (sessionId, banDevice) {
+            let data = { sessionId: sessionId, banDevice: banDevice };
+            sendRequest(new MaelstormRequest("/api/user/closeSession", "POST", data));
         },
 
-        findByNickname: function (nickname, handler) {
-            sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname, handler));
+        getOnlineStatuses: async function (ids) {
+            if (ids.length !== 0)
+                return await sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", "POST", ids));
+            throw new Error("Ids is empty");            
         },
 
-        getUserInfo: function (userId, handler) {
-            sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId, handler));
-        }
+        findByNickname: async function (nickname) {
+            if (!isEmptyOrSpaces(nickname))
+                return await sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname));
+            throw new error("Nickname is empty");
+        },
+
+        getUserInfo: async function (userId) {
+            if (userId > 0)
+                return await sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId));
+            throw new Error("Invalid user id");            
+        },
+
+        setTokens: setTokens
     };
 })();

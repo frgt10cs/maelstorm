@@ -1,5 +1,5 @@
 ﻿using Maelstorm.Database;
-using Maelstorm.Models;
+using Maelstorm.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,11 +8,11 @@ using System.Text;
 
 namespace XApiTests.cs
 {
-    class FakeContext : MaelstormRepository
+    class FakeContext : MaelstormContext
     {
         private static readonly FakeContext db = new FakeContext();
         public static FakeContext Context() => db;
-        private FakeContext()
+        private FakeContext():base(null)
         {
             Users.Add(new User()
             {
@@ -22,7 +22,7 @@ namespace XApiTests.cs
                 Nickname = "loshok",
                 PasswordHash = "ksksksksksks",
                 Role = 0,
-                Salt = "1234",
+                PasswordSalt = "1234",
                 Status = "zhopa"
             });
             SaveChanges();            

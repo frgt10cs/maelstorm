@@ -1,8 +1,9 @@
 ﻿using Maelstorm.Crypto.Interfaces;
 using Maelstorm.Database;
 using Maelstorm.Models;
+using Maelstorm.Entities;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.Dtos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,36 +12,35 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Maelstorm.Services.Implementations
 {
     public class AuthenticationService : IAuthenticationService
     {
-        private MaelstormRepository context;
+        private MaelstormContext context;
         private IOptions<JwtOptions> jwtOptions;
         private ISigningKeys signingKeys;
-        private IEncryptingKeys encryptingKeys;
-        private IPasswordService passServ;
+        private IEncryptingKeys encryptingKeys;        
         private ILogger<AccountService> logger;
+        private ICryptographyService cryptoServ;
 
-        public AuthenticationService(MaelstormRepository context, IPasswordService passServ, IOptions<JwtOptions> jwtOptions,
+        public AuthenticationService(MaelstormContext context, IOptions<JwtOptions> jwtOptions, ICryptographyService cryptoServ,
             ISigningKeys signingKeys, IEncryptingKeys encryptingKeys, ILogger<AccountService> logger)
-        {
+        {            
             this.context = context;
             this.jwtOptions = jwtOptions;
             this.signingKeys = signingKeys;
-            this.encryptingKeys = encryptingKeys;
-            this.passServ = passServ;
+            this.cryptoServ = cryptoServ;
+            this.encryptingKeys = encryptingKeys;            
             this.logger = logger;
         }
 
-        public async Task<ServiceResult> AuthenticateAsync(AuthenticationViewModel model, string ip)
+        public async Task<ServiceResult> AuthenticateAsync(AuthenticationDTO model, string ip)
         {
             ServiceResult result = new ServiceResult();
             User user = await LoginAsync(model);
@@ -55,7 +55,7 @@ namespace Maelstorm.Services.Implementations
                         session = new Session()
                         {
                             UserId = user.Id,
-                            SessionId = GenerateRandomToken(),
+                            SessionId = cryptoServ.GetRandomBase64String(),
                             FingerPrint = model.Fingerprint,
                             CreatedAt = DateTime.Now,
                             App = model.App,
@@ -65,7 +65,7 @@ namespace Maelstorm.Services.Implementations
                         };
                         context.Sessions.Add(session);
                     }
-                    TokensViewmodel tokens = CreateTokens(new Claim[]
+                    TokensDTO tokens = CreateTokens(new Claim[]
                     {
                         new Claim("UserId", user.Id.ToString()),
                         new Claim("UserEmail", user.Email),
@@ -76,7 +76,15 @@ namespace Maelstorm.Services.Implementations
                     session.IpAddress = ip;
                     session.RefreshToken = tokens.RefreshToken;
                     await context.SaveChangesAsync();
-                    result.Data = JsonConvert.SerializeObject(tokens);
+                    var authResult = new AuthenticationResultDTO() 
+                    {
+                        IVBase64 = user.IVBase64,
+                        KeySaltBase64 = user.KeySalt,
+                        PublicKey = user.PublicKey,
+                        EncryptedPrivateKey = user.EncryptedPrivateKey,
+                        Tokens = tokens 
+                    };
+                    result.Data = JsonConvert.SerializeObject(authResult);
                 }
                 else
                 {
@@ -90,13 +98,13 @@ namespace Maelstorm.Services.Implementations
             return result;
         }
 
-        public async Task<User> LoginAsync(AuthenticationViewModel model)
+        public async Task<User> LoginAsync(AuthenticationDTO model)
         {
             User result = null;
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Nickname == model.Login);
             if (user != null)
             {
-                string hash = passServ.GenerateHash(model.Password, user.Salt);
+                string hash = Convert.ToBase64String(cryptoServ.Pbkdf2(model.Password, Convert.FromBase64String(user.PasswordSalt)));
                 if (hash == user.PasswordHash)
                 {
                     result = user;
@@ -108,12 +116,12 @@ namespace Maelstorm.Services.Implementations
             }
             else
             {
-                logger.LogWarning("Login failed. Incorrect email. Email: " + model.Email);
+                logger.LogWarning("Login failed. Incorrect email. Login: " + model.Login);
             }
             return result;
         }
 
-        public async Task<ServiceResult> RefreshToken(RefreshTokenViewModel model, string ip)
+        public async Task<ServiceResult> RefreshToken(RefreshTokenDTO model, string ip)
         {
             ServiceResult result = new ServiceResult();
             JwtValidationResult validationResult = ValidateToken(model.Token);
@@ -150,7 +158,7 @@ namespace Maelstorm.Services.Implementations
             return result;
         }
 
-        public TokensViewmodel CreateTokens(Claim[] claims)
+        public TokensDTO CreateTokens(Claim[] claims)
         {
             DateTime generationTime = DateTime.Now;
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -169,10 +177,10 @@ namespace Maelstorm.Services.Implementations
                     encryptingKeys.SigningAlgorithm,
                     encryptingKeys.EncryptingAlgorithm)
             );
-            TokensViewmodel model = new TokensViewmodel()
+            TokensDTO model = new TokensDTO()
             {
                 AccessToken = tokenHandler.WriteToken(token),
-                RefreshToken = GenerateRandomToken(),
+                RefreshToken = cryptoServ.GetRandomBase64String(),
                 GenerationTime = generationTime
             };
             return model;
@@ -242,16 +250,6 @@ namespace Maelstorm.Services.Implementations
                 }
             }
             return location;
-        }
-
-        private string GenerateRandomToken()
-        {
-            byte[] randomNumber = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(randomNumber);
-            }
-            return Convert.ToBase64String(randomNumber);
-        }
+        }       
     }
 }

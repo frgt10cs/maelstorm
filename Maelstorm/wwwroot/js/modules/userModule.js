@@ -1,29 +1,25 @@
-﻿var userModule = (function () {
-    var _api;
-    var _guiManager;  
-    var _dialogs;
-    var prevSearch;
-    var openedUserInfo;
+﻿let userModule = (function () {    
+    let prevSearch;
+    let openedUserInfo;   
 
-    var getUserInfo = function (userId) {
-        _api.getUserInfo(userId, function (userInfo) {
-            openedUserInfo = userInfo;
-            _guiManager.setUserInfo(userInfo);
-            _guiManager.showUserInfo();            
-        });
+    let getUserInfo = async function (userId) {
+        var userInfo = await api.getUserInfo(userId);
+        openedUserInfo = userInfo;
+        userGuiModule.setUserInfo(userInfo);
+        userGuiModule.showUserInfo();     
     };
 
-    var createUserFoundElement = function (user) {
-        var box = document.createElement("div");
+    let createUserFoundElement = function (user) {
+        let box = document.createElement("div");
         box.classList.add("userPreviewInner");
         box.onclick = function () {
             getUserInfo(user.id);            
         };
-        var imageBox = document.createElement("div");
+        let imageBox = document.createElement("div");
         imageBox.style.backgroundImage = "url('/images/" + user.miniAvatar + "')";
         imageBox.classList.add("userPreviewAvatar");
         box.appendChild(imageBox);
-        var nicknameBox = document.createElement("div");
+        let nicknameBox = document.createElement("div");
         nicknameBox.textContent = user.nickname;
         nicknameBox.classList.add("userPreviewNickname");
         box.appendChild(nicknameBox);
@@ -31,32 +27,30 @@
         return box;        
     };
 
-    var findUserByNickname = function () {
-        var nickname = _guiManager.getUserFindValue();
+    let findUserByNickname = async function () {
+        userGuiModule.get
+        let nickname = userGuiModule.getUserFindValue();
         if (nickname !== prevSearch) {
-            _api.findByNickname(nickname, function (users) {
-                _guiManager.clearUserResultsInnner();
-                if (users.length > 0) {
-                    for (var i = 0; i < users.length; i++) {
-                        _guiManager.appendUserFound(createUserFoundElement(users[i]));
-                    }
-                } else {
-                    _guiManager.setAsNotFound();
+            let users = await api.findByNickname(nickname);
+            userGuiModule.clearUserResultsInnner();
+            if (users.length > 0) {
+                for (let i = 0; i < users.length; i++) {
+                    userGuiModule.appendUserFound(createUserFoundElement(users[i]));
                 }
-            });
-        }
-        prevSearch = nickname;
+            } else {
+                userGuiModule.setAsNotFound();
+            }
+            prevSearch = nickname;
+        }        
     };
 
     return {
-        init: function (api, guiManager, dialogs) {
-            _api = api;
-            _guiManager = guiManager;
-            _dialogs = dialogs;
-            _guiManager.setFindUserFunc(findUserByNickname);
-            _guiManager.getUserInfoOpenDialog().onclick = function () {
-                _dialogs.openOrCreateDialog(openedUserInfo);
-                _guiManager.closeUserInfo();
+        init: function () {   
+            userGuiModule.init();
+            userGuiModule.setFindUserFunc(findUserByNickname);
+            userGuiModule.getUserInfoOpenDialog().onclick = function () {
+                dialogsModule.openOrCreateDialog(openedUserInfo);
+                userGuiModule.closeUserInfo();
             };
         },
 
@@ -64,18 +58,23 @@
     };
 })();
 
-var userGuiModule = (function () {
-    var userFindTextBox;
-    var userResultsInner;
-    var findUserBtn;
-    var userInfoPanel;
-    var userInfoNicknameBox;
-    var userInfoAvatarBox;
-    var userInfoStatusBox;
-    var userInfoOnlineStatusBox;
-    var userInfoOpenDialog;
-    var closeUserInfoBtn;
-    var dark;          
+let userGuiModule = (function () {
+    let userFindTextBox;
+    let userResultsInner;
+    let findUserBtn;
+    let userInfoPanel;
+    let userInfoNicknameBox;
+    let userInfoAvatarBox;
+    let userInfoStatusBox;
+    let userInfoOnlineStatusBox;
+    let userInfoOpenDialog;
+    let closeUserInfoBtn;
+    let dark;          
+
+    closeUserInfo = function (){
+        dark.style.display = "none";
+        userInfoPanel.style.display = "none";
+    };  
 
     return {
         init: function () {
@@ -90,6 +89,7 @@ var userGuiModule = (function () {
             userInfoOpenDialog = document.getElementById("userInfoOpenDialog");
             closeUserInfoBtn = document.getElementById("closeUserInfo");            
             dark = document.getElementById("dark");
+            closeUserInfoBtn.onclick = closeUserInfo;
         },
 
         getUserFindValue: function () { return userFindTextBox.value; },
@@ -100,7 +100,7 @@ var userGuiModule = (function () {
         //getUserInfoAvatarBox: function () { return userInfoAvatarBox; },
         //getUserInfoStatusBox: function () { return userInfoStatusBox; },
         //getUserInfoOnlineStatusBox: function () { return userInfoOnlineStatusBox; },
-        getUserInfoOpenDialog: function () { return userInfoOpenDialog; },
+        getUserInfoOpenDialog: function () { return userInfoOpenDialog; },        
 
         clearUserResultsInnner: function () {
             while (userResultsInner.lastChild) {
@@ -114,11 +114,17 @@ var userGuiModule = (function () {
 
         setAsNotFound: function () { userResultsInner.innerText = "Не найдено"; },          
 
-        setFindUserFunc: function (findFunc) {
-            findUserBtn.onclick = findFunc;
-            userFindTextBox.onkeydown = function (e) {
+        setFindUserFunc: function (findFuncAsync) {
+            findUserBtn.onclick = async function () {
+                findUserBtn.disabled = true;
+                await findFuncAsync();
+                findUserBtn.disabled = false;
+            };
+            userFindTextBox.onkeydown = async function (e) {
                 if (e.keyCode === 13) {
-                    findFunc();
+                    findUserBtn.disabled = true;
+                    await findFuncAsync();
+                    findUserBtn.disabled = false;
                     return false;
                 }
             };
@@ -136,9 +142,6 @@ var userGuiModule = (function () {
             userInfoPanel.style.display = "block";
         },
 
-        closeUserInfo: function () {
-            dark.style.display = "none";
-            userInfoPanel.style.display = "none";
-        }        
+        closeUserInfo: closeUserInfo
     };
 })();

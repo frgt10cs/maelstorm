@@ -8,11 +8,58 @@ a:hover {
     text-decoration: none;
 }
 
-.dark {
-    background-color: #1E1E1E;
+.logoContainer {
+    background-color: #D32F2F;
     color: white;
+    margin-bottom:10px;
 }
 
 .mainContainer{
     height:90vh;
+}
+
+.hideScroll::-webkit-scrollbar {
+    display: none;
+}
+
+.hideScroll {
+    -ms-overflow-style: none;
+}
+
+.invert {
+    filter: invert(1);
+}
+
+.rotate {
+    transform: rotate(90deg);
+}
+
+y-scroll {
+    overflow-y: scroll;
+}
+
+/* bg color */
+
+.bg-dark-2 {
+    background-color: #2E2E30 !important;
+}
+
+.bg-dark-3 {
+    background-color: #1F1F1F !important;
+}
+
+.bg-dark-4 {
+    background-color: #333335 !important;
+}
+
+.bg-dark-5 {
+    background-color: #3E3D43 !important;
+}
+
+.bg-dark-6 {
+    background-color: #3E3E3E !important;
+}
+
+.bg-darkness {
+    background-color: #191919 !important;
 }

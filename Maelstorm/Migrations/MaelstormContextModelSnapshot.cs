@@ -3,6 +3,7 @@ using System;
 using Maelstorm.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Maelstorm.Migrations
@@ -14,156 +15,233 @@ namespace Maelstorm.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079");
+                .HasAnnotation("ProductVersion", "3.1.3")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128)
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("BannedDevice", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Fingerprint");
+                    b.Property<string>("Fingerprint")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.ToTable("BannedDevices");
                 });
 
-            modelBuilder.Entity("Maelstorm.Models.Dialog", b =>
+            modelBuilder.Entity("Maelstorm.Entities.Dialog", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("FirstUserId");
+                    b.Property<string>("EncryptedFirstCryptoKey")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsClosed");
+                    b.Property<string>("EncryptedSecondCryptoKey")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("LastActive");
+                    b.Property<int>("FirstUserId")
+                        .HasColumnType("int");
 
-                    b.Property<int>("SecondUserId");
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SaltBase64")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SecondUserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.ToTable("Dialogs");
                 });
 
-            modelBuilder.Entity("Maelstorm.Models.DialogMessage", b =>
+            modelBuilder.Entity("Maelstorm.Entities.DialogMessage", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("AuthorId");
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("DateOfSending");
+                    b.Property<DateTime>("DateOfSending")
+                        .HasColumnType("datetime2");
 
-                    b.Property<int>("DialogId");
+                    b.Property<int>("DialogId")
+                        .HasColumnType("int");
 
-                    b.Property<bool>("IsVisibleForAuthor");
+                    b.Property<string>("IVBase64")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsVisibleForOther");
+                    b.Property<bool>("IsVisibleForAuthor")
+                        .HasColumnType("bit");
 
-                    b.Property<int>("ReplyId");
+                    b.Property<bool>("IsVisibleForOther")
+                        .HasColumnType("bit");
 
-                    b.Property<byte>("Status");
+                    b.Property<int>("ReplyId")
+                        .HasColumnType("int");
 
-                    b.Property<int>("TargetId");
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
 
-                    b.Property<string>("Text");
+                    b.Property<int>("TargetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("DialogMessages");
                 });
 
-            modelBuilder.Entity("Maelstorm.Models.RegisteredApp", b =>
+            modelBuilder.Entity("Maelstorm.Entities.RegisteredApp", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<bool>("IsActive");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
-                    b.Property<string>("SecretKey");
+                    b.Property<string>("SecretKey")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.ToTable("Apps");
                 });
 
-            modelBuilder.Entity("Maelstorm.Models.Token", b =>
+            modelBuilder.Entity("Maelstorm.Entities.Session", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<byte>("Action");
+                    b.Property<string>("App")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("GenerationDate");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<int>("UserId");
+                    b.Property<string>("FingerPrint")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Value");
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OsCpu")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SessionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("Maelstorm.Entities.Token", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<byte>("Action")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("GenerationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Tokens");
                 });
 
-            modelBuilder.Entity("Maelstorm.Models.User", b =>
+            modelBuilder.Entity("Maelstorm.Entities.User", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<DateTime>("DateOfRegistration");
+                    b.Property<DateTime>("DateOfRegistration")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("Email");
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("EmailIsConfirmed");
+                    b.Property<bool>("EmailIsConfirmed")
+                        .HasColumnType("bit");
 
-                    b.Property<string>("Image");
+                    b.Property<string>("EncryptedPrivateKey")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Nickname");
+                    b.Property<string>("IVBase64")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PasswordHash");
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte>("Role");
+                    b.Property<string>("KeySalt")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Salt");
+                    b.Property<string>("Nickname")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Status");
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordSalt")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PublicKey")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte>("Role")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Session", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("App");
-
-                    b.Property<DateTime>("CreatedAt");
-
-                    b.Property<string>("FingerPrint");
-
-                    b.Property<string>("IpAddress");
-
-                    b.Property<string>("Location");
-
-                    b.Property<string>("OsCpu");
-
-                    b.Property<string>("RefreshToken");
-
-                    b.Property<string>("SessionId");
-
-                    b.Property<int>("UserId");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Sessions");
                 });
 #pragma warning restore 612, 618
         }

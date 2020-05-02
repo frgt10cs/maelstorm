@@ -1,7 +1,8 @@
 ﻿using Maelstorm.Database;
 using Maelstorm.Models;
+using Maelstorm.Entities;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.Dtos;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -21,23 +22,27 @@ using Microsoft.AspNetCore.Http;
 using Maelstorm.Extensions;
 using System.Data.Common;
 using Microsoft.Data.Sqlite;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Maelstorm.Services.Implementations
 {
     public class DialogService : IDialogService
     {
         private ISignalRSessionService sesServ;
-        private MaelstormRepository context;
+        private MaelstormContext context;
         private ILogger<MaelstormContext> logger;        
         private IHubContext<MessageHub> messHub;
         private IDistributedCache cache;
         private IHttpContextAccessor httpContext;
         private ISQLService sqlService;
+        private ICryptographyService cryptoService;
         private readonly int userId;
         private readonly JsonSerializerSettings serializerSettings;
 
-        public DialogService(MaelstormRepository context, ILogger<MaelstormContext> logger,
-            IHubContext<MessageHub> messHub, IDistributedCache cache, IHttpContextAccessor httpContext, ISignalRSessionService sesServ, ISQLService sqlService)
+        public DialogService(MaelstormContext context, ILogger<MaelstormContext> logger,
+            IHubContext<MessageHub> messHub, IDistributedCache cache, IHttpContextAccessor httpContext,
+            ISignalRSessionService sesServ, ISQLService sqlService, ICryptographyService cryptoService)
         {
             this.context = context;
             this.logger = logger;            
@@ -46,6 +51,7 @@ namespace Maelstorm.Services.Implementations
             this.httpContext = httpContext;
             this.sesServ = sesServ;
             this.sqlService = sqlService;
+            this.cryptoService = cryptoService;
             userId = httpContext.HttpContext.GetUserId();
             serializerSettings = new JsonSerializerSettings();
             serializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
@@ -59,19 +65,35 @@ namespace Maelstorm.Services.Implementations
             dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.FirstUserId == ids[0] && d.SecondUserId == ids[1]);
             if (dialog == null)
             {
-                dialog = new Dialog()
-                {
-                    FirstUserId = ids[0],
-                    SecondUserId = ids[1],
-                    IsClosed = false
-                };
+                dialog = await CreateDialog(ids[0], ids[1]);
                 context.Dialogs.Add(dialog);
                 await context.SaveChangesAsync();
             }
             return dialog;
         }
 
-        public async Task<ServiceResult> SendDialogMessageAsync(MessageSendViewModel model)
+        private async Task<Dialog> CreateDialog(int firstUserId, int secondUserId, bool isClosed = false)
+        {
+            using var rsa = RSA.Create(2048);                      
+            User firstUser = await context.Users.FirstOrDefaultAsync(u => u.Id == firstUserId);
+            User secondUser = await context.Users.FirstOrDefaultAsync(u => u.Id == secondUserId);
+            Dialog dialog = new Dialog()
+            {
+                FirstUserId = firstUserId,
+                SecondUserId = secondUserId,
+                IsClosed = isClosed                               
+            };
+            byte[] secret = cryptoService.GetRandomBytes(16);
+            byte[] salt = cryptoService.GetRandomBytes(16);
+            dialog.SaltBase64 = Convert.ToBase64String(salt);
+            rsa.ImportSubjectPublicKeyInfo(Convert.FromBase64String(firstUser.PublicKey), out _);
+            dialog.EncryptedFirstCryptoKey = Convert.ToBase64String(rsa.Encrypt(secret, RSAEncryptionPadding.OaepSHA256));
+            rsa.ImportSubjectPublicKeyInfo(Convert.FromBase64String(secondUser.PublicKey), out _);
+            dialog.EncryptedSecondCryptoKey = Convert.ToBase64String(rsa.Encrypt(secret, RSAEncryptionPadding.OaepSHA256));
+            return dialog;
+        }
+
+        public async Task<ServiceResult> SendDialogMessageAsync(MessageSendDTO model)
         {            
             ServiceResult result = new ServiceResult();
             Dialog dialog = await GetOrCreateDialogAsync(model.TargetId);
@@ -84,10 +106,9 @@ namespace Maelstorm.Services.Implementations
                     {
                         model.Text = text;
                         DialogMessage message = new DialogMessage(model, userId, dialog.Id);                        
-                        context.DialogMessages.Add(message);
-                        dialog.LastActive = message.DateOfSending;
+                        context.DialogMessages.Add(message);                        
                         await context.SaveChangesAsync();
-                        MessageDeliveredViewModel confirm = new MessageDeliveredViewModel()
+                        MessageDeliveredDTO confirm = new MessageDeliveredDTO()
                         {
                             Id = message.Id,
                             BindId = model.BindId,
@@ -113,7 +134,7 @@ namespace Maelstorm.Services.Implementations
 
         private async Task NewMessagePush(DialogMessage message)
         {
-            var messageViewModel = new MessageViewModel()
+            var messageViewModel = new MessageDTO()
             {
                 Id = message.Id,
                 AuthorId = message.AuthorId,                
@@ -154,110 +175,116 @@ namespace Maelstorm.Services.Implementations
             return messages;
         }
 
-        public IQueryable<DialogMessage> GetNewMessages(int dialogId, int userId, int count)
+        public IQueryable<DialogMessage> GetNewMessages(int dialogId, int userId, int offset, int count)
         {
             return context.DialogMessages.
                 Where(m => m.DialogId == dialogId 
-                    && m.AuthorId != userId && m.Status == 0 && m.IsVisibleForOther)                
+                    && m.AuthorId != userId && m.Status == 0 && m.IsVisibleForOther)
+                .Skip(offset)
                 .Take(count);
         }
 
-        private async Task<List<MessageViewModel>> ToMessageViewModelsAsync(IQueryable<DialogMessage> messages)
+        private async Task<List<MessageDTO>> ToMessageDTOAsync(IQueryable<DialogMessage> messages)
         {
-            return await messages.Select(m => new MessageViewModel()
+            return await messages.Select(m => new MessageDTO()
             {
                 Id = m.Id,
                 AuthorId = m.AuthorId,                
                 DialogId = m.DialogId,
                 DateOfSending = m.DateOfSending,
                 Status = m.Status,
-                Text = m.Text
+                Text = m.Text,
+                IVBase64 = m.IVBase64
             })
             .ToListAsync();
         }
 
-        public async Task<List<MessageViewModel>> GetReadedDialogMessagesAsync(int dialogId, int offset, int count)
+        public async Task<List<MessageDTO>> GetReadedDialogMessagesAsync(int dialogId, int offset, int count)
         {
             if (!(dialogId > 0 && offset >= 0 && count > 0 && count <= 100)) return null;
-            List<MessageViewModel> messages = null;
+            List<MessageDTO> messages = null;
             Dialog dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.Id == dialogId);
             if (dialog != null)
             {
-                messages = await ToMessageViewModelsAsync(GetOldMessages(dialogId, userId, offset, count));                   
+                messages = await ToMessageDTOAsync(GetOldMessages(dialogId, userId, offset, count));                   
             }
             return messages;
         }
 
-        public async Task<List<MessageViewModel>> GetUnreadedDialogMessagesAsync(int dialogId, int count)
+        public async Task<List<MessageDTO>> GetUnreadedDialogMessagesAsync(int dialogId, int offset, int count)
         {
             if (!(dialogId > 0 && count > 0 && count <= 100)) return null;
-            List<MessageViewModel> messages = null;
+            List<MessageDTO> messages = null;
             Dialog dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.Id == dialogId);
             if(dialog != null)
             {
-                messages = await ToMessageViewModelsAsync(GetNewMessages(dialogId, userId, count));                    
+                messages = await ToMessageDTOAsync(GetNewMessages(dialogId, userId, offset, count));                    
             }
             return messages;
         }
 
-        // отпимизировать
-        public async Task<List<DialogViewModel>> GetDialogsAsync(int stackNumber, int count)
+        public async Task<List<DialogDTO>> GetDialogsAsync(int offset, int count)
         {
-            List<DialogViewModel> models = new List<DialogViewModel>();
+            List<DialogDTO> models = new List<DialogDTO>();
             User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user != null)
             {
-                models = await sqlService.ExecuteAsync("select dialogs.Id as Id, users.Id as interlocutorId, " +
-                    "users.Image as Image, users.Nickname as Title, m.Text as LastMessageText, m.DateOfSending as LastMessageDate from dialogs inner join " +
-                    "(select id, dialogId, Text, max(DateOfSending) as DateOfSending from DialogMessages " +
-                    "where (dialogMessages.AuthorId = @userId and dialogMessages.IsVisibleForAuthor) " +
-                    "or(dialogMessages.AuthorId != @userId and dialogMessages.IsVisibleForOther) group by DialogId) as m " +
-                    "on dialogs.Id = m.DialogId " +
+                string sqlQuery = "select Dialogs.Id as DialogId, Dialogs.SaltBase64 as Salt, " +
+                    "case when Dialogs.FirstUserId=@userId then Dialogs.EncryptedFirstCryptoKey else Dialogs.EncryptedSecondCryptoKey end as EncryptedKey, " +
+                    "Users.id as InterlocutorId, Users.Image as Image, Users.Nickname, m.Id as MessageId, m.AuthorId, m.Text, m.IVBase64, m.DateOfSending, m.Status " +
+                    "from Dialogs inner join " +
+                    "(select DialogMessages.Id, DialogMessages.AuthorId, DialogMessages.IVBase64, DialogMessages.Status, DialogMessages.DialogId, DialogMessages.DateOfSending, DialogMessages.Text " +
+                    "from DialogMessages inner join " +
+                    "(select DialogId, max(DateOfSending) as DateOfSending from DialogMessages " +
+                    "where (DialogMessages.AuthorId = @userId and DialogMessages.IsVisibleForAuthor = 1) " +
+                    "or(DialogMessages.AuthorId != @userId and DialogMessages.IsVisibleForOther = 1) group by DialogId) x " +
+                    "on DialogMessages.DateOfSending = x.DateOfSending and DialogMessages.DialogId = x.DialogId) as m " +
+                    "on Dialogs.id = m.DialogId " +
                     "inner join Users on " +
-                    "(dialogs.FirstUserId = @userId and users.id = dialogs.SecondUserId) " +
-                    "or(dialogs.SecondUserId = @userId and users.id = Dialogs.FirstUserId) " +
-                    "order by m.DateOfSending", new SqliteParameter[] { new SqliteParameter("@userId", userId)}, async (reader)=>
+                    "(Dialogs.FirstUserId = @userId and Users.id = Dialogs.SecondUserId) " +
+                    "or(Dialogs.SecondUserId = @userId and Users.id = Dialogs.FirstUserId) " +
+                    "order by m.DateOfSending " +
+                    "offset @offsetCount rows " +
+                    "fetch next @count rows only";
+                models = await sqlService.ExecuteAsync(sqlQuery,
+                    new DbParameter[] 
                     {
-                        var models = new List<DialogViewModel>();
-                        while (await reader.ReadAsync())
-                        {
-                            models.Add(new DialogViewModel()
-                            {
-                                Id = reader.GetInt32(0),
-                                InterlocutorId = reader.GetInt32(1),
-                                Image = reader.GetString(2),
-                                Title = reader.GetString(3),
-                                LastMessageText = reader.GetString(4),
-                                LastMessageDate = reader.GetDateTime(5)                                
-                            });
-                        }
-                        return models;
-                    });
-                //var dialogMessages = from message in context.DialogMessages
-                //                     where (message.AuthorId == userId && message.IsVisibleForAuthor) ||
-                //                     (message.AuthorId != userId && message.IsVisibleForOther)
-                //                     group message by message.DialogId into messages
-                //                     select messages.OrderByDescending(m => m.DateOfSending).FirstOrDefault();
-                //var query = from dialog in context.Dialogs
-                //            join message in dialogMessages
-                //            on dialog.Id equals message.DialogId
-                //            from interlocutor in context.Users
-                //            where (dialog.FirstUserId == userId && dialog.SecondUserId == interlocutor.Id)
-                //            || (dialog.SecondUserId == userId && dialog.FirstUserId == interlocutor.Id)
-                //            orderby message.DateOfSending
-                //            select new
-                //            {
-                //                Avatar = user.Image,
-                //                DialogId = dialog.Id,
-                //                message.Text,
-                //                message.DateOfSending,
-                //                InterlocutorId = interlocutor.Id
-                //            };               
-                models = models.Skip((stackNumber - 1) * count).Take(count).ToList();                          
+                        new SqlParameter("@userId", userId),
+                        new SqlParameter("@offsetCount", offset),
+                        new SqlParameter("@count", count)
+                    },
+                    DialogViewModelSqlCoverter);                                              
             }
             return models;
         }
         
+        public async Task<List<DialogDTO>> DialogViewModelSqlCoverter(DbDataReader reader)
+        {
+            var models = new List<DialogDTO>();
+            while (await reader.ReadAsync())
+            {
+                models.Add(new DialogDTO()
+                {
+                    Id = reader.GetInt32(0),
+                    SaltBase64 = reader.GetString(1),
+                    EncryptedKey = reader.GetString(2),
+                    InterlocutorId = reader.GetInt32(3),
+                    Image = reader.GetString(4),
+                    Title = reader.GetString(5),
+                    LastMessage = new MessageDTO()
+                    {
+                        Id = reader.GetInt32(6),
+                        AuthorId = reader.GetInt32(7),                        
+                        Text = reader.GetString(8),
+                        IVBase64 = reader.GetString(9),
+                        DateOfSending = reader.GetDateTime(10),
+                        Status = reader.GetByte(11)
+                    }                    
+                });
+            }
+            return models;
+        }
+
         public async Task SetMessageAsReaded(int messageId)
         {
             if (messageId <= 0)
@@ -297,28 +324,35 @@ namespace Maelstorm.Services.Implementations
             return null;
         }
 
-        public async Task<DialogViewModel> GetDialogAsync(int interlocutorId)
+        public async Task<DialogDTO> GetDialogAsync(int interlocutorId)
         {
-            DialogViewModel model = null;
+            DialogDTO model = null;
             User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user != null)
-            {
-                int[] ids = { userId, interlocutorId };
-                Array.Sort(ids);
+            {               
                 Dialog dialog = await GetOrCreateDialogAsync(interlocutorId);
                 User targetUser = await context.Users.FirstOrDefaultAsync(u => u.Id == interlocutorId);
                 if (targetUser != null)
                 {
-                    DialogMessage message = await context.DialogMessages.LastOrDefaultAsync(m => m.DialogId == dialog.Id);
-                    model = new DialogViewModel()
-                    {
-                        Id = dialog.Id,
-                        Image = targetUser.Image,
-                        LastMessageDate = message?.DateOfSending,
-                        LastMessageText = message?.Text,
-                        InterlocutorId = interlocutorId,
-                        Title = targetUser.Nickname
-                    };
+                    string sqlQuery = "select d.Id as Id, d.SaltBase64 as Salt, " +
+                        "case when d.FirstUserId = @interlocutorId then d.EncryptedSecondCryptoKey else d.EncryptedFirstCryptoKey end as EncryptedKey, " +
+                        " u.Id as InterlocutorId, u.Image as Image, u.Nickname as Title, m.Id as MessageId, m.AuthorId, m.Text, m.IVBase64, m.DateOfSending, m.Status " +
+                        "from (select * from Dialogs where id = @dialogId) as d left join "+
+                        "(select DialogMessages.Id, DialogMessages.AuthorId, DialogMessages.IVBase64, DialogMessages.Status, DialogMessages.DialogId, DialogMessages.DateOfSending, DialogMessages.Text "+
+                        "from DialogMessages inner join "+
+                        "(select DialogId, max(DateOfSending) as DateOfSending from DialogMessages "+
+                        "where DialogId = @dialogId "+
+                        "group by DialogId) x "+
+                        "on DialogMessages.DateOfSending = x.DateOfSending and DialogMessages.DialogId = @dialogId) as m "+
+                        "on d.id = m.DialogId "+
+                        "inner join (select* from users where id = @interlocutorId) u on d.SecondUserId = u.Id or d.FirstUserId = u.Id";
+                    model = (await sqlService.ExecuteAsync(sqlQuery,
+                        new DbParameter[] 
+                        {
+                            new SqlParameter("@interlocutorId", interlocutorId),
+                            new SqlParameter("@dialogId",dialog.Id)
+                        },
+                        DialogViewModelSqlCoverter)).FirstOrDefault();                   
                 }
             }
             return model;

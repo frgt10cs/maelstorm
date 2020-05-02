@@ -1,142 +1,153 @@
-﻿var accountModule = (function () {
-    var _api;
-    var _guiManager;    
-    var _onLogin;
+﻿let accountModule = (function () {         
+    let privateKey;    
+    let publicKey;
+    let _onLogin;    
 
-    var login = function () {
-        if (_guiManager.getLoginForm().isDataValid()) {
-            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword(),
-                () => {                    
-                    _guiManager.hideAllForms();
+    let login = async function () {
+        let validationResult = loginFormModule.getDataValidationResult();
+        if (validationResult.isSuccess) {
+            try {
+                let loginResult = await api.login(loginFormModule.getLogin(), loginFormModule.getPassword());                
+                if (loginResult.isSuccessful) {
+                    let result = JSON.parse(loginResult.data);                    
+                    let IV = encodingModule.base64ToArray(result.IVBase64);
+
+                    userAesKey = await cryptoModule.genereateAesKeyByPassPhrase(loginFormModule.getPassword(), encodingModule.base64ToArray(result.KeySaltBase64), 128);                     
+                    publicKey = await window.crypto.subtle.importKey(
+                        "spki",
+                        encodingModule.base64ToArray(result.PublicKey),
+                        {
+                            name: "RSA-OAEP",
+                            hash: "SHA-256"
+                        },
+                        true,
+                        ["encrypt"]
+                    );
+
+                    let publicKeyExport = await window.crypto.subtle.exportKey("jwk", publicKey);
+                    let exponent = encodingModule.base64UrlDecode(publicKeyExport.e);                    
+                
+                    let privateKeyBytes = await cryptoModule.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);                    
+                    privateKey = await window.crypto.subtle.importKey(
+                        "pkcs8",
+                        privateKeyBytes,
+                        {
+                            name: "RSA-OAEP",
+                            modulusLength: 2048,
+                            publicExponent: exponent,
+                            hash: "SHA-256",
+                        },
+                        false,
+                        ["decrypt"]
+                    );
+
+                    api.setTokens(result.Tokens);                    
+
+                    loginFormModule.clearErrors();
+                    accountGuiModule.hideAllForms();
                     _onLogin();
-                },
-                () => {                    
-                    alert("Login failed");
-                });
-        }   
+                }
+                else {
+                    loginFormModule.addErrors([loginResult.errorMessages]);
+                }                
+            }
+            catch (errors) {  
+                loginFormModule.clearErrors();
+                loginFormModule.addErrors([errors]);
+            }
+        }
+        else {
+            loginFormModule.clearErrors();
+            loginFormModule.addErrors(validationResult.errorMessages);
+        }
     };
 
-    var registration = function () {
-        if (_guiManager.getRegForm().isDataValid()) {
-            _api.registration(_guiManager.getRegForm().getLogin(),
-                _guiManager.getRegForm().getEmail(),
-                _guiManager.getRegForm().getPassword(),
-                _guiManager.getRegForm().getPasswordConfirm(),
-                () => { _guiManager.openLogin(); },
-                (data) => { /*onRegistrationFailed(data);*/ });
-        }  
+    let registration = async function () {
+        let validationResult = registrationFormModule.getDataValidationResult();
+        if (validationResult.isSuccess) {
+            try {
+                await api.registration(registrationFormModule.getLogin(),
+                    registrationFormModule.getEmail(),
+                    registrationFormModule.getPassword(),
+                    registrationFormModule.getPasswordConfirm());
+                registrationFormModule.clearErrors();
+                accountGuiModule.openLogin();
+            }
+            catch (errors) {
+                registrationFormModule.clearErrors();
+                registrationFormModule.addErrors([errors]);
+            }
+        }
+        else {
+            registrationFormModule.clearErrors();
+            registrationFormModule.addErrors(validationResult.errorMessages);
+        }
     };
 
-    var logout = function () {
-        _api.logOut();
-        _guiManager.openLogin();
+    let logout = function () {
+        api.logOut();
+        accountGuiModule.openLogin();
     };
 
     return {
-        init: function (api, guiManager, onLogin) {
-            _api = api;
-            _guiManager = guiManager;
-            _guiManager.getLoginForm().getSubmitButton().onclick = login;
-            _guiManager.getRegForm().getSubmitButton().onclick = registration;
-            _guiManager.getLogoutBtn().onclick = logout;
+        init: function (onLogin) {
+            accountGuiModule.init();
+            loginFormModule.getSubmitButton().onclick = login;
+            registrationFormModule.getSubmitButton().onclick = registration;
+            accountGuiModule.getLogoutBtn().onclick = logout;    
             _onLogin = onLogin;
+        },
+
+        getPrivateKey: function () {
+            return privateKey;
+        },
+
+        getPublicKey: function () {
+            return publicKey;
         }
     };
 })();
 
-var loginFormModule = (function () {
-
-    var form;
-    var loginField,
-        passwordField,
-        loginBtn;      
-
-    return {
-        init: function () {
-            form = document.getElementById("loginForm");
-            loginField = document.getElementById("login");
-            passwordField = document.getElementById("password");
-            loginBtn = document.getElementById("loginBtn");
-        },
-        getLogin: function () { return loginField.value; },
-        getPassword: function () { return passwordField.value; },
-        getSubmitButton: function () { return loginBtn; },
-        hide: function () { form.style.display = "none"; },
-        open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; }
-    };
-}());
-
-var registrationFormModule = (function () {
-    var form;
-    var loginField,
-        emailField,
-        passwordField,
-        passwordConfirmField,
-        regBtn;        
-
-    return {
-        init: function () {
-            form = document.getElementById("regForm");
-            loginField = document.getElementById("regLogin");
-            emailField = document.getElementById("regEmail");
-            passwordField = document.getElementById("regPassword");
-            passwordConfirmField = document.getElementById("regPasswordConfirm");
-            regBtn = document.getElementById("regBtn");
-        },
-        getLogin: function () { return loginField.value; },
-        getEmail: function () { return emailField.value; },
-        getPassword: function () { return passwordField.value; },
-        getPasswordConfirm: function () { return passwordConfirmField.value; },
-        getSubmitButton: function () { return regBtn; },
-        hide: function () { form.style.display = "none"; },
-        open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; }
-    };
-})();
-
-var accountGuiModule = (function () {
-    var _loginForm;
-    var _regForm;
-    var logoutBtn;
-    var openLoginBtn,
+let accountGuiModule = (function () {
+    let logoutBtn;
+    let openLoginBtn,
         openRegistrationBtn,                
         dark;
 
-    var openRegistration = function () {
+    let openRegistration = function () {
         dark.style.display = "block";
-        _loginForm.hide();
-        _regForm.open();
+        loginFormModule.hide();
+        registrationFormModule.clearErrors();
+        registrationFormModule.open();
     };
 
-    var openLogin = function () {
+    let openLogin = function () {
         dark.style.display = "block";
-        _regForm.hide();
-        _loginForm.open();
+        registrationFormModule.hide();
+        loginFormModule.clearErrors();
+        loginFormModule.open();
     };
 
-    return {        
-        getLoginForm: function () { return _loginForm; },
-        getRegForm: function () { return _regForm; },
+    return {                
         getLogoutBtn: function () { return logoutBtn; },
         openLogin: openLogin,
         openRegistration: openRegistration,
+
         hideAllForms: function () {
             dark.style.display = "none";
-            _loginForm.hide();
-            _regForm.hide();
+            loginFormModule.hide();
+            registrationFormModule.hide();
         },
-        init: function (loginForm, regForm) {
+
+        init: function () {
             openLoginBtn = document.getElementById("openLogin");
             openLoginBtn.onclick = function () { openLogin(); };
             openRegistrationBtn = document.getElementById("openReg");
             openRegistrationBtn.onclick = function () { openRegistration(); };
             logoutBtn = document.getElementById("logoutButton");            
             dark = document.getElementById("dark");
-            _loginForm = loginForm;
-            _loginForm.init();
-            _regForm = regForm;
-            _regForm.init();
+            loginFormModule.init(formValidationModule)
+            registrationFormModule.init(formValidationModule);            
         }
     };
 })();

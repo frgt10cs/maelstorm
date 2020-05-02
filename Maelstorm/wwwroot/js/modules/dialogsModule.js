@@ -1,61 +1,54 @@
-﻿var dialogsModule = (function () {  
-    var _api;
-    var _guiManager;    
-    var _dialog;
-    var openedDialog;
-    var dialogs;
-    var dialogsStackNumber;               
+﻿let dialogsModule = (function () {              
+    let openedDialog;
+    let dialogs;               
 
-    var removeDialogs = function () {        
-        while (_guiManager.getDialogsContainer().firstChild) {
-            _guiManager.getDialogsContainer().firstChild.remove();
+    let removeDialogs = function () {        
+        while (dialogsGuiModule.getDialogsContainer().firstChild) {
+            dialogsGuiModule.getDialogsContainer().firstChild.remove();
         }
         dialogs = [];
         dialogsStackNumber = 1;
         openedDialog = null;
     };             
 
-    var addDialog = function (dialog) {        
+    let addDialog = function (dialog) {        
         dialog.element.onclick = function () { openDialog(dialog); };
-        _guiManager.getDialogsContainer().appendChild(dialog.element);
-        _guiManager.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
-        dialogs.push(dialog);
+        dialogsGuiModule.getDialogsContainer().appendChild(dialog.element);
+        dialogsGuiModule.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
+        dialogs.push(dialog);        
     };
 
-    var openDialog = function (dialog) {
+    let openDialog = function (dialog) {
         if (openedDialog === null || openedDialog.id !== dialog.id) {
             if (openedDialog !== null) {
                 openedDialog.messagesPanel.style.display = "none";
             }
-            _dialog.setDialogContext(dialog);            
-            _dialog.openDialog();            
+            dialogModule.setDialogContext(dialog);            
+            dialogModule.openDialog();            
             openedDialog = dialog;
         }
     };
 
-    var openOrCreateDialog = function (userInfo) {
-        var dialog = getDialogByInterlocutorId(userInfo.id);
+    let openOrCreateDialog = async function (userInfo) {
+        let dialog = getDialogByInterlocutorId(userInfo.id);
         if (dialog !== null && dialog !== undefined) {
             openDialog(dialog);
         } else {
-            _api.getDialog(userInfo.id, (dialog) => {                
-                dialog = _dialog.createDialog(dialog);
-                addDialog(dialog);
-                openDialog(dialog);
-            });
+            dialog = await api.getDialog(userInfo.id);
+            dialog = await dialogModule.createDialog(dialog);
+            addDialog(dialog);
+            openDialog(dialog);
         }
     };
 
-    var getDialogByInterlocutorId = function (interlocutorId) {
+    let getDialogByInterlocutorId = function (interlocutorId) {
         return dialogs.find(function (dialog) { return dialog.interlocutorId === interlocutorId; });
     };
 
     return {
 
-        init: function (api, guiManager, dialogModule) {  
-            _api = api;
-            _guiManager = guiManager;  
-            _dialog = dialogModule;
+        init: function () {
+            dialogsGuiModule.init();
             openedDialog = null;
             dialogs = [];
             dialogsStackNumber = 1;            
@@ -71,7 +64,7 @@
 
         updateDialogs: function (dialogs) {
             removeDialogs();
-            for (var i = 0; i < dialogs.length; i++) {                
+            for (let i = 0; i < dialogs.length; i++) {                
                 addDialog(dialogs[i]);
             }
             dialogsStackNumber++;
@@ -83,17 +76,17 @@
         openOrCreateDialog: openOrCreateDialog,
 
         isDialogUploaded: function (interlocutorId) {
-            var dialog = getDialogByInterlocutorId(interlocutorId);
+            let dialog = getDialogByInterlocutorId(interlocutorId);
             return dialog !== null && dialog !== undefined;
         },
-        
-        getDialogsStackNumber: function () { return dialogsStackNumber; }
+
+        getDialogsOffset: function () { return dialogs.length; }
     };
 })();
 
-var dialogsGuiModule = (function () {
+let dialogsGuiModule = (function () {
 
-    var dialogsContainer,
+    let dialogsContainer,
         messagesPanelsContainer,
         uploadingInfo,        
         dark;        

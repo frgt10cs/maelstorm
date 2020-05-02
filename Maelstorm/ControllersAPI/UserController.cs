@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Maelstorm.Extensions;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Maelstorm.Dtos;
 
 namespace Maelstorm.ControllersAPI
 {
@@ -52,7 +49,7 @@ namespace Maelstorm.ControllersAPI
 
         [HttpPost]
         [ActionName("CloseSession")]
-        public async Task CloseSession(CloseSessionViewModel model)
+        public async Task CloseSession(CloseSessionDTO model)
         {
             await userServ.CloseSessionAsync(HttpContext.GetUserId(), model.SessionId, model.BanDevice);
         }

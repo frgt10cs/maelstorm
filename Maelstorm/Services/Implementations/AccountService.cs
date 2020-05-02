@@ -1,33 +1,36 @@
 ﻿using Maelstorm.Database;
 using Maelstorm.Models;
+using Maelstorm.Entities;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Maelstorm.Services.Implementations
 {
     public class AccountService:IAccountService
     {
-        private MaelstormRepository context;
-        private IPasswordService passServ;
+        private MaelstormContext context;        
         private IEmailService emailServ;
+        private ICryptographyService cryptoService;
         private readonly IConfiguration config;        
 
-        public AccountService(MaelstormRepository context, IPasswordService passServ,
-            IEmailService emailServ, IConfiguration config)
+        public AccountService(MaelstormContext context, IEmailService emailServ,
+            IConfiguration config, ICryptographyService cryptoService)
         {
-            this.context = context;
-            this.passServ = passServ;
+            this.context = context;            
             this.emailServ = emailServ;
-            this.config = config;            
+            this.config = config;
+            this.cryptoService = cryptoService;
         }
 
-        public async Task<ServiceResult> RegistrationAsync(RegistrationViewModel model)
+        public async Task<ServiceResult> RegistrationAsync(RegistrationDTO model)
         {            
             var result = new ServiceResult();           
             if (await EmailIsUnique(model.Email))
@@ -87,21 +90,36 @@ namespace Maelstorm.Services.Implementations
         {
             User user = await context.Users.FirstOrDefaultAsync(u => u.Nickname == nickname);
             return user == null;
-        }       
+        }               
         
-        private User CreateUser(RegistrationViewModel model)
+        private User CreateUser(RegistrationDTO model)
         {
+            using var rsa = RSA.Create(2048);            
             User user = new User()
             {
                 DateOfRegistration = DateTime.Now,
                 Email = model.Email,
-                Nickname = model.Nickname,
-                Salt = passServ.GetRandomString(),
+                Nickname = model.Nickname,                
                 Role = 0,
                 Status = "Stupid status from community",
-                Image = "defaultUser.png"
+                Image = "defaultUser.png",
+                PublicKey = Convert.ToBase64String(rsa.ExportSubjectPublicKeyInfo())                
             };
-            user.PasswordHash = passServ.GenerateHash(model.Password, user.Salt);
+            #region password generation
+            var passwordSalt = cryptoService.GetRandomBytes();
+            user.PasswordSalt = Convert.ToBase64String(passwordSalt);
+            user.PasswordHash = Convert.ToBase64String(cryptoService.Pbkdf2(model.Password, passwordSalt));
+            #endregion
+
+            #region keys generation
+            var keySalt = cryptoService.GetRandomBytes();
+            user.KeySalt = Convert.ToBase64String(keySalt);
+            var iv = cryptoService.GenerateIV();                        
+            user.IVBase64 = Convert.ToBase64String(iv);            
+            var userAesKey = cryptoService.PBKDF2_SHA256(model.Password, keySalt, 10000, 16);               
+            user.EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportPkcs8PrivateKey(), userAesKey, iv));            
+            #endregion
+
             return user;
         }
 
@@ -112,7 +130,7 @@ namespace Maelstorm.Services.Implementations
                 Action = action,
                 GenerationDate = DateTime.Now,
                 UserId = userId,
-                Value = passServ.GetRandomString()
+                Value = cryptoService.GetRandomBase64String()
             };
             return token;
         }       

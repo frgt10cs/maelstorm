@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Maelstorm.Extensions;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,14 +25,14 @@ namespace Maelstorm.ControllersAPI
 
         [HttpGet]
         [ActionName("GetUnreadedDialogMessages")]
-        public async Task<ActionResult<List<MessageViewModel>>> GetUnreadedDialogMessages(int dialogId, int count)
+        public async Task<ActionResult<List<MessageDTO>>> GetUnreadedDialogMessages(int dialogId, int offset, int count)
         {
-            return await dialServ.GetUnreadedDialogMessagesAsync(dialogId, count);            
+            return await dialServ.GetUnreadedDialogMessagesAsync(dialogId, offset, count);            
         }
 
         [HttpGet]
         [ActionName("GetReadedDialogMessages")]
-        public async Task<ActionResult<List<MessageViewModel>>> GetReadedDialogMessages(int dialogId, int offset, int count)
+        public async Task<ActionResult<List<MessageDTO>>> GetReadedDialogMessages(int dialogId, int offset, int count)
         {                        
             return await dialServ.GetReadedDialogMessagesAsync(dialogId, offset, count);            
         }        
@@ -54,7 +54,7 @@ namespace Maelstorm.ControllersAPI
 
         [HttpPost]
         [ActionName("SendMessage")]
-        public async Task<ActionResult<ServiceResult>> SendDialogMessage([FromBody]MessageSendViewModel model)
+        public async Task<ActionResult<ServiceResult>> SendDialogMessage([FromBody]MessageSendDTO model)
         {
             // сделать проверку replyid
             ServiceResult result;            
@@ -70,10 +70,9 @@ namespace Maelstorm.ControllersAPI
         }
 
         [ActionName("GetDialogs")]
-        public async Task<ActionResult<List<DialogViewModel>>> GetDialogs(int stackNumber)
-        {
-            int count = 20;
-            var dialogs = await dialServ.GetDialogsAsync(stackNumber, count);
+        public async Task<ActionResult<List<DialogDTO>>> GetDialogs(int offset, int count)
+        {            
+            var dialogs = await dialServ.GetDialogsAsync(offset, count);
             return dialogs;
         }
 
@@ -85,7 +84,7 @@ namespace Maelstorm.ControllersAPI
         }
 
         [ActionName("GetDialog")]
-        public async Task<ActionResult<DialogViewModel>> GetDialog(int interlocutorId)
+        public async Task<ActionResult<DialogDTO>> GetDialog(int interlocutorId)
         {
             return await dialServ.GetDialogAsync(interlocutorId);
         }

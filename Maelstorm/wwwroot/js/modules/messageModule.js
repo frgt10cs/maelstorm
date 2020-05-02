@@ -1,33 +1,44 @@
-﻿var messageModule = (function () {           
+﻿/**
+ * 
+ * Operations with dialog messages
+ *
+ **/
 
-    var setElement = function (message, isFromOther) {
-        var mesBlock = document.createElement("div");
-        mesBlock.classList.add("messageBlock");
+let messageModule = (function () {           
+
+    let setElement = function (message, isFromOther) {
+        let mesBlock = document.createElement("div");
+        mesBlock.className = "messageContainer mt-2 overflow-hidden";
         mesBlock.id = message.id;
-        var messageDiv = document.createElement("div");
-        messageDiv.classList.add("message");
-        var messageText = document.createElement("div");
+
+        let messageDiv = document.createElement("div");
+        messageDiv.className = "message text-white px-2 py-1 mw-75 rounded d-inline-block bg-dark-6";
+
+        let messageText = document.createElement("div");
+        message.className = "messageText text-break";
         messageText.innerText = message.text;
+
         messageDiv.appendChild(messageText);
         if (!isFromOther) {
-            var statusDiv = document.createElement("div");
-            statusDiv.classList.add("status");
+            messageDiv.classList.add("float-right");
+            let statusDiv = document.createElement("div");
+            statusDiv.className = "messageStatus float-right";
             messageDiv.appendChild(statusDiv);
             message.statusDiv = statusDiv;
-            mesBlock.classList.add("authMes");
+            messageDiv.classList.add("float-right");
             updateStatus(message);
         }
         mesBlock.appendChild(messageDiv);
         message.element = mesBlock;
     };
 
-    var setStatus = function (message, status) {
+    let setStatus = function (message, status) {
         message.status = status;
         updateStatus(message);
     };
 
-    var updateStatus = function (message) {
-        switch (status) {
+    let updateStatus = function (message) {        
+        switch (message.status) {
             case -1:
                 message.statusDiv.style.backgroundImage = "url(/images/notConfirmed.png)";
                 break;
@@ -40,16 +51,16 @@
         }
     };
 
-    // more
-    var setText = function (message, text) {
+    let validText = function (text) {
         if (!isEmptyOrSpaces(text)) {
             text = text.trim();
             text = text.replace(/\s\s+/g, ' ');
-            message.text = text;
+            return text;
         }
-    };
+        return "";
+    }    
 
-    var isEmptyOrSpaces = function (str) {
+    let isEmptyOrSpaces = function (str) {
         return str === null || str.match(/^ *$/) !== null;
     };
 
@@ -62,6 +73,6 @@
         setElement: setElement,        
         setStatus: setStatus,
         updateStatus: updateStatus,
-        setText: setText
+        validText: validText
     };
 })();

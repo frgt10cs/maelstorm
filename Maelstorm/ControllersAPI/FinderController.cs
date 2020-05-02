@@ -1,7 +1,7 @@
 ﻿using Maelstorm.Extensions;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -24,7 +24,7 @@ namespace Maelstorm.ControllersAPI
 
         [HttpGet]
         [ActionName("FindUser")]
-        public async Task<ActionResult<List<UserFindInfoViewModel>>> FindUser(string nickname)
+        public async Task<ActionResult<List<UserFindInfoDTO>>> FindUser(string nickname)
         {
             return await findServ.FindUsersByNicknameAsync(HttpContext.GetUserId(),nickname);
         }

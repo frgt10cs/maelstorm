@@ -1,6 +1,6 @@
 ﻿using Maelstorm.Database;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.Dtos;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,17 +11,17 @@ namespace Maelstorm.Services.Implementations
 {
     public class FinderService : IFinderService
     {
-        private MaelstormRepository context;
-        public FinderService(MaelstormRepository context)
+        private MaelstormContext context;
+        public FinderService(MaelstormContext context)
         {
             this.context = context;
         }
 
-        public async Task<List<UserFindInfoViewModel>> FindUsersByNicknameAsync(int userId, string nickname)
+        public async Task<List<UserFindInfoDTO>> FindUsersByNicknameAsync(int userId, string nickname)
         {            
             var users = await context.Users
                 .Where(u => u.Nickname.Contains(nickname) && u.Id != userId)
-                .Select(u => new UserFindInfoViewModel
+                .Select(u => new UserFindInfoDTO
                 {
                     Id = u.Id,
                     MiniAvatar =  u.Image,

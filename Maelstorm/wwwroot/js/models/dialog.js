@@ -1,5 +1,4 @@
 ﻿class Dialog {
-
     constructor(serverDialog) {        
         this.id = serverDialog.id;
         this.title = serverDialog.title;
@@ -16,7 +15,8 @@
         this.allUnreadedUploaded = false;
         this.uploadingBlocked = false;
         this.uploadCount = 20;
-        this.messagesPanel = this.createMessagesPanel();        
+        this.messagesPanel = this.createMessagesPanel();
+        this.aesKey = serverDialog.aesKey;
     }
 
     openDialog() {

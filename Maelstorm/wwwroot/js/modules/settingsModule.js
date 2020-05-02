@@ -1,23 +1,22 @@
-﻿var settingsModule = (function () {
-    var _guiManager;
+﻿let settingsModule = (function () {
     return {
         init: function (guiManager) {
-            _guiManager = guiManager;
-            _guiManager.getSettingsPanelSlider().onclick = function () { _guiManager.changeSettingsOpenState(); };
+            settingsGuiModule.init();
+            settingsGuiModule.getSettingsPanelSlider().onclick = function () { settingsGuiModule.changeSettingsOpenState(); };
         }
     };
 })();
 
-var settingsGuiModule = (function () {
-    var settingsPanel;
-    var settingPanelSlider;
-    var settingsContainers;
-    var isPanelOpened = false;
-    var hideWidth;
+let settingsGuiModule = (function () {
+    let settingsPanel;
+    let settingPanelSlider;
+    let settingsContainers;
+    let isPanelOpened = false;
+    let hideWidth;
 
-    var initSettingsPanel = function () {
-        for (var i = 0; i < settingsContainers.length; i++) {
-            var inner = settingsContainers[i].children[1];
+    let initSettingsPanel = function () {
+        for (let i = 0; i < settingsContainers.length; i++) {
+            let inner = settingsContainers[i].children[1];
             settingsContainers[i].children[0].onclick = function () {
                 $(inner).slideToggle("slow");
             };

@@ -1,7 +1,7 @@
 ﻿using Maelstorm.Models;
 using Maelstorm.Services.Implementations;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.ViewModels;
+using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace Maelstorm.ControllersAPI
 
         [HttpPost]
         [ActionName("Registration")]
-        public async Task<ActionResult<ServiceResult>> Registration([FromBody]RegistrationViewModel model)
+        public async Task<ActionResult<ServiceResult>> Registration([FromBody]RegistrationDTO model)
         {
             ServiceResult result;
             if (ModelState.IsValid)

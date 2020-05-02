@@ -1,33 +1,47 @@
-var accountModule = (function () {
-    var _api;
-    var _guiManager;    
-    var _onLogin;
+let accountModule = (function () {
+    let _api;
+    let _guiManager;         
+    let privateKey;    
+    let _onLogin;
 
-    var login = function () {
+    let login = async function () {
         if (_guiManager.getLoginForm().isDataValid()) {
-            _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword(),
-                () => {                    
-                    _guiManager.hideAllForms();
-                    _onLogin();
-                },
-                () => {                    
-                    alert("Login failed");
-                });
-        }   
+            try {
+                await _api.login(_guiManager.getLoginForm().getLogin(), _guiManager.getLoginForm().getPassword());
+                _guiManager.hideAllForms();
+                _onLogin();
+            }
+            catch (error) {
+                if (error === "Wrong login or password") {
+                    _guiManager.getLoginForm().setLoginStatus(error);
+                }
+                else {                    
+                    _guiManager.getLoginForm().setLoginStatus("Connection error");
+                    console.log(error);
+                }
+            }
+        }
+        else {
+            throw new Error("Invalid login or password");
+        }
     };
 
-    var registration = function () {
+    let registration = async function () {
         if (_guiManager.getRegForm().isDataValid()) {
-            _api.registration(_guiManager.getRegForm().getLogin(),
-                _guiManager.getRegForm().getEmail(),
-                _guiManager.getRegForm().getPassword(),
-                _guiManager.getRegForm().getPasswordConfirm(),
-                () => { _guiManager.openLogin(); },
-                (data) => { /*onRegistrationFailed(data);*/ });
+            try {
+                await _api.registration(_guiManager.getRegForm().getLogin(),
+                    _guiManager.getRegForm().getEmail(),
+                    _guiManager.getRegForm().getPassword(),
+                    _guiManager.getRegForm().getPasswordConfirm());
+                _guiManager.openLogin();
+            }
+            catch(error) {
+                _guiManager.getRegForm().setRegStatus(error);
+            }                     
         }  
     };
 
-    var logout = function () {
+    let logout = function () {
         _api.logOut();
         _guiManager.openLogin();
     };
@@ -35,45 +49,53 @@ var accountModule = (function () {
     return {
         init: function (api, guiManager, onLogin) {
             _api = api;
-            _guiManager = guiManager;
+            _guiManager = guiManager;            
             _guiManager.getLoginForm().getSubmitButton().onclick = login;
             _guiManager.getRegForm().getSubmitButton().onclick = registration;
-            _guiManager.getLogoutBtn().onclick = logout;
+            _guiManager.getLogoutBtn().onclick = logout;    
             _onLogin = onLogin;
-        }
+        },
+
+        getPrivateKey: function () {
+            return privateKey;
+        }       
     };
 })();
 
-var loginFormModule = (function () {
+let loginFormModule = (function () {
 
-    var form;
-    var loginField,
-        passwordField,
-        loginBtn;      
+    let form;
+    let loginTextBox,
+        passwordTextBox,
+        loginBtn,
+        statusDiv;
 
     return {
         init: function () {
             form = document.getElementById("loginForm");
-            loginField = document.getElementById("login");
-            passwordField = document.getElementById("password");
+            loginTextBox = document.getElementById("login");
+            passwordTextBox = document.getElementById("password");
             loginBtn = document.getElementById("loginBtn");
+            statusDiv = document.getElementById("loginStatus");
         },
-        getLogin: function () { return loginField.value; },
-        getPassword: function () { return passwordField.value; },
+        getLogin: function () { return loginTextBox.value; },
+        getPassword: function () { return passwordTextBox.value; },
         getSubmitButton: function () { return loginBtn; },
         hide: function () { form.style.display = "none"; },
         open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; }
+        isDataValid: function () { return true; },
+        setLoginStatus: function (value) { statusDiv.innerText = value; }
     };
 }());
 
-var registrationFormModule = (function () {
-    var form;
-    var loginField,
+let registrationFormModule = (function () {
+    let form;
+    let loginField,
         emailField,
         passwordField,
         passwordConfirmField,
-        regBtn;        
+        regBtn,
+        statusDiv;
 
     return {
         init: function () {
@@ -83,6 +105,7 @@ var registrationFormModule = (function () {
             passwordField = document.getElementById("regPassword");
             passwordConfirmField = document.getElementById("regPasswordConfirm");
             regBtn = document.getElementById("regBtn");
+            statusDiv = document.getElementById("regStatus");
         },
         getLogin: function () { return loginField.value; },
         getEmail: function () { return emailField.value; },
@@ -91,25 +114,26 @@ var registrationFormModule = (function () {
         getSubmitButton: function () { return regBtn; },
         hide: function () { form.style.display = "none"; },
         open: function () { form.style.display = "block"; },
-        isDataValid: function () { return true; }
+        isDataValid: function () { return true; },
+        setRegStatus: function (value) { statusDiv.innerText = value; }
     };
 })();
 
-var accountGuiModule = (function () {
-    var _loginForm;
-    var _regForm;
-    var logoutBtn;
-    var openLoginBtn,
+let accountGuiModule = (function () {
+    let _loginForm;
+    let _regForm;
+    let logoutBtn;
+    let openLoginBtn,
         openRegistrationBtn,                
         dark;
 
-    var openRegistration = function () {
+    let openRegistration = function () {
         dark.style.display = "block";
         _loginForm.hide();
         _regForm.open();
     };
 
-    var openLogin = function () {
+    let openLogin = function () {
         dark.style.display = "block";
         _regForm.hide();
         _loginForm.open();
@@ -140,26 +164,114 @@ var accountGuiModule = (function () {
         }
     };
 })();
-var dialogModule = (function () {
-    var _api;
-    var _date;
-    var _guiManager;   
-    var _uploadCount;
-    var _message;
-    var onNewMessage;
-    var dialogContext;   
+let encodingModule = (function () {
+    return {
+        init: function () {
 
-    var appendMessageToBegin = function (message) {
+        },
+
+        getBytes: function (string) {
+            return new TextEncoder("utf-8").encode(string);            
+        },
+
+        getString: function (uintArray) {
+            return new TextDecoder("utf-8").decode(uintArray);
+        },
+
+        arrayToBase64: function (buffer) {
+            let binary = '';
+            let bytes = new Uint8Array(buffer);
+            let len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        },
+
+        base64ToArray: function(base64) {
+            let binaryString = window.atob(base64);
+            let len = binaryString.length;
+            let bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+        return new Uint8Array(bytes.buffer);
+        }    
+    }
+})();
+let cryptoModule = (function () {
+    let _encoding;    
+
+    let validatePassphrase = function (passphrase, length) {
+        let requiredLength = length / 8;
+        if (passphrase.length < requiredLength)
+            passphrase = passphrase + passphrase.substring(0, requiredLength - passphrase.length);
+        else if (passphrase.length > requiredLength)
+            passphrase = passphrase.substring(0, requiredLength);
+        return passphrase;
+    }   
+
+    return {
+        init: function (encoding) {
+            _encoding = encoding;
+        },
+
+        generateIV: function() {
+
+        },
+
+        genereateAesKeyByPassPhrase: function(passphrase, length) {
+            passphrase = validatePassphrase(passphrase, length);            
+            let keyBytes = _encoding.getBytes(passphrase);            
+            return window.crypto.subtle.importKey(
+                "raw",
+                keyBytes,
+                "AES-CBC",
+                true,
+                ["encrypt", "decrypt"]
+            );
+        },
+
+        encryptAes: function(aesKey, iv, plainText) {
+            let dataBytes = _encoding.getBytes(plainText);
+            return window.crypto.subtle.encrypt({
+                name: "AES-CBC",                
+                iv: iv,
+            },
+            aesKey, dataBytes);
+        },
+
+        decryptAes: function(aesKey, iv, encryptedDataBase64) {
+            let encryptedBytes = _encoding.base64ToArray(encryptedDataBase64);
+            return window.crypto.subtle.decrypt({
+                name: "AES-CBC",
+                iv: iv,
+            },
+            aesKey, encryptedBytes);
+        },        
+    }
+})();
+let dialogModule = (function () {
+    let _api;
+    let _date;
+    let _guiManager;   
+    let _uploadCount;
+    let _message;
+    let onNewMessage;
+    let dialogContext;   
+
+    let appendMessageToBegin = function (message) {
         dialogContext.messagesPanel.prepend(message.element);
     };
 
-    var appendMessageToEnd = function (message) {
+    let appendMessageToEnd = function (message) {
         dialogContext.messagesPanel.appendChild(message.element);
     };
 
-    var createMessagesPanel = function () {
-        var element = document.createElement("div");
+    let createMessagesPanel = function () {
+        let element = document.createElement("div");
         element.classList.add("conversationMessages");
+        element.classList.add("hideScroll");
         element.style.display = "none";
         element.onscroll = function () {
             onMessagesPanelScroll();
@@ -167,7 +279,7 @@ var dialogModule = (function () {
         return element;
     };
 
-    var onMessagesPanelScroll = function () {
+    let onMessagesPanelScroll = function () {
         if (!dialogContext.uploadingBlocked) {
             if (dialogContext.messagesPanel.scrollTop < 10 && !dialogContext.allReadedUpload) {
                 console.log("old upl");
@@ -183,14 +295,14 @@ var dialogModule = (function () {
         }
     };  
 
-    var isMessageFromOther = function (message) {
+    let isMessageFromOther = function (message) {
         return dialogContext.interlocutorId === message.authorId;
     };
 
-    var unreadedMessagesHandler = function (messages) {
+    let unreadedMessagesHandler = function (messages) {
         if (messages !== null && messages !== undefined && messages.length > 0) {
             if (messages.length < _uploadCount) dialogContext.allUnreadedUpload = true;
-            for (var i = 0; i < messages.length; i++) {
+            for (let i = 0; i < messages.length; i++) {
                 _message.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToEnd(messages[i]);
                 dialogContext.unreadedMessages.push(messages[i]);
@@ -202,12 +314,12 @@ var dialogModule = (function () {
         dialogContext.uploadingBlocked = false;
     };
 
-    var readedMessagesHandler = function (messages) {
+    let readedMessagesHandler = function (messages) {
         if (messages !== null && messages !== undefined && messages.length > 0) {
             if (messages.length < _uploadCount) dialogContext.allReadedUpload = true;
             dialogContext.readedMessagesOffset += messages.length;
-            var resultScrollTop = 0;
-            for (var i = 0; i < messages.length; i++) {
+            let resultScrollTop = 0;
+            for (let i = 0; i < messages.length; i++) {
                 _message.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToBegin(messages[i]);
                 dialogContext.messages.unshift(messages[i]);
@@ -221,15 +333,15 @@ var dialogModule = (function () {
         dialogContext.uploadingBlocked = false;
     };  
 
-    var uploadUnreadedMessages = function () {
-        _api.getUnreadedMessages(dialogContext.id, _uploadCount, unreadedMessagesHandler);
+    let uploadUnreadedMessages = function () {
+        _api.getUnreadedMessages(dialogContext.id, _uploadCount).then(messages => { unreadedMessagesHandler(messages); }, error => { console.log(error); });
     };
 
-    var uploadReadedMessages = function () {
-        _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount, readedMessagesHandler);
+    let uploadReadedMessages = function () {
+        _api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount).then(messages => { readedMessagesHandler(messages); }, error => { console.log(error); });
     };
 
-    var createDialog = function (serverDialog) {      
+    let createDialog = function (serverDialog) {      
         serverDialog.isPanelOpened = false;
         serverDialog.unreadedMessages = [];
         serverDialog.messages = [];
@@ -239,31 +351,31 @@ var dialogModule = (function () {
         serverDialog.allUnreadedUploaded = false;
         serverDialog.uploadingBlocked = false;
         serverDialog.messagesPanel = createMessagesPanel();
-        serverDialog.element = _guiManager.createDialogDiv(serverDialog);
+        serverDialog.element = _guiManager.createDialogLi(serverDialog);
         return serverDialog;
     };
 
-    var firstDialogMessagesUploading = function () {
+    let firstDialogMessagesUploading = function () {
         uploadReadedMessages();
     };
 
-    var createMessage = function () {
-        var message = {};
+    let createMessage = function () {
+        let message = {};
         _message.setText(message, _guiManager.getMessageText());        
         message.targetId = dialogContext.interlocutorId;
-        var id = dialogContext.unconfirmedMessages.length;
+        let id = dialogContext.unconfirmedMessages.length;
         message.dateOfSending = new Date();
         message.status = -1;
         message.bindId = id;
         return message;
     };
 
-    var sendMessage = function (message) {       
+    let sendMessage = function (message) {       
         addNewMessage(message);
         dialogContext.unconfirmedMessages.push(message);  
         _api.sendDialogMessage(message, (result) => {
-            var info = JSON.parse(result.data);
-            var confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
+            let info = JSON.parse(result.data);
+            let confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
             confirmedMessage.id = info.id;
             confirmedMessage.element.id = info.id;
             confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
@@ -271,9 +383,9 @@ var dialogModule = (function () {
         });              
     };
 
-    var addNewMessage = function (message) {
+    let addNewMessage = function (message) {
         if (dialogContext.isPanelOpened) {            
-            var isFromOther = isMessageFromOther(message);
+            let isFromOther = isMessageFromOther(message);
             _message.setElement(message, isFromOther);            
             if (isFromOther) {
                 dialogContext.unreadedMessages.push(message);
@@ -282,15 +394,15 @@ var dialogModule = (function () {
                 dialogContext.readedMessagesOffset++;
             }
             appendMessageToEnd(message);
-        }
-        var preView = dialogContext.element.lastElementChild.lastElementChild;
-        preView.firstElementChild.innerText = message.text;
-        preView.lastElementChild.innerText = _date.getDate(new Date(message.dateOfSending));
+        }        
+        let previewText = dialogContext.element.lastElementChild.children[1].lastElementChild.lastElementChild;
+        previewText.innerText = message.text;
+        dialogContext.element.lastElementChild.lastElementChild.innerText = _date.getDate(new Date(message.dateOfSending));
         onNewMessage(dialogContext);
     };
 
     var updateInterlocutorStatus = function () {
-        _api.getOnlineStatuses([dialogContext.interlocutorId], function (statuses) {
+        _api.getOnlineStatuses([dialogContext.interlocutorId]).then(statuses => {
             _guiManager.getDialogStatusDiv().innerText = statuses[0].isOnline ? "online" : "offline";
         });
     };
@@ -306,6 +418,7 @@ var dialogModule = (function () {
             onNewMessage = onNewMessageHandler;
             _guiManager.getMessageSendBtn().onclick = function () {
                 sendMessage(createMessage());
+                _guiManager.clearMessageTextInput();
             };
         },
 
@@ -327,7 +440,7 @@ var dialogModule = (function () {
 
         createDialogs: function (serverDialogs) {
             var dialogs = [];
-            for (var i = 0; i < serverDialogs.length; i++) {
+            for (let i = 0; i < serverDialogs.length; i++) {
                 dialogs.push(createDialog(serverDialogs[i]));
             }
             return dialogs;
@@ -347,55 +460,97 @@ var dialogModule = (function () {
     };
 })();
 
-var dialogGuiModule = (function () {
-    var _date;
-    var dialogTitleDiv;
-    var dialogStatusDiv;
-    var messageSendBtn;
-    var messageTextBox;
+let dialogGuiModule = (function () {
+    let _date;
+    let dialogTitleDiv;
+    let dialogStatusDiv;
+    let messageSendBtn;
+    let messageTextBox;    
+
+    let smallDeviceMenuInit = function () {
+        let dialogListContainer = document.getElementById("dialogListContainer");
+        let openedDialogContainer = document.getElementById("openedDialogContainer");
+
+        let openDialogListBtn = document.getElementById("openDialogListBtn");
+        let openOpenedDialogBtn = document.getElementById("openOpenedDialogBtn");
+
+        openDialogListBtn.onclick = function () {
+            dialogListContainer.className = dialogListContainer.className.replace("d-none", "d-block");
+            openedDialogContainer.className = openedDialogContainer.className.replace("d-flex", "d-none");
+            openOpenedDialogBtn.className = openOpenedDialogBtn.className.replace("bg-dark-5", "bg-dark-2");
+            openDialogListBtn.className = openDialogListBtn.className.replace("bg-dark-2", "bg-dark-5");
+        }
+
+        openOpenedDialogBtn.onclick = function () {
+            dialogListContainer.className = dialogListContainer.className.replace("d-block", "d-none");
+            openedDialogContainer.className = openedDialogContainer.className.replace("d-none", "d-flex");
+            openOpenedDialogBtn.className = openOpenedDialogBtn.className.replace("bg-dark-2", "bg-dark-5");
+            openDialogListBtn.className = openDialogListBtn.className.replace("bg-dark-5", "bg-dark-2");
+        }
+    }
 
     return {
         init: function (dateModule) {
             _date = dateModule;
-            dialogTitleDiv = document.getElementById("conversationTitle");
-            dialogStatusDiv = document.getElementById("conversationStatus");
+            dialogTitleDiv = document.getElementById("dialogInfoTitle");
+            dialogStatusDiv = document.getElementById("dialogInfoStatus");
             messageTextBox = document.getElementById("messageTextBox");
-            messageSendBtn = document.getElementById("messageSendBtn");            
+            messageSendBtn = document.getElementById("messageSendBtn");  
+            //if (window.screen.width < 992)
+                smallDeviceMenuInit();
         },
 
-        createDialogDiv: function (dialog) {
-            var element = document.createElement("div");
-            element.classList.add("conversation");
+        createDialogLi: function (dialog) {
+            var element = document.createElement("li");            
+            element.className = "list-group-item mt-1 bg-dark-2 text-white border-0";
             element.id = dialog.id;
+
+            var dialogInner = document.createElement("div");
+            dialogInner.className = "row position-relative";
+
+            var photoContainer = document.createElement("div");
+            photoContainer.className = "col-auto pl-0 pr-0";
+
             var photoDiv = document.createElement("div");
-            photoDiv.classList.add("conversationPhoto");
+            photoDiv.className = "dialogPhoto";
             photoDiv.style.backgroundImage = "url('/images/" + dialog.image + "')";
-            var convPreview = document.createElement("div");
-            convPreview.classList.add("conversationPreview");
-            var convTitle = document.createElement("div");
-            convTitle.classList.add("conversationTitle");
-            convTitle.innerText = dialog.title;
-            var convMessage = document.createElement("div");
-            convMessage.classList.add("conversationMessage");
-            var convText = document.createElement("div");
-            convText.classList.add("conversationText");
-            convText.innerText = dialog.lastMessageText !== null ? dialog.lastMessageText : "";
-            var convDate = document.createElement("div");
-            convDate.classList.add("conversationDate");
-            convDate.innerText = dialog.lastMessageDate !== null ? _date.getDate(new Date(dialog.lastMessageDate)) : "";
-            convMessage.appendChild(convText);
-            convMessage.appendChild(convDate);
-            convPreview.appendChild(convTitle);
-            convPreview.appendChild(convMessage);
-            element.appendChild(photoDiv);
-            element.appendChild(convPreview);
+
+            var dialogPreviewContainer = document.createElement("div");
+            dialogPreviewContainer.className = "col-8";
+
+            var dialogPreview = document.createElement("div");
+            dialogPreview.className = "dialogPreview";
+
+            var dialogTitle = document.createElement("div");
+            dialogTitle.className = "dialogTitle";
+            dialogTitle.innerText = dialog.title;
+
+            var dialogMessage = document.createElement("div");
+            dialogMessage.className = "dialogTextPreview";
+            dialogMessage.innerText = dialog.lastMessageText !== null ? dialog.lastMessageText : "";
+
+            var dialogDate = document.createElement("div");
+            dialogDate.className = "dialogDate";
+            dialogDate.innerText = dialog.lastMessageDate !== null ? _date.getDate(new Date(dialog.lastMessageDate)) : "";
+
+            photoContainer.appendChild(photoDiv);
+            dialogPreview.appendChild(dialogTitle);
+            dialogPreview.appendChild(dialogMessage);
+            dialogPreviewContainer.appendChild(dialogPreview);
+            dialogInner.appendChild(photoContainer);
+            dialogInner.appendChild(dialogPreviewContainer);
+            dialogInner.appendChild(dialogDate);
+            element.appendChild(dialogInner);
+
             return element;
         },
 
         getDialogTitleDiv: function () { return dialogTitleDiv; },
         getDialogStatusDiv: function () { return dialogStatusDiv; },
         getMessageText: function () { return messageTextBox.value; },
-        getMessageSendBtn: function () { return messageSendBtn },
+        getMessageSendBtn: function () { return messageSendBtn },   
+
+        clearMessageTextInput: function () { messageTextBox.value = ""; },
 
         setDialog: function (title) {
             dialogTitleDiv.innerText = title;            
@@ -403,7 +558,6 @@ var dialogGuiModule = (function () {
     };
 })();
 class Dialog {
-
     constructor(serverDialog) {        
         this.id = serverDialog.id;
         this.title = serverDialog.title;
@@ -420,7 +574,8 @@ class Dialog {
         this.allUnreadedUploaded = false;
         this.uploadingBlocked = false;
         this.uploadCount = 20;
-        this.messagesPanel = this.createMessagesPanel();        
+        this.messagesPanel = this.createMessagesPanel();
+        this.aesKey = serverDialog.aesKey;
     }
 
     openDialog() {
@@ -456,36 +611,40 @@ class Dialog {
         this.messagesPanel.appendChild(message.element);
     }       
 }
-var messageModule = (function () {           
+let messageModule = (function () {           
 
-    var setElement = function (message, isFromOther) {
-        var mesBlock = document.createElement("div");
-        mesBlock.classList.add("messageBlock");
+    let setElement = function (message, isFromOther) {
+        let mesBlock = document.createElement("div");
+        mesBlock.className = "messageContainer mt-2 overflow-hidden";
         mesBlock.id = message.id;
-        var messageDiv = document.createElement("div");
-        messageDiv.classList.add("message");
-        var messageText = document.createElement("div");
+
+        let messageDiv = document.createElement("div");
+        messageDiv.className = "message text-white px-2 py-1 mw-75 rounded d-inline-block float-right bg-dark-6";
+
+        let messageText = document.createElement("div");
+        message.className = "messageText text-break";
         messageText.innerText = message.text;
+
         messageDiv.appendChild(messageText);
         if (!isFromOther) {
-            var statusDiv = document.createElement("div");
-            statusDiv.classList.add("status");
+            let statusDiv = document.createElement("div");
+            statusDiv.className = "messageStatus float-right";
             messageDiv.appendChild(statusDiv);
             message.statusDiv = statusDiv;
-            mesBlock.classList.add("authMes");
+            messageDiv.classList.add("float-right");
             updateStatus(message);
         }
         mesBlock.appendChild(messageDiv);
         message.element = mesBlock;
     };
 
-    var setStatus = function (message, status) {
+    let setStatus = function (message, status) {
         message.status = status;
         updateStatus(message);
     };
 
-    var updateStatus = function (message) {
-        switch (status) {
+    let updateStatus = function (message) {        
+        switch (message.status) {
             case -1:
                 message.statusDiv.style.backgroundImage = "url(/images/notConfirmed.png)";
                 break;
@@ -499,7 +658,7 @@ var messageModule = (function () {
     };
 
     // more
-    var setText = function (message, text) {
+    let setText = function (message, text) {
         if (!isEmptyOrSpaces(text)) {
             text = text.trim();
             text = text.replace(/\s\s+/g, ' ');
@@ -507,7 +666,7 @@ var messageModule = (function () {
         }
     };
 
-    var isEmptyOrSpaces = function (str) {
+    let isEmptyOrSpaces = function (str) {
         return str === null || str.match(/^ *$/) !== null;
     };
 
@@ -523,15 +682,14 @@ var messageModule = (function () {
         setText: setText
     };
 })();
-var dialogsModule = (function () {  
-    var _api;
-    var _guiManager;    
-    var _dialog;
-    var openedDialog;
-    var dialogs;
-    var dialogsStackNumber;               
+let dialogsModule = (function () {  
+    let _api;
+    let _guiManager;    
+    let _dialog;
+    let openedDialog;
+    let dialogs;               
 
-    var removeDialogs = function () {        
+    let removeDialogs = function () {        
         while (_guiManager.getDialogsContainer().firstChild) {
             _guiManager.getDialogsContainer().firstChild.remove();
         }
@@ -540,14 +698,14 @@ var dialogsModule = (function () {
         openedDialog = null;
     };             
 
-    var addDialog = function (dialog) {        
+    let addDialog = function (dialog) {        
         dialog.element.onclick = function () { openDialog(dialog); };
         _guiManager.getDialogsContainer().appendChild(dialog.element);
         _guiManager.getMessagesPanelsContainer().appendChild(dialog.messagesPanel);
-        dialogs.push(dialog);
+        dialogs.push(dialog);        
     };
 
-    var openDialog = function (dialog) {
+    let openDialog = function (dialog) {
         if (openedDialog === null || openedDialog.id !== dialog.id) {
             if (openedDialog !== null) {
                 openedDialog.messagesPanel.style.display = "none";
@@ -558,8 +716,8 @@ var dialogsModule = (function () {
         }
     };
 
-    var openOrCreateDialog = function (userInfo) {
-        var dialog = getDialogByInterlocutorId(userInfo.id);
+    let openOrCreateDialog = function (userInfo) {
+        let dialog = getDialogByInterlocutorId(userInfo.id);
         if (dialog !== null && dialog !== undefined) {
             openDialog(dialog);
         } else {
@@ -571,7 +729,7 @@ var dialogsModule = (function () {
         }
     };
 
-    var getDialogByInterlocutorId = function (interlocutorId) {
+    let getDialogByInterlocutorId = function (interlocutorId) {
         return dialogs.find(function (dialog) { return dialog.interlocutorId === interlocutorId; });
     };
 
@@ -596,7 +754,7 @@ var dialogsModule = (function () {
 
         updateDialogs: function (dialogs) {
             removeDialogs();
-            for (var i = 0; i < dialogs.length; i++) {                
+            for (let i = 0; i < dialogs.length; i++) {                
                 addDialog(dialogs[i]);
             }
             dialogsStackNumber++;
@@ -608,17 +766,17 @@ var dialogsModule = (function () {
         openOrCreateDialog: openOrCreateDialog,
 
         isDialogUploaded: function (interlocutorId) {
-            var dialog = getDialogByInterlocutorId(interlocutorId);
+            let dialog = getDialogByInterlocutorId(interlocutorId);
             return dialog !== null && dialog !== undefined;
         },
-        
-        getDialogsStackNumber: function () { return dialogsStackNumber; }
+
+        getDialogsOffset: function () { return dialogs.length; }
     };
 })();
 
-var dialogsGuiModule = (function () {
+let dialogsGuiModule = (function () {
 
-    var dialogsContainer,
+    let dialogsContainer,
         messagesPanelsContainer,
         uploadingInfo,        
         dark;        
@@ -651,14 +809,14 @@ var dialogsGuiModule = (function () {
         }
     };
 })();
-var userModule = (function () {
-    var _api;
-    var _guiManager;  
-    var _dialogs;
-    var prevSearch;
-    var openedUserInfo;
+let userModule = (function () {
+    let _api;
+    let _guiManager;  
+    let _dialogs;
+    let prevSearch;
+    let openedUserInfo;
 
-    var getUserInfo = function (userId) {
+    let getUserInfo = function (userId) {
         _api.getUserInfo(userId, function (userInfo) {
             openedUserInfo = userInfo;
             _guiManager.setUserInfo(userInfo);
@@ -666,17 +824,17 @@ var userModule = (function () {
         });
     };
 
-    var createUserFoundElement = function (user) {
-        var box = document.createElement("div");
+    let createUserFoundElement = function (user) {
+        let box = document.createElement("div");
         box.classList.add("userPreviewInner");
         box.onclick = function () {
             getUserInfo(user.id);            
         };
-        var imageBox = document.createElement("div");
+        let imageBox = document.createElement("div");
         imageBox.style.backgroundImage = "url('/images/" + user.miniAvatar + "')";
         imageBox.classList.add("userPreviewAvatar");
         box.appendChild(imageBox);
-        var nicknameBox = document.createElement("div");
+        let nicknameBox = document.createElement("div");
         nicknameBox.textContent = user.nickname;
         nicknameBox.classList.add("userPreviewNickname");
         box.appendChild(nicknameBox);
@@ -684,13 +842,13 @@ var userModule = (function () {
         return box;        
     };
 
-    var findUserByNickname = function () {
-        var nickname = _guiManager.getUserFindValue();
+    let findUserByNickname = function () {
+        let nickname = _guiManager.getUserFindValue();
         if (nickname !== prevSearch) {
             _api.findByNickname(nickname, function (users) {
                 _guiManager.clearUserResultsInnner();
                 if (users.length > 0) {
-                    for (var i = 0; i < users.length; i++) {
+                    for (let i = 0; i < users.length; i++) {
                         _guiManager.appendUserFound(createUserFoundElement(users[i]));
                     }
                 } else {
@@ -717,18 +875,18 @@ var userModule = (function () {
     };
 })();
 
-var userGuiModule = (function () {
-    var userFindTextBox;
-    var userResultsInner;
-    var findUserBtn;
-    var userInfoPanel;
-    var userInfoNicknameBox;
-    var userInfoAvatarBox;
-    var userInfoStatusBox;
-    var userInfoOnlineStatusBox;
-    var userInfoOpenDialog;
-    var closeUserInfoBtn;
-    var dark;          
+let userGuiModule = (function () {
+    let userFindTextBox;
+    let userResultsInner;
+    let findUserBtn;
+    let userInfoPanel;
+    let userInfoNicknameBox;
+    let userInfoAvatarBox;
+    let userInfoStatusBox;
+    let userInfoOnlineStatusBox;
+    let userInfoOpenDialog;
+    let closeUserInfoBtn;
+    let dark;          
 
     return {
         init: function () {
@@ -795,38 +953,38 @@ var userGuiModule = (function () {
         }        
     };
 })();
-var sessionModule = (function () {
-    var _api;
-    var _guiManager;        
+let sessionModule = (function () {
+    let _api;
+    let _guiManager;        
 
-    var closeSession = function (sessionId) {
+    let closeSession = function (sessionId) {
         _api.closeSession(sessionId, false);        
     };
 
-    var banSession = function (sessionId) {
+    let banSession = function (sessionId) {
         _api.closeSession(sessionId, true);
     };
 
-    var uploadSessions = function () {
+    let uploadSessions = function () {
         _api.getSessions(function (sessions) {
             _guiManager.clearSessionsContainer();
-            for (var i = 0; i < sessions.length; i++) {
+            for (let i = 0; i < sessions.length; i++) {
                 _guiManager.appendSession(createSessionDiv(sessions[i]));
             }
         });
     };
 
-    var createElement = function (element, className = "", inner = "") {
-        var newElement = document.createElement(element);
+    let createElement = function (element, className = "", inner = "") {
+        let newElement = document.createElement(element);
         newElement.classList.add(className);
         newElement.innerText = inner;
         return newElement;
     };
 
-    var createSessionDiv = function (session) {
-        var sessionDate = new Date(session.session.createdAt);
-        var dateString = sessionDate.getDate() + "." + (sessionDate.getMonth() + 1) + "." + sessionDate.getFullYear();
-        var container = createElement("div", "sessionContainer"),
+    let createSessionDiv = function (session) {
+        let sessionDate = new Date(session.session.createdAt);
+        let dateString = sessionDate.getDate() + "." + (sessionDate.getMonth() + 1) + "." + sessionDate.getFullYear();
+        let container = createElement("div", "sessionContainer"),
             imageBox = createElement("div", "sessionImage"),
             mainInfo = createElement("div", "sessionMainInfo"),
             info = createElement("div", "sessionInfo"),
@@ -877,11 +1035,11 @@ var sessionModule = (function () {
     };
 })();
 
-var sessionGuiModule = (function () {
-    var sessionsContainer;
-    var loadSessionsBtn;    
+let sessionGuiModule = (function () {
+    let sessionsContainer;
+    let loadSessionsBtn;    
 
-    var clearSessionsContainer = function () {
+    let clearSessionsContainer = function () {
         while (sessionsContainer.firstChild) {
             sessionsContainer.removeChild(sessionsContainer.firstChild);
         }
@@ -901,112 +1059,170 @@ var sessionGuiModule = (function () {
     };
 })();
 class MaelstormRequest {
-    constructor(url, handler, type, data) {
-        this.url = url;
-        this.handler = handler;
+    constructor(url, type, data) {
+        this.url = url;        
         this.type = (type === undefined ? "GET" : type);
         this.data = data;
     }
 }
 
-var apiModule = (function () {
-    var _fingerprint;
+let apiModule = (function () {
+    let _fingerprint;
+    let _crypto;
+    let userPrivateKey;    
+    let userAesKey;
 
-    var accessTokenGenerationTime;
+    let accessTokenGenerationTime;
 
-    var areTokensValid = function () {
-        var token = localStorage.getItem("MAT");
-        var refreshToken = localStorage.getItem("MRT");
+    let areTokensValid = function () {
+        let token = localStorage.getItem("MAT");
+        let refreshToken = localStorage.getItem("MRT");
         return token !== null && refreshToken !== null && token !== undefined && refreshToken !== undefined && token !== "" && refreshToken !== "";
     };
 
-    var updateTokenTime = function (time) {
-        var value = new Date(time).getTime();
+    let updateTokenTime = function (time) {
+        let value = new Date(time).getTime();
         localStorage.setItem("ATGT", value);
         accessTokenGenerationTime = value;
     };
 
-    var isTokenExpired = function () {
+    let isTokenExpired = function () {
         return new Date().getTime() - accessTokenGenerationTime > 300000;
     };
 
-    var sendRequest = function (request) {
-        if (!isTokenExpired()) {
-            $.ajax({
-                url: request.url,
-                type: request.type,
-                contentType: "application/json",
-                dataType: "json",
-                data: request.type === "POST" ? JSON.stringify(request.data) : null,
-                beforeSend: function (xhr) {
-                    var token = localStorage.getItem("MAT");
-                    if (token !== undefined) {
-                        xhr.setRequestHeader("Authorization", "Bearer " + token);
-                    }
-                },
-                success: function (data) {
-                    request.handler(data);
-                },
-                statusCode: {
-                    401: function (xhr) {
-                        if (xhr.getResponseHeader("Token-Expired")) {
-                            refreshToken(request);
-                        } else {
-                            //
-                        }
+    let request = function(){
+        return $.ajax({
+            url: request.url,
+            type: request.type,
+            contentType: "application/json",
+            dataType: "json",
+            data: request.type === "POST" ? JSON.stringify(request.data) : null,
+            beforeSend: function (xhr) {
+                let token = localStorage.getItem("MAT");
+                if (token !== undefined) {
+                    xhr.setRequestHeader("Authorization", "Bearer " + token);
+                }
+            },
+            statusCode: {
+                401: function (xhr) {
+                    if (xhr.getResponseHeader("Token-Expired")) {
+                        refreshToken().then(() => {
+                            sendRequest(request).then(() => {
+                                resolve();
+                            }, error => {
+                                reject(error);
+                            });
+                        }, error => {
+                            console.log(error); reject(error);
+                        });
+                    } else {
+                        //
                     }
                 }
-            });
+            }
+        })
+    }
+
+    let sendRequest = async function (request) {
+        if (!isTokenExpired()) {
+            try {
+                let result = await $.ajax({
+                    url: request.url,
+                    type: request.type,
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: request.type === "POST" ? JSON.stringify(request.data) : null,
+                    beforeSend: function (xhr) {
+                        let token = localStorage.getItem("MAT");
+                        if (token !== undefined) {
+                            xhr.setRequestHeader("Authorization", "Bearer " + token);
+                        }
+                    },
+                    statusCode: {
+                        401: async function (xhr) {
+                            if (xhr.getResponseHeader("Token-Expired")) {
+                                try {
+                                    let refreshResult = await refreshToken();
+                                    console.log(refreshResult);
+                                }
+                                catch (error) {
+                                    console.log(error);
+                                }                                
+                            } else {
+                                //
+                            }
+                        }
+                    }
+                });
+                console.log(result);
+                return result;
+            }
+            catch (error) {
+                console.log(error);
+                throw new Error("");
+            }
         } else {
-            refreshToken(request);
-        }
+            //refreshToken().then(() => {
+            //    sendRequest(request).then(() => {
+            //        resolve();
+            //    }, error => {
+            //        reject(error);
+            //    });
+            //}, error => {
+            //    reject(error);
+            //});
+        }    
     };
 
-    var refreshToken = function (request) {
-        var token = localStorage.getItem("MAT");
-        var refreshToken = localStorage.getItem("MRT");
+    let refreshToken = async function () {
+        let token = localStorage.getItem("MAT");
+        let refreshToken = localStorage.getItem("MRT");
         if (areTokensValid() && isTokenExpired()) {
-            var refresh = JSON.stringify({
+            let refresh = JSON.stringify({
                 token: token,
                 refreshtoken: refreshToken,
                 fingerPrint: _fingerprint
             });
-            $.ajax({
-                url: "/api/authentication/rfrshtkn",
-                type: "POST",
-                contentType: "application/json",
-                dataType: "json",
-                data: refresh,
-                success: function (data) {
-                    console.log(data);
-                    if (data.isSuccessful) {
-                        var tokens = JSON.parse(data.data);
-                        localStorage.setItem("MAT", tokens.AccessToken);
-                        localStorage.setItem("MRT", tokens.RefreshToken);
-                        updateTokenTime(tokens.GenerationTime);
-                        sendRequest(request);
-                    } else {
-                        console.log("Token refreshing error: " + data.errorMessages.join(' '));
-                        localStorage.removeItem("MAT");
-                        localStorage.removeItem("MRT");
-                        //
-                    }
+            try {
+                let result = await $.ajax({
+                    url: "/api/authentication/rfrshtkn",
+                    type: "POST",
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: refresh
+                });
+                console.log(result);
+                if (result.isSuccessful) {
+                    let tokens = JSON.parse(result.data);
+                    localStorage.setItem("MAT", tokens.AccessToken);
+                    localStorage.setItem("MRT", tokens.RefreshToken);
+                    updateTokenTime(tokens.GenerationTime);
+                    resolve();
+                } else {
+                    localStorage.removeItem("MAT");
+                    localStorage.removeItem("MRT");
+                    reject(new Error("Token refreshing error: " + data.errorMessages.join(' ')))
+                    //
                 }
-            });
-        }
+            }
+            catch (error) {
+                console.log(error);
+                throw new Error(error);
+            }
+        }        
     };
 
-    var isEmptyOrSpaces = function (str) {
+    let isEmptyOrSpaces = function (str) {
         return str === null || str.match(/^ *$/) !== null;
     }; 
 
-    var getOS = function () {
-        var userAgent = window.navigator.userAgent;
-        var platform = window.navigator.platform;
-        var macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
-        var windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
-        var iosPlatforms = ['iPhone', 'iPad', 'iPod'];
-        var os = "Unknown";
+    let getOS = function () {
+        let userAgent = window.navigator.userAgent;
+        let platform = window.navigator.platform;
+        let macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
+        let windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
+        let iosPlatforms = ['iPhone', 'iPad', 'iPod'];
+        let os = "Unknown";
 
         if (macosPlatforms.indexOf(platform) !== -1) {
             os = 'Mac OS';
@@ -1022,8 +1238,8 @@ var apiModule = (function () {
         return os;
     };
 
-    var getBrowser = function () {
-        var ua = navigator.userAgent,
+    let getBrowser = function () {
+        let ua = navigator.userAgent,
             tem,
             M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
         if (/trident/i.test(M[1])) {
@@ -1039,27 +1255,60 @@ var apiModule = (function () {
         return M.join(' ');
     };  
 
+    let loginRequest = function () {
+
+    };
+
+    //let decryptMessages = function (dialogKey, messages) {
+    //    let promises = [];
+    //    for (let i = 0; i < messages.length; i++) {
+    //        promises.push(_crypto.decryptAes(dialogKey, messages[i].IV, messages[i]));
+    //    }
+    //    return Promise.all(promises);                    
+    //}
+
     return {
-        init: function(fingerprint) {
+        init: function (fingerprint, crypto, encoding) {
             _fingerprint = fingerprint;
+            _crypto = crypto;
+            _encoding = encoding;
             accessTokenGenerationTime = Number(localStorage.getItem("ATGT"));
         },
 
         areTokensValid: areTokensValid,
 
-        getDialogs: function(stackNumber, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialogs?stackNumber=" + stackNumber, handler));
+        getDialogs: function (offset, count) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getdialogs?offset=" + offset + "&count=" + count)).then(dialogs => {
+                    resolve(dialogs);
+                }, (error) => {
+                    reject(error);
+                });
+            });
         },
 
-        getReadedMessages: function(dialogId, offset, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, handler, "GET"));
+        getReadedMessages: function (dialogId, offset, count) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {
+                    resolve(messages);
+                }, error => {
+                    reject(error);
+                });
+            })
         },
 
-        getUnreadedMessages: function(dialogId, count, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&count=" + count, handler, "GET"));
+        getUnreadedMessages: function (dialogId, count) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET")).then(messages => {   
+                    
+                    resolve(messages);
+                }, error => {
+                    reject(error);
+                });
+            })
         },
 
-        sendDialogMessage: function(message, onSuccessful) {
+        sendDialogMessage: function (message, onSuccessful) {
             if (message.targetId !== 0) {
                 if (!isEmptyOrSpaces(message.text)) {
                     if (message.text.length > 1 && message.text.length < 4096) {
@@ -1076,8 +1325,8 @@ var apiModule = (function () {
             }
         },
 
-        login: function(login, password, onSuccess, onFailed) {
-            var model = {
+        login: async function (login, password) {
+            let model = {
                 email: login,
                 password: password,
                 osCpu: getOS(),
@@ -1089,25 +1338,28 @@ var apiModule = (function () {
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(model),
-                dataType: "json",
-                success: function (data) {
-                    if (data.isSuccessful) {
-                        var tokens = JSON.parse(data.data);
-                        localStorage.setItem("MAT", tokens.AccessToken);
-                        localStorage.setItem("MRT", tokens.RefreshToken);
-                        updateTokenTime(tokens.GenerationTime);
-                        onSuccess();
-                    } else {
-                        onFailed();
-                    }
+                dataType: "json",                
+            }).done(async function (data) {
+                if (data.isSuccessful) {
+                    let result = JSON.parse(data.data);
+                    localStorage.setItem("MAT", result.Tokens.AccessToken);
+                    localStorage.setItem("MRT", result.Tokens.RefreshToken);
+                    updateTokenTime(result.Tokens.GenerationTime);
+                    let IV = _encoding.base64ToArray(result.IVBase64);
+                    userAesKey = await _crypto.genereateAesKeyByPassPhrase(password, 128);
+                    userPrivateKey = await _crypto.decryptAes(userAesKey, IV, result.EncryptedPrivateKey);
+                } else {
+                    throw new Error(data.errorMessages[0]);
                 }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                throw new Error(textStatus);
             });
         },
 
-        registration: function(nickname, email, password, confirmPassword, onSuccess, onFailed) {
+        registration: async function (nickname, email, password, confirmPassword) {
             if (!isEmptyOrSpaces(nickname) && !isEmptyOrSpaces(email) && !isEmptyOrSpaces(password) && !isEmptyOrSpaces(confirmPassword)) {
                 if (password === confirmPassword) {
-                    var model = {
+                    let model = {
                         nickname: nickname,
                         email: email,
                         password: password,
@@ -1118,59 +1370,93 @@ var apiModule = (function () {
                         type: "POST",
                         contentType: "application/json",
                         data: JSON.stringify(model),
-                        dataType: "json",
-                        success: function (data) {
-                            if (data.isSuccessful) {
-                                onSuccess();
-                            }
-                            else {
-                                onFailed(data);
-                            }
+                        dataType: "json"
+                    }).done(function (data) {
+                        if (!data.isSuccessful) {
+                            throw new Error(data.errorMessages[0]);
                         }
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        throw new Error(textStatus);
                     });
                 }
+                else {
+                    throw new Error("Passwords are not same");
+                }
+            }
+            else {
+                throw new Error("Invalid data");
             }
         },
 
-        logOut: function() {
-            sendRequest(new MaelstormRequest("/api/user/logout", null, "GET"));
+        logOut: function () {
+            sendRequest(new MaelstormRequest("/api/user/logout", "GET"));
             localStorage.clear();
         },
 
-        getDialog: function(interlocutorId, handler) {
-            sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId, handler));
-        },            
-
-        getSessions: function(handler) {
-            sendRequest(new MaelstormRequest("/api/user/getsessions", handler, "GET"));
+        getDialog: function (interlocutorId) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/dialog/getdialog?interlocutorId=" + interlocutorId)).then(dialog => {
+                    resolve(dialog);
+                }, error => {
+                    reject(error);
+                });
+            });
         },
 
-        closeSession: function(sessionId, banDevice) {
-            var data = { sessionId: sessionId, banDevice: banDevice };
-            sendRequest(new MaelstormRequest("/api/user/closeSession", null, "POST", data));
+        getSessions: function () {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/user/getsessions", "GET")).then(sessions => {
+                    resolve(sessions);
+                }, error => {
+                    reject(error);
+                });
+            });
         },
 
-        getOnlineStatuses: function(ids, handler) {
-            if (ids.length === 0) return;
-            sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", handler, "POST", ids));
+        closeSession: function (sessionId, banDevice) {
+            let data = { sessionId: sessionId, banDevice: banDevice };
+            sendRequest(new MaelstormRequest("/api/user/closeSession", "POST", data));
         },
 
-        findByNickname: function (nickname, handler) {
-            sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname, handler));
+        getOnlineStatuses: function (ids) {
+            return new Promise(function (resolve, reject) {
+                if (ids.length === 0) reject();
+                sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", "POST", ids)).then(statuses => {
+                    resolve(statuses);
+                }, error => {
+                    reject(error);
+                });
+            });
         },
 
-        getUserInfo: function (userId, handler) {
-            sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId, handler));
+        findByNickname: function (nickname) {
+            return new Promise(function(resolve, reject){
+                sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname).then(user => {
+                    resolve(user);
+                }, error => {
+                    reject(error);
+                }));
+            });
+        },
+
+        getUserInfo: function (userId) {
+            return new Promise(function (resolve, reject) {
+                sendRequest(new MaelstormRequest("/api/user/getuserinfo?userId=" + userId).then(user => {
+                    resolve(user);
+                }, error => {
+                    reject(error);
+                }));
+            });           
         }
     };
 })();
-var dateModule = (function () {    
-    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sem", "Okt", "Nov", "Dec"];
+let dateModule = (function () {    
+    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sem", "Okt", "Nov", "Dec"];
 
     return {
         getDate: function (date) {
-            var currentDate = new Date();
-            var dateString = "";
+            let currentDate = new Date();
+            let dateString = "";
             if (date.toDateString() !== currentDate.toDateString()) {
                 if (date === currentDate.getDate() - 1) {
                     dateString = "Tomorrow";
@@ -1181,31 +1467,31 @@ var dateModule = (function () {
                     }
                 }
             } else {
-                var minutes = date.getMinutes().toString();
+                let minutes = date.getMinutes().toString();
                 dateString = date.getHours() + ":" + (minutes.length === 2 ? minutes : "0" + minutes);
             }
             return dateString;
         }
     };
 })();
-var signalRModule = (function () {
-    var url = "/messageHub";
-    var connection;
-    var timeToReconnect;
-    var tryReconnectingCount;
-    var isClosedByClient;
-    var pingTime;
-    var _api;
-    var _fingerprint;
-    var _dialogs;
-    var _connectionGui;
-    var _accountGui;    
+let signalRModule = (function () {
+    let url = "/messageHub";
+    let connection;
+    let timeToReconnect;
+    let tryReconnectingCount;
+    let isClosedByClient;
+    let pingTime;
+    let _api;
+    let _fingerprint;
+    let _dialogs;
+    let _connectionGui;
+    let _accountGui;    
 
-    var auth = function () {
+    let auth = function () {
         connection.invoke("Authorize", localStorage.getItem("MAT"), _fingerprint);
     };   
 
-    var startConnection = function () {
+    let startConnection = function () {
         if (connection !== null && _fingerprint !== "" && connection.connectionState !== 1) {
             connecting();
             connection.start()
@@ -1224,7 +1510,7 @@ var signalRModule = (function () {
         }
     };
 
-    var initHandlers = function () {
+    let initHandlers = function () {
         connection.onclose(() => {
             if (isClosedByClient || _fingerprint === "") return;
             console.log("lost connection");
@@ -1237,9 +1523,9 @@ var signalRModule = (function () {
         });
 
         connection.on("RecieveMessage", function (serverMessage) {
-            var sm = JSON.parse(serverMessage);
-            var message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
-            var dialog = _dialogs.getDialogById(message.dialogId);
+            let sm = JSON.parse(serverMessage);
+            let message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
+            let dialog = _dialogs.getDialogById(message.dialogId);
             if (dialog !== undefined && dialog !== null) {
                 dialog.addNewMessage(message);
             } else {
@@ -1251,10 +1537,10 @@ var signalRModule = (function () {
         });
 
         connection.on("MessageWasReaded", function (dialogId, messageId) {
-            var dialog = _dialogs.getDialogById(dialogId);
+            let dialog = _dialogs.getDialogById(dialogId);
             if (dialog !== undefined) {
-                var messages = dialog.messages;
-                for (var i = messages.length; i > 0; i--) {
+                let messages = dialog.messages;
+                for (let i = messages.length; i > 0; i--) {
                     if (messages[i].id === messageId) {
                         SetAsReaded(messages[i].element.firstChild);//!!
                         console.log("man read: " + messages[i].text);
@@ -1276,19 +1562,19 @@ var signalRModule = (function () {
         });
     };
 
-    var connected = function () {
+    let connected = function () {
         console.log("connected");
         tryReconnectingCount = -1;
         _connectionGui.showConnected();
         auth();        
     };
 
-    var connecting = function () {
+    let connecting = function () {
         console.log("connecting...");
         _connectionGui.showConnecting();        
     };
 
-    var disconnected = function () {
+    let disconnected = function () {
         console.log("disconnected");
         _connectionGui.showDisconnected();
     };
@@ -1322,12 +1608,12 @@ var signalRModule = (function () {
     };
 })();
 
-var connectionGuiModule = (function () {
-    var connectingInfo;
-    var connectedInfo;
-    var disconnectedInfo;
+let connectionGuiModule = (function () {
+    let connectingInfo;
+    let connectedInfo;
+    let disconnectedInfo;
 
-    var hideConnectInfo = function () {
+    let hideConnectInfo = function () {
         connectingInfo.style.display = "none";
         connectedInfo.style.display = "none";
     };
@@ -1359,8 +1645,8 @@ var connectionGuiModule = (function () {
         }
     };
 })();
-var settingsModule = (function () {
-    var _guiManager;
+let settingsModule = (function () {
+    let _guiManager;
     return {
         init: function (guiManager) {
             _guiManager = guiManager;
@@ -1369,16 +1655,16 @@ var settingsModule = (function () {
     };
 })();
 
-var settingsGuiModule = (function () {
-    var settingsPanel;
-    var settingPanelSlider;
-    var settingsContainers;
-    var isPanelOpened = false;
-    var hideWidth;
+let settingsGuiModule = (function () {
+    let settingsPanel;
+    let settingPanelSlider;
+    let settingsContainers;
+    let isPanelOpened = false;
+    let hideWidth;
 
-    var initSettingsPanel = function () {
-        for (var i = 0; i < settingsContainers.length; i++) {
-            var inner = settingsContainers[i].children[1];
+    let initSettingsPanel = function () {
+        for (let i = 0; i < settingsContainers.length; i++) {
+            let inner = settingsContainers[i].children[1];
             settingsContainers[i].children[0].onclick = function () {
                 $(inner).slideToggle("slow");
             };
@@ -1409,63 +1695,49 @@ var settingsGuiModule = (function () {
         getSettingsPanelSlider: function () { return settingPanelSlider; }
     }
 })();
-var accountGui = accountGuiModule;
-var account = accountModule;
-var loginForm = loginFormModule;
-var regForm = registrationFormModule;
-var dialogs = dialogsModule;
-var dialog = dialogModule;
-var message = messageModule;
-var dialogsGui = dialogsGuiModule;
-var dialogGui = dialogGuiModule;
-var date = dateModule;
-var api = apiModule;
-var signalRConnection = signalRModule;
-var connectionGui = connectionGuiModule;
-var user = userModule;
-var userGui = userGuiModule;
-var session = sessionModule;
-var sessionGui = sessionGuiModule;
-var settings = settingsModule;
-var settingsGui = settingsGuiModule;
+let api = apiModule;
 
 function init() {
-    dialogsGui.showUploading();
-    api.getDialogs(dialogs.getDialogsStackNumber(), (data) => {
-        signalRConnection.startConnection();
-        dialogs.updateDialogs(dialog.createDialogs(data));        
-        dialogsGui.hideUploading();
+    dialogsGuiModule.showUploading();
+    api.getDialogs(dialogsModule.getDialogsOffset(), 20).then(data => {
+        signalRModule.startConnection();
+        dialogsModule.updateDialogs(dialogModule.createDialogs(data));
+        dialogsGuiModule.hideUploading();
+    }, error => {
+        console.log(error);
     });
 }
 
 function initModules(fingerprint) {
-    api.init(fingerprint);
-    accountGui.init(loginForm, regForm);
-    account.init(api, accountGui, init);
-    dialogsGui.init();
-    dialogGui.init(date);
-    dialog.init(api, dialogGui, message, date, 20, dialogsGui.toTheTop);
-    dialogs.init(api, dialogsGui, dialog);
-    connectionGui.init();
-    signalRConnection.init(api, fingerprint, dialogs, connectionGui, accountGui);
-    sessionGui.init();
-    session.init(api, sessionGui);
-    userGui.init();
-    user.init(api, userGui, dialogs);
-    settingsGui.init();
-    settings.init(settingsGui);    
+    encodingModule.init();
+    cryptoModule.init(encodingModule);
+    api.init(fingerprint, cryptoModule, encodingModule);    
+    accountGuiModule.init(loginFormModule, registrationFormModule);
+    accountModule.init(api, accountGuiModule, init);
+    dialogsGuiModule.init();
+    dialogGuiModule.init(dateModule);
+    dialogModule.init(api, dialogGuiModule, messageModule, dateModule, 20, dialogsGuiModule.toTheTop);
+    dialogsModule.init(api, dialogsGuiModule, dialogModule);
+    connectionGuiModule.init();
+    signalRModule.init(api, fingerprint, dialogsModule, connectionGuiModule, accountGuiModule);
+    sessionGuiModule.init();
+    sessionModule.init(api, sessionGuiModule);
+    userGuiModule.init();
+    userModule.init(api, userGuiModule, dialogsModule);
+    settingsGuiModule.init();
+    settingsModule.init(settingsGuiModule);    
 }
 
 function main() {
     Fingerprint2.get(function(components) {
-        var values = components.map(function (component) { return component.value; });
-        var fingerprint = Fingerprint2.x64hash128(values.join(''), 31);
+        let values = components.map(function (component) { return component.value; });
+        let fingerprint = Fingerprint2.x64hash128(values.join(''), 31);
         initModules(fingerprint);        
         
         if (api.areTokensValid()) {
             init();
         } else {
-            accountGui.openLogin();
+            accountGuiModule.openLogin();
         }
     });
 }

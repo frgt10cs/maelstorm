@@ -1,4 +1,4 @@
-﻿using Maelstorm.ViewModels;
+﻿using Maelstorm.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,10 +8,10 @@ namespace Maelstorm.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<UserInfoViewModel> GetUserInfoAsync(int userId);
-        Task<List<SessionViewModel>> GetSessionsAsync(int userId);
+        Task<UserInfoDTO> GetUserInfoAsync(int userId);
+        Task<List<SessionDTO>> GetSessionsAsync(int userId);
         Task CloseSessionAsync(int userId, string sessionId, bool banDevice = false);
         Task<bool> IsOnlineAsync(int id);
-        Task<List<OnlineStatusViewModel>> GetOnlineStatusesAsync(int[] ids);
+        Task<List<OnlineStatusDTO>> GetOnlineStatusesAsync(int[] ids);
     }
 }

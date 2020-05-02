@@ -1,5 +1,5 @@
 ﻿using Maelstorm.Models;
-using Maelstorm.ViewModels;
+using Maelstorm.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +9,11 @@ namespace Maelstorm.Services.Interfaces
 {
     public interface IDialogService
     {
-        Task<ServiceResult> SendDialogMessageAsync(MessageSendViewModel model);
-        Task<List<MessageViewModel>> GetReadedDialogMessagesAsync(int dialogId, int offset, int count);
-        Task<List<MessageViewModel>> GetUnreadedDialogMessagesAsync(int dialogId, int count);
-        Task<List<DialogViewModel>> GetDialogsAsync(int stackNumber, int count);
+        Task<ServiceResult> SendDialogMessageAsync(MessageSendDTO model);
+        Task<List<MessageDTO>> GetReadedDialogMessagesAsync(int dialogId, int offset, int count);
+        Task<List<MessageDTO>> GetUnreadedDialogMessagesAsync(int dialogId, int offset, int count);
+        Task<List<DialogDTO>> GetDialogsAsync(int stackNumber, int count);
         Task SetMessageAsReaded(int messageId);
-        Task<DialogViewModel> GetDialogAsync(int interlocutorId);
+        Task<DialogDTO> GetDialogAsync(int interlocutorId);
     }
 }

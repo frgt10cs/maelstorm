@@ -1,21 +1,18 @@
-﻿var signalRModule = (function () {
-    var url = "/messageHub";
-    var connection;
-    var timeToReconnect;
-    var tryReconnectingCount;
-    var isClosedByClient;
-    var pingTime;
-    var _api;
-    var _fingerprint;
-    var _dialogs;
-    var _connectionGui;
-    var _accountGui;    
+﻿let signalRModule = (function () {
+    let url = "/messageHub";
+    let connection;
+    let timeToReconnect;
+    let tryReconnectingCount;
+    let isClosedByClient;
+    let pingTime;    
+    let _fingerprint;
+    let dialogsModule;        
 
-    var auth = function () {
+    let auth = function () {
         connection.invoke("Authorize", localStorage.getItem("MAT"), _fingerprint);
     };   
 
-    var startConnection = function () {
+    let startConnection = function () {
         if (connection !== null && _fingerprint !== "" && connection.connectionState !== 1) {
             connecting();
             connection.start()
@@ -34,7 +31,7 @@
         }
     };
 
-    var initHandlers = function () {
+    let initHandlers = function () {
         connection.onclose(() => {
             if (isClosedByClient || _fingerprint === "") return;
             console.log("lost connection");
@@ -47,24 +44,24 @@
         });
 
         connection.on("RecieveMessage", function (serverMessage) {
-            var sm = JSON.parse(serverMessage);
-            var message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
-            var dialog = _dialogs.getDialogById(message.dialogId);
+            let sm = JSON.parse(serverMessage);
+            let message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
+            let dialog = dialogsModule.getDialogById(message.dialogId);
             if (dialog !== undefined && dialog !== null) {
                 dialog.addNewMessage(message);
             } else {
-                _api.getDialog(message.authorId, function (dialog) {
-                    _dialogs.addDialog(dialog);
+                api.getDialog(message.authorId, function (dialog) {
+                    dialogsModule.addDialog(dialog);
                     _dialog.addNewMessage(message);
                 });
             }
         });
 
         connection.on("MessageWasReaded", function (dialogId, messageId) {
-            var dialog = _dialogs.getDialogById(dialogId);
+            let dialog = dialogsModule.getDialogById(dialogId);
             if (dialog !== undefined) {
-                var messages = dialog.messages;
-                for (var i = messages.length; i > 0; i--) {
+                let messages = dialog.messages;
+                for (let i = messages.length; i > 0; i--) {
                     if (messages[i].id === messageId) {
                         SetAsReaded(messages[i].element.firstChild);//!!
                         console.log("man read: " + messages[i].text);
@@ -82,34 +79,31 @@
             localStorage.clear();
             isClosedByClient = true;
             connection.stop();
-            _accountGui.openLogin();
+            accountGuiModule.openLogin();
         });
     };
 
-    var connected = function () {
+    let connected = function () {
         console.log("connected");
         tryReconnectingCount = -1;
-        _connectionGui.showConnected();
+        connectionGuiModule.showConnected();
         auth();        
     };
 
-    var connecting = function () {
+    let connecting = function () {
         console.log("connecting...");
-        _connectionGui.showConnecting();        
+        connectionGuiModule.showConnecting();        
     };
 
-    var disconnected = function () {
+    let disconnected = function () {
         console.log("disconnected");
-        _connectionGui.showDisconnected();
+        connectionGuiModule.showDisconnected();
     };
 
     return {
-        init: function (api, fingerprint, dialogsModule, connectionGui, accountGui) {
-            _api = api;
-            _fingerprint = fingerprint;
-            _dialogs = dialogsModule;
-            _connectionGui = connectionGui;
-            _accountGui = accountGui;
+        init: function (fingerprint) {            
+            connectionGuiModule.init();
+            _fingerprint = fingerprint;                       
             timeToReconnect = [0, 2000, 2000, 4000, 6000];
             tryReconnectingCount = -1;
             isClosedByClient = false;
@@ -132,12 +126,12 @@
     };
 })();
 
-var connectionGuiModule = (function () {
-    var connectingInfo;
-    var connectedInfo;
-    var disconnectedInfo;
+let connectionGuiModule = (function () {
+    let connectingInfo;
+    let connectedInfo;
+    let disconnectedInfo;
 
-    var hideConnectInfo = function () {
+    let hideConnectInfo = function () {
         connectingInfo.style.display = "none";
         connectedInfo.style.display = "none";
     };
