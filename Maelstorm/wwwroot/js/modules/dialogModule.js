@@ -9,10 +9,14 @@ let dialogModule = (function () {
     let _uploadCount;    
     let dialogContext;   
 
-    let decryptMessages = function (messages) {
+    let decryptMessage = async function (message) {
+        message.text = encodingModule.getString(await cryptoModule.decryptAes(dialogContext.key, encodingModule.base64ToArray(message.ivBase64), message.text));        
+    }
+
+    let decryptMessages = async function (messages) {
         let promises = [];
         for (let i = 0; i < messages.length; i++) {
-            promises.push(cryptoModule.decryptAes(dialogContext.key, messages[i].IV, messages[i].text));
+            promises.push(decryptMessage(messages[i]));
         }
         return Promise.all(promises);
     }
@@ -56,9 +60,10 @@ let dialogModule = (function () {
         return dialogContext.interlocutorId === message.authorId;
     };
 
-    let unreadedMessagesHandler = function (messages) {
+    let unreadedMessagesHandler = async function (messages) {
         if (messages !== null && messages !== undefined && messages.length > 0) {
-            if (messages.length < _uploadCount) dialogContext.allUnreadedUpload = true;
+            if (messages.length < _uploadCount) dialogContext.allUnreadedUpload = true;    
+            dialogContext.unreadedMessagesOffset += messages.length;
             for (let i = 0; i < messages.length; i++) {
                 messageModule.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToEnd(messages[i]);
@@ -71,11 +76,11 @@ let dialogModule = (function () {
         dialogContext.uploadingBlocked = false;
     };
 
-    let readedMessagesHandler = function (messages) {
+    let readedMessagesHandler = async function (messages) {
         if (messages !== null && messages !== undefined && messages.length > 0) {
             if (messages.length < _uploadCount) dialogContext.allReadedUpload = true;
             dialogContext.readedMessagesOffset += messages.length;
-            let resultScrollTop = 0;
+            let resultScrollTop = 0;            
             for (let i = 0; i < messages.length; i++) {
                 messageModule.setElement(messages[i], isMessageFromOther(messages[i]));
                 appendMessageToBegin(messages[i]);
@@ -90,12 +95,16 @@ let dialogModule = (function () {
         dialogContext.uploadingBlocked = false;
     };  
 
-    let uploadUnreadedMessages = function () {
-        api.getUnreadedMessages(dialogContext.id, _uploadCount).then(messages => { unreadedMessagesHandler(messages); }, error => { console.log(error); });
+    let uploadUnreadedMessages = async function () {
+        let messages = await api.getUnreadedMessages(dialogContext.id, dialogContext.unreadedMessagesOffset, _uploadCount);
+        await decryptMessages(messages);
+        unreadedMessagesHandler(messages); 
     };
 
-    let uploadReadedMessages = function () {
-        api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount).then(messages => { readedMessagesHandler(messages); }, error => { console.log(error); });
+    let uploadReadedMessages = async function () {
+        let messages = await api.getReadedMessages(dialogContext.id, dialogContext.readedMessagesOffset, _uploadCount);
+        await decryptMessages(messages);
+        readedMessagesHandler(messages);
     };
 
     let createDialog = async function (serverDialog) {      
@@ -104,26 +113,28 @@ let dialogModule = (function () {
         serverDialog.messages = [];
         serverDialog.unconfirmedMessages = [];
         serverDialog.readedMessagesOffset = 0;
+        serverDialog.unreadedMessagesOffset = 0;
         serverDialog.allReadedUploaded = false;
         serverDialog.allUnreadedUploaded = false;
         serverDialog.uploadingBlocked = false;
-        serverDialog.messagesPanel = createMessagesPanel();
+        serverDialog.messagesPanel = createMessagesPanel();       
+        let decryptedDialogKey = await cryptoModule.decryptRsa(serverDialog.encryptedKey, accountModule.getPrivateKey());
+        serverDialog.key = await cryptoModule.genereateAesKeyByPassPhrase(encodingModule.getString(decryptedDialogKey), encodingModule.base64ToArray(serverDialog.saltBase64), 128);        
+        serverDialog.lastMessage.text = await encodingModule.getString(await cryptoModule.decryptAes(serverDialog.key, encodingModule.base64ToArray(serverDialog.lastMessage.ivBase64), serverDialog.lastMessage.text));
         serverDialog.element = dialogGuiModule.createDialogLi(serverDialog);
-        serverDialog.key = await cryptoModule.decryptRsa(serverDialog.encryptedKey, accountModule.getPrivateKey());
         return serverDialog;
     };
 
-    let firstDialogMessagesUploading = function () {
-        uploadReadedMessages();
+    let firstDialogMessagesUploading = async function () {
+        await uploadReadedMessages();        
+        await uploadUnreadedMessages();
     };
 
-    let createMessage = async function () {
+    let createMessage = function () {
         let message = {};
         let text = messageModule.validText(dialogGuiModule.getMessageText());
-        if (text !== "") {
-            let IV = cryptoModule.generateIV();
-            message.IVBase64 = encodingModule.arrayToBase64(IV);
-            message.text = await cryptoModule.encryptAes(dialogContext.key, message.IV, text);
+        if (text !== "") {            
+            message.text = text;
             message.targetId = dialogContext.interlocutorId;
             let bindId = dialogContext.unconfirmedMessages.length;
             message.dateOfSending = new Date();
@@ -132,19 +143,27 @@ let dialogModule = (function () {
             return message;
         }
         return null;        
+    };   
+
+    let encryptMessage = async function (message) {
+        let encryptedMessage = objectModule.iterationCopy(message);   
+        let IV = cryptoModule.generateIV();            
+        encryptedMessage.IVBase64 = encodingModule.arrayToBase64(IV);
+        encryptedMessage.text = encodingModule.arrayToBase64(await cryptoModule.encryptAes(dialogContext.key, IV, message.text));
+        return encryptedMessage;
     };
 
-    let sendMessage = function (message) {       
+    let sendMessage = async function (message) {       
         addNewMessage(message);
         dialogContext.unconfirmedMessages.push(message);  
-        api.sendDialogMessage(message, (result) => {
-            let info = JSON.parse(result.data);
-            let confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
-            confirmedMessage.id = info.id;
-            confirmedMessage.element.id = info.id;
-            confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
-            dialogContext.unconfirmedMessages[info.bindId] = undefined;
-        });              
+        let encryptedMessage = await encryptMessage(message);
+        let result = await api.sendDialogMessage(encryptedMessage); 
+        let info = JSON.parse(result.data);
+        let confirmedMessage = dialogContext.unconfirmedMessages[info.bindId];
+        confirmedMessage.id = info.id;
+        confirmedMessage.element.id = info.id;
+        confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
+        dialogContext.unconfirmedMessages[info.bindId] = undefined;             
     };
 
     let addNewMessage = function (message) {
@@ -186,9 +205,9 @@ let dialogModule = (function () {
             dialogContext = dialog;
         },
 
-        openDialog: function () {
+        openDialog: async function () {
             if (!dialogContext.isPanelOpened) {                
-                firstDialogMessagesUploading();
+                await firstDialogMessagesUploading();
             }
             dialogContext.isPanelOpened = true;
             dialogContext.messagesPanel.style.display = "block";
@@ -199,11 +218,11 @@ let dialogModule = (function () {
         createDialog: createDialog,
 
         createDialogs: function (serverDialogs) {
-            var dialogs = [];
+            let promises = [];            
             for (let i = 0; i < serverDialogs.length; i++) {
-                dialogs.push(createDialog(serverDialogs[i]));
+                promises.push(createDialog(serverDialogs[i]));                
             }
-            return dialogs;
+            return Promise.all(promises);
         },
 
         decryptMessages: decryptMessages,
@@ -222,8 +241,7 @@ let dialogModule = (function () {
     };
 })();
 
-let dialogGuiModule = (function () {
-    let dateModule;
+let dialogGuiModule = (function () {    
     let dialogTitleDiv;
     let dialogStatusDiv;
     let messageSendBtn;
@@ -288,11 +306,11 @@ let dialogGuiModule = (function () {
 
             var dialogMessage = document.createElement("div");
             dialogMessage.className = "dialogTextPreview";
-            dialogMessage.innerText = dialog.lastMessageText !== null ? dialog.lastMessageText : "";
+            dialogMessage.innerText = dialog.lastMessageText !== null ? dialog.lastMessage.text : "";
 
             var dialogDate = document.createElement("div");
             dialogDate.className = "dialogDate";
-            dialogDate.innerText = dialog.lastMessageDate !== null ? dateModule.getDate(new Date(dialog.lastMessageDate)) : "";
+            dialogDate.innerText = dialog.dateOfSending !== null ? dateModule.getDate(new Date(dialog.lastMessage.dateOfSending)) : "";
 
             photoContainer.appendChild(photoDiv);
             dialogPreview.appendChild(dialogTitle);

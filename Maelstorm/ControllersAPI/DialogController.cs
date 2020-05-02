@@ -25,9 +25,9 @@ namespace Maelstorm.ControllersAPI
 
         [HttpGet]
         [ActionName("GetUnreadedDialogMessages")]
-        public async Task<ActionResult<List<MessageDTO>>> GetUnreadedDialogMessages(int dialogId, int count)
+        public async Task<ActionResult<List<MessageDTO>>> GetUnreadedDialogMessages(int dialogId, int offset, int count)
         {
-            return await dialServ.GetUnreadedDialogMessagesAsync(dialogId, count);            
+            return await dialServ.GetUnreadedDialogMessagesAsync(dialogId, offset, count);            
         }
 
         [HttpGet]

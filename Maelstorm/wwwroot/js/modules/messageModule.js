@@ -12,7 +12,7 @@ let messageModule = (function () {
         mesBlock.id = message.id;
 
         let messageDiv = document.createElement("div");
-        messageDiv.className = "message text-white px-2 py-1 mw-75 rounded d-inline-block float-right bg-dark-6";
+        messageDiv.className = "message text-white px-2 py-1 mw-75 rounded d-inline-block bg-dark-6";
 
         let messageText = document.createElement("div");
         message.className = "messageText text-break";
@@ -20,6 +20,7 @@ let messageModule = (function () {
 
         messageDiv.appendChild(messageText);
         if (!isFromOther) {
+            messageDiv.classList.add("float-right");
             let statusDiv = document.createElement("div");
             statusDiv.className = "messageStatus float-right";
             messageDiv.appendChild(statusDiv);

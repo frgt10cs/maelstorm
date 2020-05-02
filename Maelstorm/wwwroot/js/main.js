@@ -1,14 +1,11 @@
 let api = apiModule;
 
-function init() {
+async function init() {
     dialogsGuiModule.showUploading();
-    api.getDialogs(dialogsModule.getDialogsOffset(), 20).then(data => {
-        signalRModule.startConnection();
-        dialogsModule.updateDialogs(dialogModule.createDialogs(data));
-        dialogsGuiModule.hideUploading();
-    }, error => {
-        console.log(error);
-    });
+    let dialogs = await api.getDialogs(dialogsModule.getDialogsOffset(), 20);
+    signalRModule.startConnection();
+    await dialogsModule.updateDialogs(await dialogModule.createDialogs(dialogs));
+    dialogsGuiModule.hideUploading();
 }
 
 function initModules(fingerprint) {

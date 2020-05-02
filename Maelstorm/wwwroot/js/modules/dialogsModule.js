@@ -35,7 +35,7 @@
             openDialog(dialog);
         } else {
             dialog = await api.getDialog(userInfo.id);
-            dialog = dialogModule.createDialog(dialog);
+            dialog = await dialogModule.createDialog(dialog);
             addDialog(dialog);
             openDialog(dialog);
         }

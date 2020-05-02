@@ -8,6 +8,7 @@ namespace Maelstorm.Dtos
     public class MessageDTO
     {
         public int Id { get; set; }
+        public string IVBase64 { get; set; }
         public int AuthorId { get; set; }
         public int DialogId { get; set; }
         public DateTime DateOfSending { get; set; }

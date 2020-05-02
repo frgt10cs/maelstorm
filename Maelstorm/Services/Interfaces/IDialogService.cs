@@ -11,7 +11,7 @@ namespace Maelstorm.Services.Interfaces
     {
         Task<ServiceResult> SendDialogMessageAsync(MessageSendDTO model);
         Task<List<MessageDTO>> GetReadedDialogMessagesAsync(int dialogId, int offset, int count);
-        Task<List<MessageDTO>> GetUnreadedDialogMessagesAsync(int dialogId, int count);
+        Task<List<MessageDTO>> GetUnreadedDialogMessagesAsync(int dialogId, int offset, int count);
         Task<List<DialogDTO>> GetDialogsAsync(int stackNumber, int count);
         Task SetMessageAsReaded(int messageId);
         Task<DialogDTO> GetDialogAsync(int interlocutorId);

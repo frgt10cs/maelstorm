@@ -171,7 +171,7 @@ let apiModule = (function () {
             return await sendRequest(new MaelstormRequest("/api/dialog/getReadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET"));            
         },
 
-        getUnreadedMessages: async function (dialogId, count) {
+        getUnreadedMessages: async function (dialogId, offset, count) {
             return await sendRequest(new MaelstormRequest("/api/dialog/getUnreadedDialogMessages?dialogId=" + dialogId + "&offset=" + offset + "&count=" + count, "GET"));            
         },
 

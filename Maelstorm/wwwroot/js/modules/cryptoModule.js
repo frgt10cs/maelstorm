@@ -42,7 +42,7 @@
         },
 
         generateIV: function (size = 16) {
-            let array = new Uint32Array(size);
+            let array = new Uint8Array(size);
             window.crypto.getRandomValues(array);
             return array;
         },
@@ -68,11 +68,23 @@
         },        
 
         decryptRsa: function (encryptedDataBase64, privateKey) {
-
+            return window.crypto.subtle.decrypt(
+                {
+                    name: "RSA-OAEP"
+                },
+                privateKey,
+                encodingModule.base64ToArray(encryptedDataBase64)
+            );
         },
 
         encryptRsa: function (plainText, publicKey) {
-
+            return window.crypto.subtle.encrypt(
+                {
+                    name: "RSA-OAEP"
+                },
+                publicKey,
+                encodingModule.getBytes(plainText)
+            );
         }
     }
 })();

@@ -100,7 +100,11 @@
 
         getPrivateKey: function () {
             return privateKey;
-        }       
+        },
+
+        getPublicKey: function () {
+            return publicKey;
+        }
     };
 })();
 
