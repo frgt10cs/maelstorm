@@ -9,6 +9,8 @@ let dialogModule = (function () {
     let _uploadCount;    
     let dialogContext;   
 
+    // crypto message
+
     let decryptMessage = async function (message) {
         message.text = encodingModule.getString(await cryptoModule.decryptAes(dialogContext.key, encodingModule.base64ToArray(message.ivBase64), message.text));        
     }
@@ -21,9 +23,19 @@ let dialogModule = (function () {
         return Promise.all(promises);
     }
 
+    let encryptMessage = async function (message) {
+        let encryptedMessage = objectModule.iterationCopy(message);
+        let IV = cryptoModule.generateIV();
+        encryptedMessage.IVBase64 = encodingModule.arrayToBase64(IV);
+        encryptedMessage.text = encodingModule.arrayToBase64(await cryptoModule.encryptAes(dialogContext.key, IV, message.text));
+        return encryptedMessage;
+    };
+
+    // messages handling
+
     let appendMessageToBegin = function (message) {
         dialogContext.messagesPanel.prepend(message.element);
-    };
+    }
 
     let appendMessageToEnd = function (message) {
         dialogContext.messagesPanel.appendChild(message.element);
@@ -39,22 +51,7 @@ let dialogModule = (function () {
         };
         return element;
     };
-
-    let onMessagesPanelScroll = function () {
-        if (!dialogContext.uploadingBlocked) {
-            if (dialogContext.messagesPanel.scrollTop < 10 && !dialogContext.allReadedUpload) {
-                console.log("old upl");
-                dialogContext.uploadingBlocked = true;
-                uploadReadedMessages();
-            }
-            else if (dialogContext.messagesPanel.scrollHeight - dialogContext.messagesPanel.scrollTop - dialogContext.messagesPanel.offsetHeight < 10
-                && !dialogContext.allUnreadedUpload && dialogContext.unreadedMessages.length === 0) {
-                console.log("new upl");
-                dialogContext.uploadingBlocked = true;
-                uploadUnreadedMessages();
-            }
-        }
-    };  
+    
 
     let isMessageFromOther = function (message) {
         return dialogContext.interlocutorId === message.authorId;
@@ -93,12 +90,37 @@ let dialogModule = (function () {
             dialogContext.allReadedUpload = true;
         }
         dialogContext.uploadingBlocked = false;
-    };  
+    }; 
+
+    let addNewMessage = function (message) {
+        if (dialogContext.isPanelOpened) {
+            let isFromOther = isMessageFromOther(message);
+            messageModule.setElement(message, isFromOther);
+            if (isFromOther) {
+                dialogContext.unreadedMessages.push(message);
+            } else {
+                dialogContext.messages.push(message);
+                dialogContext.readedMessagesOffset++;
+            }
+            appendMessageToEnd(message);
+        }
+        let previewText = dialogContext.element.lastElementChild.children[1].lastElementChild.lastElementChild;
+        previewText.innerText = message.text;
+        dialogContext.element.lastElementChild.lastElementChild.innerText = dateModule.getDate(new Date(message.dateOfSending));
+        dialogsGuiModule.toTheTop(dialogContext);
+    };
+
+    // messages uploading
+
+    let firstDialogMessagesUploading = async function () {
+        await uploadReadedMessages();
+        await uploadUnreadedMessages();
+    };
 
     let uploadUnreadedMessages = async function () {
         let messages = await api.getUnreadedMessages(dialogContext.id, dialogContext.unreadedMessagesOffset, _uploadCount);
         await decryptMessages(messages);
-        unreadedMessagesHandler(messages); 
+        unreadedMessagesHandler(messages);
     };
 
     let uploadReadedMessages = async function () {
@@ -106,6 +128,8 @@ let dialogModule = (function () {
         await decryptMessages(messages);
         readedMessagesHandler(messages);
     };
+
+    // dialog handling
 
     let createDialog = async function (serverDialog) {      
         serverDialog.isPanelOpened = false;
@@ -119,16 +143,35 @@ let dialogModule = (function () {
         serverDialog.uploadingBlocked = false;
         serverDialog.messagesPanel = createMessagesPanel();       
         let decryptedDialogKey = await cryptoModule.decryptRsa(serverDialog.encryptedKey, accountModule.getPrivateKey());
-        serverDialog.key = await cryptoModule.genereateAesKeyByPassPhrase(encodingModule.getString(decryptedDialogKey), encodingModule.base64ToArray(serverDialog.saltBase64), 128);        
-        serverDialog.lastMessage.text = await encodingModule.getString(await cryptoModule.decryptAes(serverDialog.key, encodingModule.base64ToArray(serverDialog.lastMessage.ivBase64), serverDialog.lastMessage.text));
+        serverDialog.key = await cryptoModule.genereateAesKeyByPassPhrase(encodingModule.getString(decryptedDialogKey), encodingModule.base64ToArray(serverDialog.saltBase64), 128);
+        setDialogContext(serverDialog);
+        serverDialog.lastMessage.text = await decryptMessage(serverDialog.lastMessage);
         serverDialog.element = dialogGuiModule.createDialogLi(serverDialog);
         return serverDialog;
+    }; 
+    
+    var updateInterlocutorStatus = async function () {
+        let status = (await api.getOnlineStatuses([dialogContext.interlocutorId]))[0];
+        dialogGuiModule.getDialogStatusDiv().innerText = status.isOnline ? "online" : "offline";
     };
 
-    let firstDialogMessagesUploading = async function () {
-        await uploadReadedMessages();        
-        await uploadUnreadedMessages();
-    };
+    let onMessagesPanelScroll = function () {
+        if (!dialogContext.uploadingBlocked) {
+            if (dialogContext.messagesPanel.scrollTop < 10 && !dialogContext.allReadedUpload) {
+                console.log("old upl");
+                dialogContext.uploadingBlocked = true;
+                uploadReadedMessages();
+            }
+            else if (dialogContext.messagesPanel.scrollHeight - dialogContext.messagesPanel.scrollTop - dialogContext.messagesPanel.offsetHeight < 10
+                && !dialogContext.allUnreadedUpload && dialogContext.unreadedMessages.length === 0) {
+                console.log("new upl");
+                dialogContext.uploadingBlocked = true;
+                uploadUnreadedMessages();
+            }
+        }
+    };  
+
+    // message sending
 
     let createMessage = function () {
         let message = {};
@@ -143,15 +186,7 @@ let dialogModule = (function () {
             return message;
         }
         return null;        
-    };   
-
-    let encryptMessage = async function (message) {
-        let encryptedMessage = objectModule.iterationCopy(message);   
-        let IV = cryptoModule.generateIV();            
-        encryptedMessage.IVBase64 = encodingModule.arrayToBase64(IV);
-        encryptedMessage.text = encodingModule.arrayToBase64(await cryptoModule.encryptAes(dialogContext.key, IV, message.text));
-        return encryptedMessage;
-    };
+    };       
 
     let sendMessage = async function (message) {       
         addNewMessage(message);
@@ -164,31 +199,8 @@ let dialogModule = (function () {
         confirmedMessage.element.id = info.id;
         confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
         dialogContext.unconfirmedMessages[info.bindId] = undefined;             
-    };
-
-    let addNewMessage = function (message) {
-        if (dialogContext.isPanelOpened) {            
-            let isFromOther = isMessageFromOther(message);
-            messageModule.setElement(message, isFromOther);            
-            if (isFromOther) {
-                dialogContext.unreadedMessages.push(message);
-            } else {
-                dialogContext.messages.push(message);
-                dialogContext.readedMessagesOffset++;
-            }
-            appendMessageToEnd(message);
-        }        
-        let previewText = dialogContext.element.lastElementChild.children[1].lastElementChild.lastElementChild;
-        previewText.innerText = message.text;
-        dialogContext.element.lastElementChild.lastElementChild.innerText = dateModule.getDate(new Date(message.dateOfSending));
-        dialogsGuiModule.toTheTop(dialogContext);
-    };
-
-    var updateInterlocutorStatus = function () {
-        api.getOnlineStatuses([dialogContext.interlocutorId]).then(statuses => {
-            dialogGuiModule.getDialogStatusDiv().innerText = statuses[0].isOnline ? "online" : "offline";
-        });
-    };
+    };    
+   
 
     return {
 
@@ -229,15 +241,7 @@ let dialogModule = (function () {
 
         addNewMessage: addNewMessage,
 
-        unreadedMessagesHandler: unreadedMessagesHandler,
-
-        readedMessagesHandler: readedMessagesHandler,  
-
-        sendMessage: sendMessage,
-
-        uploadUnreadedMessages: uploadUnreadedMessages,
-
-        uploadReadedMessages: uploadUnreadedMessages
+        sendMessage: sendMessage
     };
 })();
 

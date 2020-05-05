@@ -43,18 +43,16 @@
             console.log("Ping: " + (new Date().getMilliseconds() - pingTime.getMilliseconds()));
         });
 
-        connection.on("RecieveMessage", function (serverMessage) {
+        connection.on("RecieveMessage", async function (serverMessage) {
             let sm = JSON.parse(serverMessage);
-            let message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
+            //let message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
             let dialog = dialogsModule.getDialogById(message.dialogId);
-            if (dialog !== undefined && dialog !== null) {
-                dialog.addNewMessage(message);
-            } else {
-                api.getDialog(message.authorId, function (dialog) {
-                    dialogsModule.addDialog(dialog);
-                    _dialog.addNewMessage(message);
-                });
+            if (dialog === undefined || dialog === null) {
+                let dialog = await api.getDialog(message.authorId);
+                dialogsModule.addDialog(dialog);
             }
+            dialogModule.setDialogContext(dialog);
+            dialogModule.addNewMessage(message);
         });
 
         connection.on("MessageWasReaded", function (dialogId, messageId) {

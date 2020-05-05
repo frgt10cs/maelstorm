@@ -55,22 +55,7 @@ namespace Maelstorm.Services.Implementations
             userId = httpContext.HttpContext.GetUserId();
             serializerSettings = new JsonSerializerSettings();
             serializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-        }
-
-        private async Task<Dialog> GetOrCreateDialogAsync(int interlocutorId)
-        {            
-            Dialog dialog;
-            int[] ids = { userId, interlocutorId };
-            Array.Sort(ids);
-            dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.FirstUserId == ids[0] && d.SecondUserId == ids[1]);
-            if (dialog == null)
-            {
-                dialog = await CreateDialog(ids[0], ids[1]);
-                context.Dialogs.Add(dialog);
-                await context.SaveChangesAsync();
-            }
-            return dialog;
-        }
+        }        
 
         private async Task<Dialog> CreateDialog(int firstUserId, int secondUserId, bool isClosed = false)
         {
@@ -91,6 +76,36 @@ namespace Maelstorm.Services.Implementations
             rsa.ImportSubjectPublicKeyInfo(Convert.FromBase64String(secondUser.PublicKey), out _);
             dialog.EncryptedSecondCryptoKey = Convert.ToBase64String(rsa.Encrypt(secret, RSAEncryptionPadding.OaepSHA256));
             return dialog;
+        }
+
+        private async Task<Dialog> GetOrCreateDialogAsync(int interlocutorId)
+        {
+            Dialog dialog;
+            int[] ids = { userId, interlocutorId };
+            Array.Sort(ids);
+            dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.FirstUserId == ids[0] && d.SecondUserId == ids[1]);
+            if (dialog == null)
+            {
+                dialog = await CreateDialog(ids[0], ids[1]);
+                context.Dialogs.Add(dialog);
+                await context.SaveChangesAsync();
+            }
+            return dialog;
+        }
+
+        #region Message sending
+        private string ValidateMessageText(string text)
+        {
+            if (!String.IsNullOrWhiteSpace(text))
+            {
+                text = text.Trim();
+                text = Regex.Replace(text, @"\s+", " ");
+                if (text.Length > 1 && text.Length <= 4096)
+                {
+                    return text;
+                }
+            }
+            return null;
         }
 
         public async Task<ServiceResult> SendDialogMessageAsync(MessageSendDTO model)
@@ -130,8 +145,11 @@ namespace Maelstorm.Services.Implementations
                 logger.LogWarning($"Trying to send message in dialog that doesn't exist. AuthorId: {userId} To: {model.TargetId}");
             }
             return result;
-        }        
+        }
 
+        #endregion
+
+        #region pushes
         private async Task NewMessagePush(DialogMessage message)
         {
             var messageViewModel = new MessageDTO()
@@ -159,11 +177,28 @@ namespace Maelstorm.Services.Implementations
             await messHub.Clients.Clients(connectionIds).SendAsync("MessageWasReaded", conversationId, messageId);
         }
 
-        //private async Task DialogCreatedPush(int userId, DialogViewModel model)
-        //{
-        //    await messHub.Clients.Group(userId.ToString()).SendAsync("DialogIsCreated", model);
-        //}
+        public async Task SetMessageAsReaded(int messageId)
+        {
+            if (messageId <= 0)
+                return;
+            DialogMessage message = await context.DialogMessages.FirstOrDefaultAsync(m => m.Id == messageId);
+            if (message != null)
+            {
+                Dialog dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.Id == message.DialogId);
+                if (dialog != null)
+                {
+                    if ((dialog.FirstUserId == userId || dialog.SecondUserId == userId) && message.AuthorId != userId)
+                    {
+                        message.Status = 1;
+                        await context.SaveChangesAsync();
+                        await MessageWasReadedPush(message.AuthorId, dialog.Id, messageId);
+                    }
+                }
+            }
+        }
+        #endregion
 
+        #region Getting messages
         public IQueryable<DialogMessage> GetOldMessages(int dialogId, int userId, int offset, int count)
         {
             var messages = context.DialogMessages
@@ -223,6 +258,9 @@ namespace Maelstorm.Services.Implementations
             return messages;
         }
 
+        #endregion
+
+        #region Uploading dialogs
         public async Task<List<DialogDTO>> GetDialogsAsync(int offset, int count)
         {
             List<DialogDTO> models = new List<DialogDTO>();
@@ -256,73 +294,7 @@ namespace Maelstorm.Services.Implementations
                     DialogViewModelSqlCoverter);                                              
             }
             return models;
-        }
-        
-        public async Task<List<DialogDTO>> DialogViewModelSqlCoverter(DbDataReader reader)
-        {
-            var models = new List<DialogDTO>();
-            while (await reader.ReadAsync())
-            {
-                models.Add(new DialogDTO()
-                {
-                    Id = reader.GetInt32(0),
-                    SaltBase64 = reader.GetString(1),
-                    EncryptedKey = reader.GetString(2),
-                    InterlocutorId = reader.GetInt32(3),
-                    Image = reader.GetString(4),
-                    Title = reader.GetString(5),
-                    LastMessage = new MessageDTO()
-                    {
-                        Id = reader.GetInt32(6),
-                        AuthorId = reader.GetInt32(7),                        
-                        Text = reader.GetString(8),
-                        IVBase64 = reader.GetString(9),
-                        DateOfSending = reader.GetDateTime(10),
-                        Status = reader.GetByte(11)
-                    }                    
-                });
-            }
-            return models;
-        }
-
-        public async Task SetMessageAsReaded(int messageId)
-        {
-            if (messageId <= 0)
-                return;
-            DialogMessage message = await context.DialogMessages.FirstOrDefaultAsync(m => m.Id == messageId);
-            if (message != null)
-            {
-                Dialog dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.Id == message.DialogId);
-                if (dialog != null)
-                {
-                    if ((dialog.FirstUserId == userId || dialog.SecondUserId == userId) && message.AuthorId != userId)
-                    {
-                        message.Status = 1;
-                        await context.SaveChangesAsync();
-                        await MessageWasReadedPush(message.AuthorId, dialog.Id, messageId);
-                    }
-                }
-            }
-        }           
-
-        /// <summary>
-        /// Валидация текста сообщения
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns>Возвращает отформатированный по правилам текст. Null в случае невалидности текста</returns>
-        private string ValidateMessageText(string text)
-        {
-            if (!String.IsNullOrWhiteSpace(text))
-            {
-                text = text.Trim();
-                text = Regex.Replace(text, @"\s+", " ");
-                if (text.Length > 1 && text.Length <= 4096)
-                {
-                    return text;
-                }
-            }
-            return null;
-        }
+        }               
 
         public async Task<DialogDTO> GetDialogAsync(int interlocutorId)
         {
@@ -357,5 +329,34 @@ namespace Maelstorm.Services.Implementations
             }
             return model;
         }
+
+        public async Task<List<DialogDTO>> DialogViewModelSqlCoverter(DbDataReader reader)
+        {
+            var models = new List<DialogDTO>();
+            while (await reader.ReadAsync())
+            {
+                models.Add(new DialogDTO()
+                {
+                    Id = reader.GetInt32(0),
+                    SaltBase64 = reader.GetString(1),
+                    EncryptedKey = reader.GetString(2),
+                    InterlocutorId = reader.GetInt32(3),
+                    Image = reader.GetString(4),
+                    Title = reader.GetString(5),
+                    LastMessage = new MessageDTO()
+                    {
+                        Id = reader.GetInt32(6),
+                        AuthorId = reader.GetInt32(7),
+                        Text = reader.GetString(8),
+                        IVBase64 = reader.GetString(9),
+                        DateOfSending = reader.GetDateTime(10),
+                        Status = reader.GetByte(11)
+                    }
+                });
+            }
+            return models;
+        }
+
+        #endregion
     }
 }
