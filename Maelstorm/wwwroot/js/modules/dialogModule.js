@@ -9,6 +9,10 @@ let dialogModule = (function () {
     let _uploadCount;    
     let dialogContext;   
 
+    let setDialogContext = function (dialog) {
+        dialogContext = dialog;
+    };
+
     // crypto message
 
     let decryptMessage = async function (message) {
@@ -145,7 +149,7 @@ let dialogModule = (function () {
         let decryptedDialogKey = await cryptoModule.decryptRsa(serverDialog.encryptedKey, accountModule.getPrivateKey());
         serverDialog.key = await cryptoModule.genereateAesKeyByPassPhrase(encodingModule.getString(decryptedDialogKey), encodingModule.base64ToArray(serverDialog.saltBase64), 128);
         setDialogContext(serverDialog);
-        serverDialog.lastMessage.text = await decryptMessage(serverDialog.lastMessage);
+        await decryptMessage(serverDialog.lastMessage);        
         serverDialog.element = dialogGuiModule.createDialogLi(serverDialog);
         return serverDialog;
     }; 
@@ -213,9 +217,7 @@ let dialogModule = (function () {
             };
         },
 
-        setDialogContext: function (dialog) {
-            dialogContext = dialog;
-        },
+        setDialogContext: setDialogContext,
 
         openDialog: async function () {
             if (!dialogContext.isPanelOpened) {                

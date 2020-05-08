@@ -3,13 +3,13 @@
     let connection;
     let timeToReconnect;
     let tryReconnectingCount;
-    let isClosedByClient;
+    let isConnectionClosedByError;
     let pingTime;    
     let _fingerprint;
     let dialogsModule;        
 
     let auth = function () {
-        connection.invoke("Authorize", localStorage.getItem("MAT"), _fingerprint);
+        connection.invoke("Authorize", sessionStorage.getItem("MAT"), _fingerprint);
     };   
 
     let startConnection = function () {
@@ -17,8 +17,9 @@
             connecting();
             connection.start()
                 .then(connected)
-                .catch(function (error) {
+                .catch(function (error) {                    
                     console.log("error on connecting");
+                    isConnectionClosedByError = true;
                     tryReconnectingCount += 1;
                     if (tryReconnectingCount < timeToReconnect.length)
                         setTimeout(() => startConnection(), timeToReconnect[tryReconnectingCount]);
@@ -31,11 +32,20 @@
         }
     };
 
+    let closeConnection = function () {
+        isConnectionClosedByError = false;
+        connection.stop();
+    }
+
     let initHandlers = function () {
         connection.onclose(() => {
-            if (isClosedByClient || _fingerprint === "") return;
-            console.log("lost connection");
-            startConnection();
+            if (isConnectionClosedByError) {
+                console.log("lost connection");
+                startConnection();                    
+            }
+            else {
+                refreshConnectionData();
+            }            
         });
 
         connection.on("Ping", function (isAuth) {
@@ -73,13 +83,16 @@
             alert("Auth failed");
         });
 
-        connection.on("OnSessionClosed", function () {
-            localStorage.clear();
-            isClosedByClient = true;
-            connection.stop();
-            accountGuiModule.openLogin();
+        connection.on("OnSessionClosed", function () {                    
+            accountModule.closeSession();            
         });
     };
+
+    let refreshConnectionData = function () {        
+        tryReconnectingCount = -1;
+        isConnectionClosedByError = true;
+        pingTime = null;        
+    }
 
     let connected = function () {
         console.log("connected");
@@ -101,17 +114,19 @@
     return {
         init: function (fingerprint) {            
             connectionGuiModule.init();
-            _fingerprint = fingerprint;                       
-            timeToReconnect = [0, 2000, 2000, 4000, 6000];
-            tryReconnectingCount = -1;
-            isClosedByClient = false;
-            pingTime = null;
+            _fingerprint = fingerprint;
+            timeToReconnect = [0, 2000, 2000, 4000, 6000];    
             connection = new signalR.HubConnectionBuilder()
                 .withUrl(url).configureLogging(signalR.LogLevel.None).build();
+            refreshConnectionData();
             initHandlers();
         },
 
         startConnection: startConnection,
+
+        closeConnection: closeConnection,
+
+        refreshConnectionData: refreshConnectionData,
 
         ping: function () {
             if (connection.connectionState === 1) {

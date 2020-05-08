@@ -19,20 +19,20 @@ let apiModule = (function () {
     let accessTokenGenerationTime;
 
     let setTokens = function (tokens) {
-        localStorage.setItem("MAT", tokens.AccessToken);
-        localStorage.setItem("MRT", tokens.RefreshToken);
+        sessionStorage.setItem("MAT", tokens.AccessToken);
+        sessionStorage.setItem("MRT", tokens.RefreshToken);
         updateTokenTime(tokens.GenerationTime);              
     }
 
     let areTokensValid = function () {
-        let token = localStorage.getItem("MAT");
-        let refreshToken = localStorage.getItem("MRT");
+        let token = sessionStorage.getItem("MAT");
+        let refreshToken = sessionStorage.getItem("MRT");
         return token !== null && refreshToken !== null && token !== undefined && refreshToken !== undefined && token !== "" && refreshToken !== "";
     };
 
     let updateTokenTime = function (time) {
         let value = new Date(time).getTime();
-        localStorage.setItem("ATGT", value);
+        sessionStorage.setItem("ATGT", value);
         accessTokenGenerationTime = value;
     };
 
@@ -58,7 +58,7 @@ let apiModule = (function () {
             dataType: "json",
             data: request.type === "POST" ? JSON.stringify(request.data) : null,
             beforeSend: function (xhr) {
-                let token = localStorage.getItem("MAT");
+                let token = sessionStorage.getItem("MAT");
                 if (token !== undefined) {
                     xhr.setRequestHeader("Authorization", "Bearer " + token);
                 }
@@ -69,13 +69,13 @@ let apiModule = (function () {
     let sendRequest = async function (requestParams) {
         if (isTokenExpired()) {
             await refreshToken();           
-        }        
+        }
         return await sendAjaxAuthRequest(requestParams);
     }
 
     let refreshToken = async function () {
-        let token = localStorage.getItem("MAT");
-        let refreshToken = localStorage.getItem("MRT");
+        let token = sessionStorage.getItem("MAT");
+        let refreshToken = sessionStorage.getItem("MRT");
         if (areTokensValid() && isTokenExpired()) {
             let refreshDTO = {
                 token: token,
@@ -88,8 +88,8 @@ let apiModule = (function () {
                     let tokens = JSON.parse(result.data);
                     setTokens(tokens);
                 } else {
-                    localStorage.removeItem("MAT");
-                    localStorage.removeItem("MRT");                    
+                    sessionStorage.removeItem("MAT");
+                    sessionStorage.removeItem("MRT");                    
                     //
                 }
             }
@@ -157,8 +157,8 @@ let apiModule = (function () {
 
     return {
         init: function (fingerprint) {
-            _fingerprint = fingerprint;            
-            accessTokenGenerationTime = Number(localStorage.getItem("ATGT"));
+            _fingerprint = fingerprint;
+            accessTokenGenerationTime = Number(sessionStorage.getItem("ATGT"));
         },
 
         areTokensValid: areTokensValid,
@@ -238,7 +238,7 @@ let apiModule = (function () {
 
         logOut: function () {
             sendRequest(new MaelstormRequest("/api/user/logout", "GET"));
-            localStorage.clear();
+            sessionStorage.clear();
         },
 
         getDialog: async function (interlocutorId) {

@@ -1,13 +1,13 @@
 ﻿let dialogsModule = (function () {              
-    let openedDialog;
-    let dialogs;               
+    let openedDialog = null;
+    let dialogs = [];               
 
     let removeDialogs = function () {        
         while (dialogsGuiModule.getDialogsContainer().firstChild) {
             dialogsGuiModule.getDialogsContainer().firstChild.remove();
         }
-        dialogs = [];
-        dialogsStackNumber = 1;
+        dialogsGuiModule.removeMessagesPanels();
+        dialogs = [];        
         openedDialog = null;
     };             
 
@@ -48,10 +48,7 @@
     return {
 
         init: function () {
-            dialogsGuiModule.init();
-            openedDialog = null;
-            dialogs = [];
-            dialogsStackNumber = 1;            
+            dialogsGuiModule.init();                      
         },
 
         getDialogById: function (id) {
@@ -66,8 +63,7 @@
             removeDialogs();
             for (let i = 0; i < dialogs.length; i++) {                
                 addDialog(dialogs[i]);
-            }
-            dialogsStackNumber++;
+            }            
         },
 
         getDialogByInterlocutorId: getDialogByInterlocutorId, 
@@ -102,7 +98,13 @@ let dialogsGuiModule = (function () {
         getDialogsContainer: function () { return dialogsContainer; },        
         getMessagesPanelsContainer: function () { return messagesPanelsContainer; },
         getUploadingInfo: function () { return uploadingInfo; },        
-        getDark: function () { return dark; },                 
+        getDark: function () { return dark; },    
+
+        removeMessagesPanels: function () {
+            while (messagesPanelsContainer.firstChild) {
+                messagesPanelsContainer.firstChild.remove();
+            }
+        },
 
         showUploading: function () {
             dark.style.display = "block";

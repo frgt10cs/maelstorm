@@ -86,8 +86,21 @@
 
     let logout = function () {
         api.logOut();
-        accountGuiModule.openLogin();
+        closeSession();
     };
+
+    /**
+     * Removes all data 
+     * and closes connections    
+     * */
+    let closeSession = function () {
+        dialogsModule.removeDialogs();
+        signalRModule.refreshConnectionData();
+        sessionGuiModule.clearSessionsContainer();
+        sessionStorage.clear();
+        localStorage.clear();
+        accountGuiModule.openLogin();
+    }
 
     return {
         init: function (onLogin) {
@@ -97,6 +110,8 @@
             accountGuiModule.getLogoutBtn().onclick = logout;    
             _onLogin = onLogin;
         },
+
+        closeSession: closeSession,
 
         getPrivateKey: function () {
             return privateKey;

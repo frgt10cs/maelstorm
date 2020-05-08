@@ -8,13 +8,12 @@
         api.closeSession(sessionId, true);
     };
 
-    let uploadSessions = function () {
-        api.getSessions(function (sessions) {
-            sessionGuiModule.clearSessionsContainer();
-            for (let i = 0; i < sessions.length; i++) {
-                sessionGuiModule.appendSession(createSessionDiv(sessions[i]));
-            }
-        });
+    let uploadSessions = async function () {
+        let sessions = await api.getSessions();
+        sessionGuiModule.clearSessionsContainer();
+        for (let i = 0; i < sessions.length; i++) {
+            sessionGuiModule.appendSession(createSessionDiv(sessions[i]));
+        }     
     };
 
     let createElement = function (element, className = "", inner = "") {
