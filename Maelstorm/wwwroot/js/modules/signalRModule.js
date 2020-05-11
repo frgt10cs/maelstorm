@@ -5,8 +5,7 @@
     let tryReconnectingCount;
     let isConnectionClosedByError;
     let pingTime;    
-    let _fingerprint;
-    let dialogsModule;        
+    let _fingerprint;       
 
     let auth = function () {
         connection.invoke("Authorize", sessionStorage.getItem("MAT"), _fingerprint);
@@ -54,15 +53,14 @@
         });
 
         connection.on("RecieveMessage", async function (serverMessage) {
-            let sm = JSON.parse(serverMessage);
-            //let message = new Message(sm.id, sm.dialogId, sm.authorId, sm.text, sm.replyId, sm.status, sm.dateOfSending);
+            let message = JSON.parse(serverMessage);            
             let dialog = dialogsModule.getDialogById(message.dialogId);
             if (dialog === undefined || dialog === null) {
                 let dialog = await api.getDialog(message.authorId);
                 dialogsModule.addDialog(dialog);
             }
             dialogModule.setDialogContext(dialog);
-            dialogModule.addNewMessage(message);
+            dialogModule.addNewEncryptedMessage(message);
         });
 
         connection.on("MessageWasReaded", function (dialogId, messageId) {

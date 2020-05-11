@@ -55,7 +55,6 @@ let dialogModule = (function () {
         };
         return element;
     };
-    
 
     let isMessageFromOther = function (message) {
         return dialogContext.interlocutorId === message.authorId;
@@ -177,6 +176,11 @@ let dialogModule = (function () {
 
     // message sending
 
+    let onSendMessageClick = function () {
+        sendMessage(createMessage());
+        dialogGuiModule.clearMessageTextInput();
+    }
+
     let createMessage = function () {
         let message = {};
         let text = messageModule.validText(dialogGuiModule.getMessageText());
@@ -203,8 +207,7 @@ let dialogModule = (function () {
         confirmedMessage.element.id = info.id;
         confirmedMessage.statusDiv.style.backgroundImage = "url(/images/delivered.png)";
         dialogContext.unconfirmedMessages[info.bindId] = undefined;             
-    };    
-   
+    };        
 
     return {
 
@@ -212,8 +215,11 @@ let dialogModule = (function () {
             dialogGuiModule.init();
             _uploadCount = uploadCount;            
             dialogGuiModule.getMessageSendBtn().onclick = function () {
-                sendMessage(createMessage());
-                dialogGuiModule.clearMessageTextInput();
+                onSendMessageClick();
+            };
+            dialogGuiModule.getMessageTextBox().onkeydown = function (e) {
+                if (e.keyCode  === 13)
+                    onSendMessageClick();
             };
         },
 
@@ -242,6 +248,11 @@ let dialogModule = (function () {
         decryptMessages: decryptMessages,
 
         addNewMessage: addNewMessage,
+
+        addNewEncryptedMessage: async function (message) {
+            await decryptMessage(message);
+            addNewMessage(message);
+        },
 
         sendMessage: sendMessage
     };
@@ -333,7 +344,8 @@ let dialogGuiModule = (function () {
         getDialogTitleDiv: function () { return dialogTitleDiv; },
         getDialogStatusDiv: function () { return dialogStatusDiv; },
         getMessageText: function () { return messageTextBox.value; },
-        getMessageSendBtn: function () { return messageSendBtn },   
+        getMessageTextBox: function () { return messageTextBox; },
+        getMessageSendBtn: function () { return messageSendBtn; },   
 
         clearMessageTextInput: function () { messageTextBox.value = ""; },
 

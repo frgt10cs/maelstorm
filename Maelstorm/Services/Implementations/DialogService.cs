@@ -149,7 +149,7 @@ namespace Maelstorm.Services.Implementations
 
         #endregion
 
-        #region pushes
+        #region Pushes
         private async Task NewMessagePush(DialogMessage message)
         {
             var messageViewModel = new MessageDTO()
@@ -159,7 +159,8 @@ namespace Maelstorm.Services.Implementations
                 DialogId = message.DialogId,
                 DateOfSending = message.DateOfSending,
                 Status = message.Status,
-                Text = message.Text
+                Text = message.Text,
+                IVBase64 = message.IVBase64
             };            
             string messageJson = JsonConvert.SerializeObject(messageViewModel, serializerSettings);
             var targetIds = await sesServ.GetConnectionIdsAsync(message.TargetId);
