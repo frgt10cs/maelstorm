@@ -1,8 +1,7 @@
 ﻿let settingsModule = (function () {
     return {
         init: function (guiManager) {
-            settingsGuiModule.init();
-            settingsGuiModule.getSettingsPanelSlider().onclick = function () { settingsGuiModule.changeSettingsOpenState(); };
+            settingsGuiModule.init();            
         }
     };
 })();
@@ -13,6 +12,8 @@ let settingsGuiModule = (function () {
     let settingsContainers;
     let isPanelOpened = false;
     let hideWidth;
+    let settingsPanelOpenBtn;
+    let settingsPanelCloseBtn;
 
     let initSettingsPanel = function () {
         for (let i = 0; i < settingsContainers.length; i++) {
@@ -23,12 +24,23 @@ let settingsGuiModule = (function () {
         }
     };
 
+    let openSettingsPanel = function () {
+        $(settingsPanel).animate({ left: "0px" }, 500);        
+    };
+
+    let closeSettingsPanel = function () {
+        $(settingsPanel).animate({ left: hideWidth + "px" }, 500);        
+    };
+
     return {
         init: function () {
-            settingsPanel = document.getElementById("settingsPanel");
-            settingPanelSlider = document.getElementById("settingsPanelSlider");
+            settingsPanel = document.getElementById("settingsPanel");            
             settingsContainers = document.getElementsByClassName("settingsContainer");
-            hideWidth = -settingsPanel.offsetWidth + settingPanelSlider.offsetWidth
+            settingsPanelOpenBtn = document.getElementById("settingsOpenBtn");
+            settingsPanelOpenBtn.onclick = openSettingsPanel;            
+            settingsPanelCloseBtn = document.getElementById("settingsCloseBtn");
+            settingsPanelCloseBtn.onclick = closeSettingsPanel;
+            hideWidth = -settingsPanel.offsetWidth /*+ settingsPanelOpenBtn.offsetWidth*/;
             initSettingsPanel();
         },
 
@@ -44,6 +56,7 @@ let settingsGuiModule = (function () {
             isPanelOpened = !isPanelOpened;
         },
 
-        getSettingsPanelSlider: function () { return settingPanelSlider; }
+        getSettingsPanelOpenBtn: function () { return settingsPanelOpenBtn; },
+        getSettingsPanelCloseBtn: function () { return settingsPanelCloseBtn; }
     }
 })();

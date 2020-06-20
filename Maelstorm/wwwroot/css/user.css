@@ -52,6 +52,11 @@
     font-weight:400 !important;
 }
 
+#sessionsContainer{
+    max-height: 200px;
+    overflow-y: scroll;
+}
+
 .cst {
     color: black;
     text-align: center;
@@ -62,8 +67,7 @@
 .sessionContainer {
     font-family: sans-serif;
     border: 1px solid lightgray;
-    padding: 5px 6px;
-    width: max-content;
+    padding: 5px 6px;    
     background-color: white;
     width: 100%;
 }
@@ -113,32 +117,45 @@
 
 .settingsBlockInner{
     color:black;
+    width: 100%;
 }
 
-#settingsPanelSlider {
-    width: 50px;
-    height: 50px;
-    background-image: url(/images/openPanel.png);
+#settingsOpenBtn {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-image: url(/images/settings.svg);
+    background-size: cover;
     cursor: pointer;
-    z-index:999;
+    left: 20px;
+    bottom: 20px;
+    z-index: 99;
 }
 
 #settingsPanel {
-    left: -311px;
     position: absolute;
     display: flex;
     align-items: center;
     top: 0px;
-    height: 100vh;
+    height: 100vh;    
 }
 
 #settingsContainer {
     height: 100vh;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: column;    
     background-color: rgba(0,0,0,0.6);
-    z-index:999;
+    z-index: 999;
+    width: calc(100% - 50px);    
+}
+
+@media screen and (min-width: 992px){
+    #settingsContainer{
+        width: 331px !important;
+    }
+    #settingsPanel {
+        left: -311px;
+    }
 }
 
 .settingsBlock {
@@ -147,7 +164,11 @@
     font-weight: bold;
     border: 1px solid white;
     padding: 10px 5px;
-    width: 311px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .settingsBlockTitle {
@@ -157,4 +178,10 @@
 
 .settingsBlockInner {
     display: none;
+}
+
+#settingsCloseBtn {
+    position: absolute;
+    right: 20px;
+    cursor: pointer;
 }
