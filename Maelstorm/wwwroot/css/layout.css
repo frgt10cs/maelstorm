@@ -63,3 +63,13 @@ a:hover {
 .bg-darkness {
     background-color: #191919 !important;
 }
+
+.navbar ul {
+    display: none;
+}
+
+@media screen and (min-width: 992px) {
+    .navbar ul {
+        display: flex !important;
+    }
+}

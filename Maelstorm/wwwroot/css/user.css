@@ -30,8 +30,7 @@
     display: none;
     margin: 0 auto;
     right: 0px;
-    left: 0px;
-    width: fit-content;
+    left: 0px;    
 }
 
 #userInfoAvatar {
@@ -120,24 +119,13 @@
     width: 100%;
 }
 
-#settingsOpenBtn {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background-image: url(/images/settings.svg);
-    background-size: cover;
-    cursor: pointer;
-    left: 20px;
-    bottom: 20px;
-    z-index: 99;
-}
-
 #settingsPanel {
-    position: absolute;
+    position: fixed;
     display: flex;
     align-items: center;
     top: 0px;
     height: 100vh;    
+    z-index: 99;
 }
 
 #settingsContainer {
@@ -154,7 +142,7 @@
         width: 331px !important;
     }
     #settingsPanel {
-        left: -311px;
+        right: -331px;
     }
 }
 
@@ -180,8 +168,14 @@
     display: none;
 }
 
-#settingsCloseBtn {
+#settingsCloseBtn {    
     position: absolute;
     right: 20px;
     cursor: pointer;
+}
+
+.btn-light, .btn-light:focus, .btn-light:active {
+    color: white !important;
+    background: none !important;
+    border: none !important;
 }

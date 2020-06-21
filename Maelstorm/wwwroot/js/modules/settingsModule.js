@@ -25,11 +25,11 @@ let settingsGuiModule = (function () {
     };
 
     let openSettingsPanel = function () {
-        $(settingsPanel).animate({ left: "0px" }, 500);        
+        $(settingsPanel).animate({ right: "0px" }, 500);        
     };
 
     let closeSettingsPanel = function () {
-        $(settingsPanel).animate({ left: hideWidth + "px" }, 500);        
+        $(settingsPanel).animate({ right: hideWidth + "px" }, 500);        
     };
 
     return {

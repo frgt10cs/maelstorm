@@ -24,9 +24,17 @@
 </head>
 <body class="bg-darkness vh-100 d-flex flex-column">
     <nav class="navbar navbar-dark bg-dark-2">
-        <div class="navbar-header">
+        <div class="justify-content-between container-lg">
             <a class="navbar-brand" href="#">Maelstorm</a>
-        </div>
+            <ul class="navbar-nav ml-auto mr-2 navbar-item-container flex-row">
+                <li class="nav-item">
+                    <button id="settingsOpenBtn" class = "btn-light">Settings</button>
+                </li>
+                <li class="nav-item">
+                    <button class="btn-light">Quit</button>
+                </li>
+            </ul>
+        </div>        
     </nav>
     @RenderBody()
 </body>
