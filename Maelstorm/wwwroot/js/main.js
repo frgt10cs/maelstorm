@@ -28,6 +28,7 @@ function initDynamicModules() {
  * @param {any} fingerprint
  */
 function initStaticModules(fingerprint) {
+    layoutGuiModule.init();
     encodingModule.init();
     cryptoModule.init();
     api.init(fingerprint);        

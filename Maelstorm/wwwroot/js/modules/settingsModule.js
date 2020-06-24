@@ -25,10 +25,12 @@ let settingsGuiModule = (function () {
     };
 
     let openSettingsPanel = function () {
+        layoutGuiModule.showDark();
         $(settingsPanel).animate({ right: "0px" }, 500);        
     };
 
     let closeSettingsPanel = function () {
+        layoutGuiModule.hideDark();
         $(settingsPanel).animate({ right: hideWidth + "px" }, 500);        
     };
 
@@ -44,17 +46,8 @@ let settingsGuiModule = (function () {
             initSettingsPanel();
         },
 
-        changeSettingsOpenState: function () {
-            if (isPanelOpened) {
-                $(settingsPanel).animate({ left: hideWidth + "px" }, 500);
-                settingPanelSlider.style.backgroundImage = "url(/images/openPanel.png)";
-            }
-            else {
-                $(settingsPanel).animate({ left: "0px" }, 500);
-                settingPanelSlider.style.backgroundImage = "url(/images/closePanel.png)";
-            }
-            isPanelOpened = !isPanelOpened;
-        },
+        openSettingsPanel: openSettingsPanel,
+        closeSettingsPanel: closeSettingsPanel,       
 
         getSettingsPanelOpenBtn: function () { return settingsPanelOpenBtn; },
         getSettingsPanelCloseBtn: function () { return settingsPanelCloseBtn; }

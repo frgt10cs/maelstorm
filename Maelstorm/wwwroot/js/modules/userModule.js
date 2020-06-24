@@ -69,7 +69,7 @@ let userGuiModule = (function () {
     let userInfoOnlineStatusBox;
     let userInfoOpenDialog;
     let closeUserInfoBtn;
-    let dark;          
+    let dark;            
 
     closeUserInfo = function (){
         dark.style.display = "none";

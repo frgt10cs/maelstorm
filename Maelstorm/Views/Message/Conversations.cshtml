@@ -6,7 +6,7 @@
     <div id="settingsContainer">
         <div class="settingsBlock text-center position-relative">
             <div>
-                Меню
+                Settings
             </div>
             <div id="settingsCloseBtn">
                 🗙
@@ -24,17 +24,12 @@
                     <input type="button" id="loadSessions" class="btnLink" value="Reload">
                 </div>
             </div>
-        </div>
-        <div class="settingsBlock invert">
-            <div>
-                <input type="button" value="Выйти" id="logoutButton" class="btnLink" />
-            </div>
-        </div>
+        </div>       
     </div>    
 </div>
 <div id="loginForm" class="form">
     <div class="fLabel">
-        Вход
+        Login
     </div>
     <div id="loginErrorsContainer"></div>
     <div>
@@ -49,10 +44,14 @@
     <div>
         <input type="button" id="openReg" value="Registration" class="btnLink" />
     </div>
+    <div id="loginProcessInfo" class="flex-column h-100 justify-content-around text-center text-light position-absolute">
+        <div id="loginProcessText">Loging in ...</div>
+        <div class="loader">Loading...</div>
+    </div>
 </div>
 <div id="regForm" class="form">
     <div class="fLabel">
-        Регистрация
+        Registration
     </div>
     <div id="regErrorsContainer"></div>
     <div>
@@ -79,7 +78,7 @@
 
     </div>
     <div class="infoText">
-        Связь с сервером потеряна. Пожалуйста, попробуйте перезагрузить страницу.
+        Connection has lost. Please, try to refresh the page.
     </div>
 </div>
 <div class="siteInfo" id="connecting">
@@ -87,7 +86,7 @@
 
     </div>
     <div class="infoText">
-        Подключение...
+        Connecting...
     </div>
 </div>
 <div class="siteInfo" id="connected">
@@ -95,7 +94,7 @@
 
     </div>
     <div class="infoText">
-        Подключено
+        Connected
     </div>
 </div>
 <div class="siteInfo" id="uploading">
@@ -103,7 +102,7 @@
 
     </div>
     <div class="infoText">
-        Получение данных с сервера...
+        Getting data from server...
     </div>
 </div>
 
@@ -134,7 +133,7 @@
             </div>
         </div>
     </div>
-    <input type="button" value="К диалогу" id="userInfoOpenDialog" />
+    <input type="button" value="Open the dialog" id="userInfoOpenDialog" />
     <input type="button" value="x" id="closeUserInfo" />
 </div>
 
@@ -219,6 +218,7 @@
 <script src="~/lib/fingerprint/fingerprint2.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/modules/layoutGuiModule.js"></script>
 <script src="~/js/modules/objectModule.js"></script>
 <script src="~/js/modules/dateModule.js"></script>
 <script src="~/js/modules/formModule.js"></script>

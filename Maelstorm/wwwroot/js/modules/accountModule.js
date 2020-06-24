@@ -7,10 +7,14 @@
         let validationResult = loginFormModule.getDataValidationResult();
         if (validationResult.isSuccess) {
             try {
+                accountGuiModule.setLoginProcessText("Logging in");
+                accountGuiModule.showLoginProcess();
                 let loginResult = await api.login(loginFormModule.getLogin(), loginFormModule.getPassword());                
                 if (loginResult.isSuccessful) {
+                    accountGuiModule.setLoginProcessText("Parsing data");
                     let result = JSON.parse(loginResult.data);                    
                     let IV = encodingModule.base64ToArray(result.IVBase64);
+                    accountGuiModule.setLoginProcessText("Generating keys");
 
                     userAesKey = await cryptoModule.genereateAesKeyByPassPhrase(loginFormModule.getPassword(), encodingModule.base64ToArray(result.KeySaltBase64), 128);                     
                     publicKey = await window.crypto.subtle.importKey(
@@ -41,10 +45,14 @@
                         ["decrypt"]
                     );
 
+                    accountGuiModule.setLoginProcessText("Settings tokens");
                     api.setTokens(result.Tokens);                    
 
-                    loginFormModule.clearErrors();
+                    accountGuiModule.setLoginProcessText("Finishing");
+                    loginFormModule.clearErrors();                    
+                    layoutGuiModule.showNavOptions();
                     accountGuiModule.hideAllForms();
+                    accountGuiModule.hideLoginProcess();
                     _onLogin();
                 }
                 else {
@@ -86,11 +94,12 @@
 
     let logout = function () {
         api.logOut();
-        closeSession();
+        closeSession();               
     };
 
     /**
-     * Removes all data 
+     * Removes all data,
+     * closes all opened windows
      * and closes connections    
      * */
     let closeSession = function () {
@@ -98,7 +107,9 @@
         signalRModule.refreshConnectionData();
         sessionGuiModule.clearSessionsContainer();
         sessionStorage.clear();
-        localStorage.clear();
+        localStorage.clear();        
+        settingsGuiModule.closeSettingsPanel();
+        layoutGuiModule.hideNavOptions();
         accountGuiModule.openLogin();
     }
 
@@ -126,18 +137,19 @@
 let accountGuiModule = (function () {
     let logoutBtn;
     let openLoginBtn,
-        openRegistrationBtn,                
-        dark;
+        openRegistrationBtn; 
+    let loginProcessInfo,
+        loginProcessText;
 
     let openRegistration = function () {
-        dark.style.display = "block";
+        layoutGuiModule.showDark();
         loginFormModule.hide();
         registrationFormModule.clearErrors();
         registrationFormModule.open();
     };
 
     let openLogin = function () {
-        dark.style.display = "block";
+        layoutGuiModule.showDark();
         registrationFormModule.hide();
         loginFormModule.clearErrors();
         loginFormModule.open();
@@ -149,7 +161,7 @@ let accountGuiModule = (function () {
         openRegistration: openRegistration,
 
         hideAllForms: function () {
-            dark.style.display = "none";
+            layoutGuiModule.hideDark();
             loginFormModule.hide();
             registrationFormModule.hide();
         },
@@ -159,10 +171,23 @@ let accountGuiModule = (function () {
             openLoginBtn.onclick = function () { openLogin(); };
             openRegistrationBtn = document.getElementById("openReg");
             openRegistrationBtn.onclick = function () { openRegistration(); };
-            logoutBtn = document.getElementById("logoutButton");            
-            dark = document.getElementById("dark");
+            logoutBtn = document.getElementById("logoutButton");
+            loginProcessInfo = document.getElementById("loginProcessInfo");
+            loginProcessText = document.getElementById("loginProcessText");
             loginFormModule.init(formValidationModule)
             registrationFormModule.init(formValidationModule);            
+        },
+
+        showLoginProcess: function () {
+            loginProcessInfo.style.display = "flex";
+        },
+
+        hideLoginProcess: function () {
+            loginProcessInfo.style.display = "none";
+        },
+
+        setLoginProcessText: function (text) {
+            loginProcessText.innerText = text + "...";
         }
     };
 })();
