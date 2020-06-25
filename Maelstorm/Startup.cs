@@ -19,6 +19,7 @@ using Maelstorm.Hubs;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.Net.Http.Headers;
 
 namespace Maelstorm
 {
@@ -68,17 +69,16 @@ namespace Maelstorm
 
             // раскоментить при ошибках с jwt и всякого рода шифрования, чтобы видеть инфу об ошибке
             //IdentityModelEventSource.ShowPII = true;
-
-            const string jwtSchemeName = "JwtBearer";
+            
             IJwtSigningDecodingKey signingDecodingKey = (IJwtSigningDecodingKey)signingKey;
             IJwtEncryptingDecodingKey encryptingDecodingKey = (IJwtEncryptingDecodingKey)encryptionEncodingKey;
             services
                 .AddAuthentication(options =>
                 {
-                    options.DefaultAuthenticateScheme = jwtSchemeName;
-                    options.DefaultChallengeScheme = jwtSchemeName;
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 })
-                .AddJwtBearer(jwtSchemeName, jwtBearerOptions =>
+                .AddJwtBearer(jwtBearerOptions =>
                 {
                     jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
                     {
@@ -99,8 +99,20 @@ namespace Maelstorm
 
                     jwtBearerOptions.Events = new JwtBearerEvents
                     {
-                        OnAuthenticationFailed = context =>
+                        OnMessageReceived = context =>
                         {
+                            var path = context.HttpContext.Request.Path;
+                            if (!path.StartsWithSegments("/messageHub")) return Task.CompletedTask;
+                            var accessToken = context.Request.Headers[HeaderNames.Authorization];
+                            if (!string.IsNullOrWhiteSpace(accessToken) && context.Scheme.Name == JwtBearerDefaults.AuthenticationScheme)
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        },
+                        OnAuthenticationFailed = context =>
+                        {                            
                             if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                             {
                                 context.Response.Headers.Add("Token-Expired", "true");

@@ -237,7 +237,7 @@ let apiModule = (function () {
         },
 
         logOut: function () {
-            sendRequest(new MaelstormRequest("/api/user/logout", "GET"));
+            sendRequest(new MaelstormRequest("/api/user/logout", "POST"));
             sessionStorage.clear();
         },
 

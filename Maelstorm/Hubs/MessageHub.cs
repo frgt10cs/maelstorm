@@ -1,5 +1,8 @@
-﻿using Maelstorm.Models;
+﻿using Maelstorm.Entities;
+using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -9,7 +12,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Maelstorm.Hubs
-{
+{  
     public class MessageHub : Hub
     {
         private IAuthenticationService authServ;
@@ -19,7 +22,7 @@ namespace Maelstorm.Hubs
         {
             this.authServ = authServ;
             this.logger = logger;
-            this.cache = cache;
+            this.cache = cache;            
         }
 
         private bool IsAuthorized()
@@ -77,7 +80,7 @@ namespace Maelstorm.Hubs
                     await Clients.Caller.SendAsync("OnHubAuthFalied", "Invalid token.");
                 }
             }
-        }
+        }        
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {

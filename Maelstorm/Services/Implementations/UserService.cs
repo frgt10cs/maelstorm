@@ -40,7 +40,7 @@ namespace Maelstorm.Services.Implementations
                 if (signalRSession != null)
                 {
                     await cache.RemoveFromListAsync<SignalRSession>(userId.ToString(), signalRSession);
-                    await messHub.Clients.Client(signalRSession.ConnectionId).SendAsync("OnSessionClosed");
+                    await messHub.Clients.Client(signalRSession.ConnectionId).SendAsync("OnSessionClosed");                    
                 }
                 await cache.SetStringAsync("sc:" + session.SessionId, "sessionIsClosed", new DistributedCacheEntryOptions()
                 {

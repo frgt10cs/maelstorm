@@ -4,7 +4,8 @@
     let _onLogin;    
 
     let login = async function () {
-        let validationResult = loginFormModule.getDataValidationResult();
+        loginFormModule.clearErrors();
+        let validationResult = loginFormModule.getDataValidationResult();        
         if (validationResult.isSuccess) {
             try {
                 accountGuiModule.setLoginProcessText("Logging in");
@@ -51,21 +52,19 @@
                     accountGuiModule.setLoginProcessText("Finishing");
                     loginFormModule.clearErrors();                    
                     layoutGuiModule.showNavOptions();
-                    accountGuiModule.hideAllForms();
-                    accountGuiModule.hideLoginProcess();
+                    accountGuiModule.hideAllForms();                    
                     _onLogin();
                 }
-                else {
+                else {                    
                     loginFormModule.addErrors([loginResult.errorMessages]);
-                }                
+                }  
+                accountGuiModule.hideLoginProcess();
             }
-            catch (errors) {  
-                loginFormModule.clearErrors();
+            catch (errors) {                  
                 loginFormModule.addErrors([errors]);
             }
         }
-        else {
-            loginFormModule.clearErrors();
+        else {            
             loginFormModule.addErrors(validationResult.errorMessages);
         }
     };

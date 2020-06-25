@@ -27,6 +27,7 @@ namespace Maelstorm.ControllersAPI
             return Json(new ServiceResult() { Data = HttpContext.User.FindFirst("UserEmail").Value });
         }
         
+        [HttpPost]
         [ActionName("Logout")]
         public async Task Logout()
         {
