@@ -20,6 +20,11 @@ using Microsoft.Extensions.Caching.Distributed;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Net.Http.Headers;
+using Microsoft.AspNetCore.SignalR;
+using StackExchange.Redis.Extensions.Core.Abstractions;
+using StackExchange.Redis.Extensions.Newtonsoft;
+using StackExchange.Redis.Extensions.Core.Configuration;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Maelstorm
 {
@@ -99,18 +104,18 @@ namespace Maelstorm
 
                     jwtBearerOptions.Events = new JwtBearerEvents
                     {
-                        OnMessageReceived = context =>
-                        {
-                            var path = context.HttpContext.Request.Path;
-                            if (!path.StartsWithSegments("/messageHub")) return Task.CompletedTask;
-                            var accessToken = context.Request.Headers[HeaderNames.Authorization];
-                            if (!string.IsNullOrWhiteSpace(accessToken) && context.Scheme.Name == JwtBearerDefaults.AuthenticationScheme)
-                            {
-                                context.Token = accessToken;
-                            }
+                        //OnMessageReceived = context =>
+                        //{
+                        //    var path = context.HttpContext.Request.Path;
+                        //    if (!path.StartsWithSegments("/messageHub")) return Task.CompletedTask;                            
+                        //    var accessToken = context.Request.Headers[HeaderNames.Authorization];
+                        //    if (!string.IsNullOrWhiteSpace(accessToken) && context.Scheme.Name == JwtBearerDefaults.AuthenticationScheme)
+                        //    {
+                        //        context.Token = accessToken;
+                        //    }
 
-                            return Task.CompletedTask;
-                        },
+                        //    return Task.CompletedTask;
+                        //},
                         OnAuthenticationFailed = context =>
                         {                            
                             if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
@@ -122,7 +127,7 @@ namespace Maelstorm
                         OnTokenValidated = async context =>
                         {
                             var sessionService = context.HttpContext.RequestServices.GetService<ISessionService>();
-                            if (await sessionService.IsSessionClosed(context.Principal.FindFirst("SessionId")?.Value)
+                            if (await sessionService.IsSessionClosedAsync(context.Principal.FindFirst("SessionId")?.Value)
                                 || context.Principal.FindFirst("Ip")?.Value != context.HttpContext.Connection.RemoteIpAddress.ToString())
                             {
                                 context.Fail("Invalid session");
@@ -133,13 +138,9 @@ namespace Maelstorm
 
             #endregion
 
-            services.AddDistributedRedisCache(option =>
-            {
-                option.Configuration = Configuration["Redis:Address"];
-                option.InstanceName = "maelstorm";
-            });            
-
             services.AddSignalR();
+            var redisConfiguration = Configuration.GetSection("Redis").Get<RedisConfiguration>();            
+            services.AddStackExchangeRedisExtensions<NewtonsoftSerializer>(redisConfiguration);            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

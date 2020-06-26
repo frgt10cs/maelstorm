@@ -24,6 +24,7 @@ using System.Data.Common;
 using Microsoft.Data.Sqlite;
 using System.Security.Cryptography;
 using System.Text;
+using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -33,7 +34,7 @@ namespace Maelstorm.Services.Implementations
         private MaelstormContext context;
         private ILogger<MaelstormContext> logger;        
         private IHubContext<MessageHub> messHub;
-        private IDistributedCache cache;
+        private IRedisCacheClient cache;
         private IHttpContextAccessor httpContext;
         private ISQLService sqlService;
         private ICryptographyService cryptoService;
@@ -41,7 +42,7 @@ namespace Maelstorm.Services.Implementations
         private readonly JsonSerializerSettings serializerSettings;
 
         public DialogService(MaelstormContext context, ILogger<MaelstormContext> logger,
-            IHubContext<MessageHub> messHub, IDistributedCache cache, IHttpContextAccessor httpContext,
+            IHubContext<MessageHub> messHub, IRedisCacheClient cache, IHttpContextAccessor httpContext,
             ISignalRSessionService sesServ, ISQLService sqlService, ICryptographyService cryptoService)
         {
             this.context = context;
@@ -161,20 +162,30 @@ namespace Maelstorm.Services.Implementations
                 Status = message.Status,
                 Text = message.Text,
                 IVBase64 = message.IVBase64
-            };            
-            string messageJson = JsonConvert.SerializeObject(messageViewModel, serializerSettings);
-            var targetIds = await sesServ.GetConnectionIdsAsync(message.TargetId);
-            if (targetIds?.Any() ?? false)
-                await messHub.Clients.Clients(targetIds).SendAsync("RecieveMessage", messageJson);
-            string authorSessionId = httpContext.HttpContext.User.FindFirst("SessionId").Value;            
-            var authorIds = await sesServ.GetConnectionIdsAsync(message.AuthorId, (SignalRSession s) => s.SessionId != authorSessionId);
-            if (authorIds?.Any() ?? false)
-                await messHub.Clients.Clients(authorIds).SendAsync("RecieveMessage", messageJson);
+            };  
+            // ser after check is any?
+            string messageJson = JsonConvert.SerializeObject(messageViewModel, serializerSettings);         
+            
+            // send message to the target
+            var targetConnectionIds = (await sesServ.GetConnectionIdsAsync(message.TargetId.ToString())).ToList();
+            if (targetConnectionIds?.Any() ?? false)
+                await messHub.Clients.Clients(targetConnectionIds).SendAsync("RecieveMessage", messageJson);
+
+            // send message to the another author's connections
+            string authorSessionId = httpContext.HttpContext.User.FindFirst("SessionId").Value;
+            var authorId = message.AuthorId.ToString();
+            var authorConnectionIds = (await sesServ.GetConnectionIdsAsync(authorId)).ToList();
+            if (authorConnectionIds?.Count > 1)
+            {
+                var authorConnectionId = await sesServ.GetConnectionId(authorId, authorSessionId);
+                authorConnectionIds.Remove(authorConnectionId);
+                await messHub.Clients.Clients(authorConnectionIds).SendAsync("RecieveMessage", messageJson);
+            }                
         }
 
         private async Task MessageWasReadedPush(int userId, int conversationId, int messageId)
         {
-            var connectionIds = await sesServ.GetConnectionIdsAsync(userId);
+            var connectionIds = (await sesServ.GetConnectionIdsAsync(userId.ToString())).ToList();
             await messHub.Clients.Clients(connectionIds).SendAsync("MessageWasReaded", conversationId, messageId);
         }
 

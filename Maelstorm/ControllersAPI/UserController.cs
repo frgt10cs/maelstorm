@@ -15,9 +15,11 @@ namespace Maelstorm.ControllersAPI
     public class UserController : Controller
     {        
         private IUserService userServ;
-        public UserController(IUserService userServ)
+        private ISessionService sessionServ;
+        public UserController(IUserService userServ, ISessionService sessionServ)
         {            
             this.userServ = userServ;
+            this.sessionServ = sessionServ;
         }
 
         [HttpGet]
@@ -45,7 +47,7 @@ namespace Maelstorm.ControllersAPI
         [ActionName("GetSessions")]
         public async Task<JsonResult> GetSessions()
         {
-            return Json(await userServ.GetSessionsAsync(HttpContext.GetUserId()));
+            return Json(await sessionServ.GetSessionsAsync(HttpContext.GetUserId()));
         }
 
         [HttpPost]

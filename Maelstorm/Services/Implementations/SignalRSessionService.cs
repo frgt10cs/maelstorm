@@ -1,6 +1,7 @@
 ﻿using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis.Extensions.Core.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,22 +11,25 @@ namespace Maelstorm.Services.Implementations
 {
     public class SignalRSessionService : ISignalRSessionService
     {
-        private IDistributedCache cache;
-        public SignalRSessionService(IDistributedCache cache)
+        private IRedisCacheClient cache;
+        public SignalRSessionService(IRedisCacheClient cache)
         {
             this.cache = cache;
-        }       
+        }               
 
-        public async Task<IReadOnlyList<string>> GetConnectionIdsAsync(int userId)
+        public async Task<string> GetConnectionId(string userId, string sessionId)
         {
-            IReadOnlyList<string> connectionIds = (await cache.GetListAsync<SignalRSession>(userId.ToString()))?.Select(s => s.ConnectionId).ToList();
-            return connectionIds;
+            return await cache.Db0.HashGetAsync<string>(userId, sessionId);
         }
 
-        public  async Task<IReadOnlyList<string>> GetConnectionIdsAsync(int userId, Func<SignalRSession, bool> predicate)
+        public async Task<SignalRSession> GetSignalRSession(string connectionId)
         {
-            IReadOnlyList<string> connectionIds = (await cache.GetListAsync<SignalRSession>(userId.ToString()))?.Where(s => predicate(s)).Select(s => s.ConnectionId).ToList();
-            return connectionIds;
+            return await cache.Db1.GetAsync<SignalRSession>(connectionId);
         }
+
+        public async Task<IEnumerable<string>> GetConnectionIdsAsync(string userId)
+        {
+            return await cache.Db0.HashValuesAsync<string>(userId);       
+        }        
     }
 }
