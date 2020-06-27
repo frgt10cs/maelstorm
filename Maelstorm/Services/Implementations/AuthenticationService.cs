@@ -60,8 +60,7 @@ namespace Maelstorm.Services.Implementations
                             CreatedAt = DateTime.Now,
                             App = model.App,
                             OsCpu = model.OsCpu,
-                            // ExpiresInDays = 30,
-                            Location = GetLocationByIp(ip)
+                            // ExpiresInDays = 30,                            
                         };
                         context.Sessions.Add(session);
                     }
@@ -74,7 +73,8 @@ namespace Maelstorm.Services.Implementations
                         new Claim("SessionId", session.SessionId)
                     });
                     session.IpAddress = ip;
-                    session.RefreshToken = tokens.RefreshToken;
+                    session.Location = GetLocationByIp(ip);
+                    session.RefreshToken = tokens.RefreshToken;                    
                     await context.SaveChangesAsync();
                     var authResult = new AuthenticationResultDTO() 
                     {

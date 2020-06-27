@@ -16,15 +16,10 @@ using Maelstorm.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Maelstorm.Hubs;
-using Microsoft.Extensions.Caching.Distributed;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using Microsoft.Net.Http.Headers;
-using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 using StackExchange.Redis.Extensions.Newtonsoft;
 using StackExchange.Redis.Extensions.Core.Configuration;
-using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Hosting;
 
 namespace Maelstorm
 {
@@ -127,7 +122,7 @@ namespace Maelstorm
                         OnTokenValidated = async context =>
                         {
                             var sessionService = context.HttpContext.RequestServices.GetService<ISessionService>();
-                            if (await sessionService.IsSessionClosedAsync(context.Principal.FindFirst("SessionId")?.Value)
+                            if (await sessionService.IsSessionClosedAsync(context.Principal.FindFirst("UserId")?.Value, context.Principal.FindFirst("SessionId")?.Value)
                                 || context.Principal.FindFirst("Ip")?.Value != context.HttpContext.Connection.RemoteIpAddress.ToString())
                             {
                                 context.Fail("Invalid session");
@@ -139,14 +134,19 @@ namespace Maelstorm
             #endregion
 
             services.AddSignalR();
+
             var redisConfiguration = Configuration.GetSection("Redis").Get<RedisConfiguration>();            
             services.AddStackExchangeRedisExtensions<NewtonsoftSerializer>(redisConfiguration);            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime applicationLifetime)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime, IRedisCacheClient cache)
         {
-            applicationLifetime.ApplicationStopping.Register(OnShutdown);
+            applicationLifetime.ApplicationStopping.Register(()=> {
+                for (int i = 0; i < 17; i++)
+                    cache.GetDb(i).FlushDbAsync();                                
+            });
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -186,27 +186,6 @@ namespace Maelstorm
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
-        }
-
-        private void OnShutdown()
-        {
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                ExecuteCommand("redis-cli flushall");            
-        }
-
-        public void ExecuteCommand(string command)
-        {
-            Process proc = new System.Diagnostics.Process();
-            proc.StartInfo.FileName = "/bin/bash";
-            proc.StartInfo.Arguments = "-c \" " + command + " \"";
-            proc.StartInfo.UseShellExecute = false;
-            proc.StartInfo.RedirectStandardOutput = true;
-            proc.Start();
-            Console.Write("Execution result: ");
-            while (!proc.StandardOutput.EndOfStream)
-            {
-                Console.WriteLine(proc.StandardOutput.ReadLine());
-            }
-        }
+        }      
     }
 }

@@ -7,6 +7,7 @@ using Maelstorm.Dtos;
 using Maelstorm.Entities;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 
@@ -14,18 +15,17 @@ public class SessionService : ISessionService
 {
     private IRedisCacheClient cache;
     private MaelstormContext context;
-    public SessionService(IRedisCacheClient cache, MaelstormContext context)
+    private ISignalRSessionService signalSessionServ;
+    public SessionService(IRedisCacheClient cache, MaelstormContext context, ISignalRSessionService signalSessionServ)
     {
         this.cache = cache;
         this.context = context;
+        this.signalSessionServ = signalSessionServ;
     }
-    public async Task<bool> IsSessionClosedAsync(string sessionId)
-    {
-        if (!String.IsNullOrWhiteSpace(sessionId))
-        {
-            return await cache.Db0.SetContainsAsync("closedSessions", sessionId);     
-        }
-        return true;
+    public async Task<bool> IsSessionClosedAsync(string userId, string sessionId)
+    {        
+        return string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(sessionId) ||
+                !string.IsNullOrEmpty(await cache.Db2.GetAsync<string>(sessionId));
     }
 
     public async Task<List<SessionDTO>> GetSessionsAsync(int userId)
@@ -33,7 +33,7 @@ public class SessionService : ISessionService
         List<SessionDTO> models = new List<SessionDTO>();
         var sessions = context.Sessions.Where(s => s.UserId == userId);
         var connectionIds = await cache.Db0.HashValuesAsync<string>(userId.ToString());
-        var signalRSessions = (await cache.Db0.GetAllAsync<SignalRSession>(connectionIds)).Values;
+        var signalRSessions = (await cache.Db1.GetAllAsync<SignalRSession>(connectionIds)).Values;
         foreach (Session session in sessions)
         {
             models.Add(new SessionDTO()
@@ -43,5 +43,24 @@ public class SessionService : ISessionService
             });
         }
         return models;
+    }
+
+    public async Task CloseSessionAsync(int userId, string sessionId, bool banDevice = false)
+    {
+        Session session = await context.Sessions.FirstOrDefaultAsync(s => s.SessionId == sessionId && s.UserId == userId);
+        string userIdStr = userId.ToString();
+        var connectionId = await cache.Db0.HashGetAsync<string>(userIdStr, sessionId);
+        if (!string.IsNullOrEmpty(connectionId))
+        {
+            await signalSessionServ.CloseSessionAsync(connectionId);
+            await cache.Db0.HashDeleteAsync(userIdStr, sessionId);
+        }
+        await cache.Db2.AddAsync(sessionId, "closed", TimeSpan.FromMinutes(5));
+        if (banDevice)
+        {
+            context.BannedDevices.Add(new BannedDevice() { UserId = userId, Fingerprint = session.FingerPrint });
+        }
+        context.Sessions.Remove(session);
+        await context.SaveChangesAsync();
     }
 }

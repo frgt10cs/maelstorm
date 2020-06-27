@@ -237,7 +237,7 @@ let apiModule = (function () {
         },
 
         logOut: function () {
-            sendRequest(new MaelstormRequest("/api/user/logout", "POST"));
+            sendRequest(new MaelstormRequest("/api/session/closecurrentsession", "POST"));
             sessionStorage.clear();
         },
 
@@ -246,17 +246,17 @@ let apiModule = (function () {
         },
 
         getSessions: async function () {
-            return await sendRequest(new MaelstormRequest("/api/user/getsessions", "GET"));            
+            return await sendRequest(new MaelstormRequest("/api/session/getsessions", "GET"));            
         },
 
         closeSession: function (sessionId, banDevice) {
             let data = { sessionId: sessionId, banDevice: banDevice };
-            sendRequest(new MaelstormRequest("/api/user/closeSession", "POST", data));
+            sendRequest(new MaelstormRequest("/api/session/closeSession", "POST", data));
         },
 
         getOnlineStatuses: async function (ids) {
             if (ids.length !== 0)
-                return await sendRequest(new MaelstormRequest("/api/user/getonlinestatuses", "POST", ids));
+                return await sendRequest(new MaelstormRequest("/api/session/getonlinestatuses", "POST", ids));
             throw new Error("Ids is empty");            
         },
 

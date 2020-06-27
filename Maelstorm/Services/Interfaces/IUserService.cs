@@ -8,9 +8,6 @@ namespace Maelstorm.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<UserInfoDTO> GetUserInfoAsync(int userId);        
-        Task CloseSessionAsync(int userId, string sessionId, bool banDevice = false);
-        Task<bool> IsOnlineAsync(int userId);
-        Task<List<OnlineStatusDTO>> GetOnlineStatusesAsync(int[] ids);
+        Task<UserInfoDTO> GetUserInfoAsync(int userId);               
     }
 }

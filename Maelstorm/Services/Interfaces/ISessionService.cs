@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 public interface ISessionService
 {
-    Task<bool> IsSessionClosedAsync(string sessionId);
+    Task<bool> IsSessionClosedAsync(string userId, string sessionId);
     public Task<List<SessionDTO>> GetSessionsAsync(int userId);
+    public Task CloseSessionAsync(int userId, string sessionId, bool banDevice = false);
 }

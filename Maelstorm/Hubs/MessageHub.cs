@@ -26,8 +26,8 @@ namespace Maelstorm.Hubs
 
         private async Task<bool> IsAuthorized()
         {
-            string userId = Context.Items["UserId"]?.ToString();
-            return userId != null && await cache.Db0.SetContainsAsync(userId, Context.ConnectionId);
+            
+            
         }
         
         public async Task Ping()
