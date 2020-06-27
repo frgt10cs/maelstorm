@@ -177,7 +177,7 @@ namespace Maelstorm.Services.Implementations
             var authorConnectionIds = (await sesServ.GetConnectionIdsAsync(authorId)).ToList();
             if (authorConnectionIds?.Count > 1)
             {
-                var authorConnectionId = await sesServ.GetConnectionId(authorId, authorSessionId);
+                var authorConnectionId = await sesServ.GetConnectionIdAsync(authorId, authorSessionId);
                 authorConnectionIds.Remove(authorConnectionId);
                 await messHub.Clients.Clients(authorConnectionIds).SendAsync("RecieveMessage", messageJson);
             }                

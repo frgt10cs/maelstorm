@@ -22,12 +22,12 @@ namespace Maelstorm.Services.Implementations
             this.messHub = messHub;
         }               
 
-        public async Task<string> GetConnectionId(string userId, string sessionId)
+        public async Task<string> GetConnectionIdAsync(string userId, string sessionId)
         {
             return await cache.Db0.HashGetAsync<string>(userId, sessionId);
         }
 
-        public async Task<SignalRSession> GetSignalRSession(string connectionId)
+        public async Task<SignalRSession> GetSignalRSessionAsync(string connectionId)
         {
             return await cache.Db1.GetAsync<SignalRSession>(connectionId);
         }

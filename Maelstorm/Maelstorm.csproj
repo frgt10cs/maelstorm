@@ -33,6 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Authorization\Handlers\" />
     <Folder Include="Filters\" />
     <Folder Include="wwwroot\css\bundled\" />
     <Folder Include="wwwroot\js\bundled\" />

@@ -26,8 +26,8 @@ namespace Maelstorm.Hubs
 
         private async Task<bool> IsAuthorized()
         {
-            
-            
+            if (Context.Items.Count == 0) return false;
+            return await cache.Db1.ExistsAsync(Context.ConnectionId);
         }
         
         public async Task Ping()
@@ -39,6 +39,7 @@ namespace Maelstorm.Hubs
         {
             if (!await IsAuthorized())
             {
+                Console.WriteLine("----------------------");
                 var result = authServ.ValidateToken(token, true);
                 if (result.IsSuccessful)
                 {

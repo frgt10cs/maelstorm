@@ -76,7 +76,7 @@ namespace Maelstorm
                 .AddAuthentication(options =>
                 {
                     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;                    
                 })
                 .AddJwtBearer(jwtBearerOptions =>
                 {
@@ -102,17 +102,12 @@ namespace Maelstorm
                         //OnMessageReceived = context =>
                         //{
                         //    var path = context.HttpContext.Request.Path;
-                        //    if (!path.StartsWithSegments("/messageHub")) return Task.CompletedTask;                            
-                        //    var accessToken = context.Request.Headers[HeaderNames.Authorization];
-                        //    if (!string.IsNullOrWhiteSpace(accessToken) && context.Scheme.Name == JwtBearerDefaults.AuthenticationScheme)
-                        //    {
-                        //        context.Token = accessToken;
-                        //    }
-
-                        //    return Task.CompletedTask;
+                        //    if (path.StartsWithSegments("/messageHub"))
+                        //        context.Success();
+                        //    return Task.CompletedTask;                            
                         //},
                         OnAuthenticationFailed = context =>
-                        {                            
+                        {
                             if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                             {
                                 context.Response.Headers.Add("Token-Expired", "true");
@@ -127,9 +122,9 @@ namespace Maelstorm
                             {
                                 context.Fail("Invalid session");
                             }
-                        }
+                        }                        
                     };
-                });
+                });                
 
             #endregion
 
@@ -143,8 +138,15 @@ namespace Maelstorm
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime, IRedisCacheClient cache)
         {
             applicationLifetime.ApplicationStopping.Register(()=> {
-                for (int i = 0; i < 17; i++)
-                    cache.GetDb(i).FlushDbAsync();                                
+                try
+                {
+                    for (int i = 0; i < 16; i++)
+                        cache.GetDb(i).FlushDbAsync();
+                }
+                catch (Exception ex)
+                {
+                    
+                }                
             });
 
             if (env.IsDevelopment())
@@ -157,11 +159,10 @@ namespace Maelstorm
                 app.UseHsts();
             }
 
-            app.UseAuthentication();
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
             app.UseRouting();
+            app.UseStaticFiles();
+            app.UseAuthentication();                                            
             app.UseAuthorization();
 
             app.Use(async (context, next) =>
