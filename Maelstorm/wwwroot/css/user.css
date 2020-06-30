@@ -1,3 +1,74 @@
+#usersPanel {
+    background-color: #2E2E30;
+    color: white;
+    padding: 20px;
+    display:flex;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 999;        
+    display: none;
+    position: absolute;
+    height: 100%;
+}
+
+#findUserValue {
+    width: 100%;
+}
+
+.form-radio {
+    display: flex;
+}
+
+.radio-item {
+    font-size: 14px;
+    width: 5em;
+    display: flex;
+    align-items: center;
+}
+
+.form-radio input[type=radio] {
+    display: none;
+}
+
+.form-radio label {
+    cursor: pointer;
+    padding: 0px 15px;
+    line-height: 34px;
+    border: 1px solid #999;
+    border-right: none;
+    user-select: none;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-height: 2em;
+}
+
+.form-radio .radio-item:first-child label {
+    /* border-radius: 6px 0 0 6px; */
+}
+
+.form-radio .radio-item:last-child label {
+    /* border-radius: 0 6px 6px 0; */
+    border-right: 1px solid #999;
+}
+
+.form-radio input[type=radio]:checked + label {
+    background: #191919;
+}
+
+.form-radio label:hover {
+    color: #666;
+}
+
+.form-radio input[type=radio]:disabled + label {
+    background: #efefef;
+    color: #666;
+}
+
 #findUserResults {
     color: white;
 }
@@ -138,6 +209,10 @@
 }
 
 @media screen and (min-width: 992px){
+    #usersPanel {
+        top: 0.5rem;
+        height: calc(100% - 1.5rem);
+    }
     #settingsContainer{
         width: 331px !important;
     }

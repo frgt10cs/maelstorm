@@ -1,9 +1,14 @@
 ﻿let layoutGuiModule = (function () {
     let dark;
     let navOptions;
+    let usersBtn;
 
     return {
         init: function () {
+            usersBtn = document.getElementById("openUsersPanelBtn");
+            usersBtn.onclick = function () {
+                userGuiModule.openUsersPanel();
+            }
             dark = document.getElementById("dark");
             navOptions = document.getElementById("nav-options");
         },

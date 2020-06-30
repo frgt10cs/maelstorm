@@ -59,9 +59,9 @@
 })();
 
 let userGuiModule = (function () {
+    let usersPanel;
     let userFindTextBox;
-    let userResultsInner;
-    let findUserBtn;
+    let userResultsInner;    
     let userInfoPanel;
     let userInfoNicknameBox;
     let userInfoAvatarBox;
@@ -69,26 +69,25 @@ let userGuiModule = (function () {
     let userInfoOnlineStatusBox;
     let userInfoOpenDialog;
     let closeUserInfoBtn;
-    let dark;            
+    var isSearchBlocked = false;   
 
-    closeUserInfo = function (){
-        dark.style.display = "none";
+    closeUserInfo = function () {
+        layoutGuiModule.hideDark();
         userInfoPanel.style.display = "none";
     };  
 
     return {
         init: function () {
             userFindTextBox = document.getElementById("findUserValue");
-            userResultsInner = document.getElementById("findUserResults");
-            findUserBtn = document.getElementById("findUserButton");
+            userResultsInner = document.getElementById("findUserResults");            
             userInfoPanel = document.getElementById("userFullInfoPanel");
             userInfoNicknameBox = document.getElementById("userInfoNickname");
             userInfoAvatarBox = document.getElementById("userInfoAvatar");
             userInfoStatusBox = document.getElementById("userInfoStatus");
             userInfoOnlineStatusBox = document.getElementById("userInfoOnlineStatus");
             userInfoOpenDialog = document.getElementById("userInfoOpenDialog");
-            closeUserInfoBtn = document.getElementById("closeUserInfo");            
-            dark = document.getElementById("dark");
+            closeUserInfoBtn = document.getElementById("closeUserInfo");
+            usersPanel = document.getElementById("usersPanel");
             closeUserInfoBtn.onclick = closeUserInfo;
         },
 
@@ -101,6 +100,16 @@ let userGuiModule = (function () {
         //getUserInfoStatusBox: function () { return userInfoStatusBox; },
         //getUserInfoOnlineStatusBox: function () { return userInfoOnlineStatusBox; },
         getUserInfoOpenDialog: function () { return userInfoOpenDialog; },        
+
+        openUsersPanel: function () {
+            usersPanel.style.display = "block";
+            layoutGuiModule.showDark();
+        },
+
+        hideUsersPanel: function(){
+            usersPanel.style.display = "none";
+            layoutGuiModule.hideDark();
+        },
 
         clearUserResultsInnner: function () {
             while (userResultsInner.lastChild) {
@@ -115,16 +124,11 @@ let userGuiModule = (function () {
         setAsNotFound: function () { userResultsInner.innerText = "Не найдено"; },          
 
         setFindUserFunc: function (findFuncAsync) {
-            findUserBtn.onclick = async function () {
-                findUserBtn.disabled = true;
-                await findFuncAsync();
-                findUserBtn.disabled = false;
-            };
             userFindTextBox.onkeydown = async function (e) {
-                if (e.keyCode === 13) {
-                    findUserBtn.disabled = true;
+                if (e.keyCode === 13 && !isSearchBlocked) {
+                    isSearchBlocked = true;
                     await findFuncAsync();
-                    findUserBtn.disabled = false;
+                    isSearchBlocked = false;
                     return false;
                 }
             };
@@ -137,8 +141,8 @@ let userGuiModule = (function () {
             userInfoOnlineStatusBox.innerText = userInfo.onlineStatus ? "online" : "offline";            
         },
 
-        showUserInfo: function() {
-            dark.style.display = "block";
+        showUserInfo: function () {
+            layoutGuiModule.showDark();
             userInfoPanel.style.display = "block";
         },
 
