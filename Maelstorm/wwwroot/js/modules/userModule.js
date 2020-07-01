@@ -1,34 +1,34 @@
 ﻿let userModule = (function () {    
-    let prevSearch;
-    let openedUserInfo;   
-
-    let getUserInfo = async function (userId) {
-        var userInfo = await api.getUserInfo(userId);
-        openedUserInfo = userInfo;
-        userGuiModule.setUserInfo(userInfo);
-        userGuiModule.showUserInfo();     
-    };
+    let prevSearch;      
 
     let createUserFoundElement = function (user) {
         let box = document.createElement("div");
-        box.classList.add("userPreviewInner");
+        box.id = "f_" + user.id;
+        box.className = "userPreviewInner col-12 col-sm-6 col-md-4 col-lg-3";
         box.onclick = function () {
-            getUserInfo(user.id);            
+            dialogsModule.openOrCreateDialog(Number(box.id.split('_')[1]));
+            userGuiModule.hideUsersPanel(); 
         };
         let imageBox = document.createElement("div");
         imageBox.style.backgroundImage = "url('/images/" + user.miniAvatar + "')";
         imageBox.classList.add("userPreviewAvatar");
         box.appendChild(imageBox);
+        let rightBox = document.createElement("div");
+        rightBox.className = "d-flex justify-content-between flex-column pl-1 overflow-hidden";
         let nicknameBox = document.createElement("div");
         nicknameBox.textContent = user.nickname;
-        nicknameBox.classList.add("userPreviewNickname");
-        box.appendChild(nicknameBox);
-        box.id = user.userId;
+        nicknameBox.className = "userPreviewNickname text-truncate";
+        if (user.isOnline) nicknameBox.classList.add("text-success");
+        let statusBox = document.createElement("div");
+        statusBox.innerHTML = user.status;
+        statusBox.className = "userPreviewStatus text-truncate";
+        rightBox.appendChild(nicknameBox);
+        rightBox.appendChild(statusBox);
+        box.appendChild(rightBox);        
         return box;        
     };
 
-    let findUserByNickname = async function () {
-        userGuiModule.get
+    let findUserByNickname = async function () {        
         let nickname = userGuiModule.getUserFindValue();
         if (nickname !== prevSearch) {
             let users = await api.findByNickname(nickname);
@@ -47,11 +47,7 @@
     return {
         init: function () {   
             userGuiModule.init();
-            userGuiModule.setFindUserFunc(findUserByNickname);
-            userGuiModule.getUserInfoOpenDialog().onclick = function () {
-                dialogsModule.openOrCreateDialog(openedUserInfo);
-                userGuiModule.closeUserInfo();
-            };
+            userGuiModule.setFindUserFunc(findUserByNickname);           
         },
 
         findUserByNickname: findUserByNickname
@@ -61,14 +57,7 @@
 let userGuiModule = (function () {
     let usersPanel;
     let userFindTextBox;
-    let userResultsInner;    
-    let userInfoPanel;
-    let userInfoNicknameBox;
-    let userInfoAvatarBox;
-    let userInfoStatusBox;
-    let userInfoOnlineStatusBox;
-    let userInfoOpenDialog;
-    let closeUserInfoBtn;
+    let userResultsInner;        
     var isSearchBlocked = false;   
 
     closeUserInfo = function () {
@@ -79,27 +68,11 @@ let userGuiModule = (function () {
     return {
         init: function () {
             userFindTextBox = document.getElementById("findUserValue");
-            userResultsInner = document.getElementById("findUserResults");            
-            userInfoPanel = document.getElementById("userFullInfoPanel");
-            userInfoNicknameBox = document.getElementById("userInfoNickname");
-            userInfoAvatarBox = document.getElementById("userInfoAvatar");
-            userInfoStatusBox = document.getElementById("userInfoStatus");
-            userInfoOnlineStatusBox = document.getElementById("userInfoOnlineStatus");
-            userInfoOpenDialog = document.getElementById("userInfoOpenDialog");
-            closeUserInfoBtn = document.getElementById("closeUserInfo");
-            usersPanel = document.getElementById("usersPanel");
-            closeUserInfoBtn.onclick = closeUserInfo;
+            userResultsInner = document.getElementById("findUserResults");                       
+            usersPanel = document.getElementById("usersPanel");            
         },
 
-        getUserFindValue: function () { return userFindTextBox.value; },
-        //getUserResultsInner: function () { return userResultsInner; },
-        //getFindUserBtn: function () { return findUserBtn; },
-        //getUserInfoPanel: function () { return userInfoPanel; },
-        //getUserInfoNicknameBox: function () { return userInfoNicknameBox; },
-        //getUserInfoAvatarBox: function () { return userInfoAvatarBox; },
-        //getUserInfoStatusBox: function () { return userInfoStatusBox; },
-        //getUserInfoOnlineStatusBox: function () { return userInfoOnlineStatusBox; },
-        getUserInfoOpenDialog: function () { return userInfoOpenDialog; },        
+        getUserFindValue: function () { return userFindTextBox.value; },                      
 
         openUsersPanel: function () {
             usersPanel.style.display = "block";
@@ -121,7 +94,7 @@ let userGuiModule = (function () {
             userResultsInner.appendChild(element);
         },
 
-        setAsNotFound: function () { userResultsInner.innerText = "Не найдено"; },          
+        setAsNotFound: function () { userResultsInner.innerText = "No matches"; },          
 
         setFindUserFunc: function (findFuncAsync) {
             userFindTextBox.onkeydown = async function (e) {
@@ -132,20 +105,6 @@ let userGuiModule = (function () {
                     return false;
                 }
             };
-        },        
-
-        setUserInfo: function (userInfo) {
-            userInfoAvatarBox.style.backgroundImage = "url('/images/" + userInfo.avatar + "')";
-            userInfoNicknameBox.innerText = userInfo.nickname;
-            userInfoStatusBox.innerText = userInfo.status;
-            userInfoOnlineStatusBox.innerText = userInfo.onlineStatus ? "online" : "offline";            
-        },
-
-        showUserInfo: function () {
-            layoutGuiModule.showDark();
-            userInfoPanel.style.display = "block";
-        },
-
-        closeUserInfo: closeUserInfo
+        }                        
     };
 })();

@@ -29,12 +29,12 @@
         }
     };
 
-    let openOrCreateDialog = async function (userInfo) {
-        let dialog = getDialogByInterlocutorId(userInfo.id);
+    let openOrCreateDialog = async function (userId) {
+        let dialog = getDialogByInterlocutorId(userId);
         if (dialog !== null && dialog !== undefined) {
             openDialog(dialog);
         } else {
-            dialog = await api.getDialog(userInfo.id);
+            dialog = await api.getDialog(userId);
             dialog = await dialogModule.createDialog(dialog);
             addDialog(dialog);
             openDialog(dialog);
