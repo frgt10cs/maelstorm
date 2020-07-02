@@ -28,10 +28,10 @@
         return box;        
     };
 
-    let findUserByNickname = async function () {        
-        let nickname = userGuiModule.getUserFindValue();
-        if (nickname !== prevSearch) {
-            let users = await api.findByNickname(nickname);
+    let findUserByLogin = async function () {        
+        let login = userGuiModule.getUserFindValue();        
+        if (login !== prevSearch) {
+            let users = await api.finsUserByLogin(login);
             userGuiModule.clearUserResultsInnner();
             if (users.length > 0) {
                 for (let i = 0; i < users.length; i++) {
@@ -40,7 +40,7 @@
             } else {
                 userGuiModule.setAsNotFound();
             }
-            prevSearch = nickname;
+            prevSearch = login;
         }        
     };
 
@@ -50,7 +50,7 @@
             userGuiModule.setFindUserFunc(findUserByNickname);           
         },
 
-        findUserByNickname: findUserByNickname
+        findUserByLogin: findUserByLogin
     };
 })();
 
@@ -58,7 +58,8 @@ let userGuiModule = (function () {
     let usersPanel;
     let userFindTextBox;
     let userResultsInner;        
-    var isSearchBlocked = false;   
+    var isSearchBlocked = false;  
+    let equalsRadio;
 
     closeUserInfo = function () {
         layoutGuiModule.hideDark();
@@ -69,7 +70,8 @@ let userGuiModule = (function () {
         init: function () {
             userFindTextBox = document.getElementById("findUserValue");
             userResultsInner = document.getElementById("findUserResults");                       
-            usersPanel = document.getElementById("usersPanel");            
+            usersPanel = document.getElementById("usersPanel");
+            equalsRadio = document.getElementById("equalsRadioSearch");
         },
 
         getUserFindValue: function () { return userFindTextBox.value; },                      
@@ -105,6 +107,6 @@ let userGuiModule = (function () {
                     return false;
                 }
             };
-        }                        
+        }
     };
 })();

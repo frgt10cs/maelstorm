@@ -7,6 +7,7 @@
     z-index: 999;        
     display: none;
     position: absolute;    
+    height:100%;
 }
 
 #findUserValue {
@@ -69,6 +70,7 @@
 #findUserResults {
     color: white;
     overflow-y:scroll;
+    max-height: calc(100vh - 176px);
 }
 
 .userPreviewInner {

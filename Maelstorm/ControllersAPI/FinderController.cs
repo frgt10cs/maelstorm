@@ -26,7 +26,7 @@ namespace Maelstorm.ControllersAPI
         [ActionName("FindUser")]
         public async Task<ActionResult<List<UserFindInfoDTO>>> FindUser(string nickname)
         {
-            return await findServ.FindUsersByNicknameAsync(HttpContext.GetUserId(),nickname);
-        }
+            return await findServ.FindUserByLoginAsync(nickname);
+        }        
     }
 }

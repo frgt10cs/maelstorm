@@ -260,10 +260,11 @@ let apiModule = (function () {
             throw new Error("Ids is empty");            
         },
 
-        findByNickname: async function (nickname) {
-            if (!isEmptyOrSpaces(nickname))
-                return await sendRequest(new MaelstormRequest("/api/finder/finduser?nickname=" + nickname));
-            throw new error("Nickname is empty");
+        finsUserByLogin: async function (login) {
+            if (!isEmptyOrSpaces(input)) {
+                return await sendRequest(new MaelstormRequest("/api/finder/finduser?login=" + login));
+            }                
+            throw new error("Login is empty");
         },
 
         getUserInfo: async function (userId) {

@@ -8,6 +8,6 @@ namespace Maelstorm.Services.Interfaces
 {
     public interface IFinderService
     {
-        Task<List<UserFindInfoDTO>> FindUsersByNicknameAsync(int userId, string nickname);
+        Task<List<UserFindInfoDTO>> FindUserByLoginAsync(string login);        
     }
 }

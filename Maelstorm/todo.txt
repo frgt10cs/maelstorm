@@ -15,4 +15,3 @@ onlogin ?
 foreign keys
 email already exist client error
 after succesful reconecting to server signalr 401 for requests
-user find results scroll

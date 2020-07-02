@@ -19,10 +19,10 @@ namespace Maelstorm.Services.Implementations
             this.signalRSessionService = signalRSessionService;
         }
 
-        public async Task<List<UserFindInfoDTO>> FindUsersByNicknameAsync(int userId, string nickname)
+        public async Task<List<UserFindInfoDTO>> FindUserByLoginAsync(string login)
         {            
             var users = await context.Users
-                .Where(u => u.Nickname.Contains(nickname) && u.Id != userId)
+                .Where(u => u.Nickname.Contains(login))
                 .Select(u => new UserFindInfoDTO
                 {
                     Status  = u.Status,
@@ -34,6 +34,6 @@ namespace Maelstorm.Services.Implementations
             foreach (var user in users)
                 user.IsOnline = await signalRSessionService.IsOnlineAsync(user.Id.ToString());
             return users;
-        }        
+        }
     }
 }
