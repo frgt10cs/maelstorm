@@ -23,10 +23,10 @@ namespace Maelstorm.ControllersAPI
         }
 
         [HttpGet]
-        [ActionName("FindUser")]
-        public async Task<ActionResult<List<UserFindInfoDTO>>> FindUser(string nickname)
+        [ActionName("FindUserByLogin")]
+        public async Task<ActionResult<List<UserFindInfoDTO>>> FindUserByLogin(string login)
         {
-            return await findServ.FindUserByLoginAsync(nickname);
+            return await findServ.FindUserByLoginAsync(login);
         }        
     }
 }

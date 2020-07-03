@@ -38,8 +38,7 @@ namespace Maelstorm.Hubs
         public async Task Authorize(string token, string signalRFingerprint)
         {
             if (!await IsAuthorized())
-            {
-                Console.WriteLine("----------------------");
+            {                
                 var result = authServ.ValidateToken(token, true);
                 if (result.IsSuccessful)
                 {

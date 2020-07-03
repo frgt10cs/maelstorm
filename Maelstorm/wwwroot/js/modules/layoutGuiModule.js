@@ -1,7 +1,7 @@
 ﻿let layoutGuiModule = (function () {
     let dark;
     let navOptions;
-    let usersBtn;
+    let usersBtn;    
 
     return {
         init: function () {

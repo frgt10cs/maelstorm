@@ -261,8 +261,8 @@ let apiModule = (function () {
         },
 
         finsUserByLogin: async function (login) {
-            if (!isEmptyOrSpaces(input)) {
-                return await sendRequest(new MaelstormRequest("/api/finder/finduser?login=" + login));
+            if (!isEmptyOrSpaces(login)) {
+                return await sendRequest(new MaelstormRequest("/api/finder/finduserbylogin?login=" + login));
             }                
             throw new error("Login is empty");
         },

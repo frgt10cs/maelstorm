@@ -1,5 +1,6 @@
 ﻿let userModule = (function () {    
-    let prevSearch;      
+    let prevSearch;     
+    var isSearchBlocked = false;
 
     let createUserFoundElement = function (user) {
         let box = document.createElement("div");
@@ -41,30 +42,39 @@
                 userGuiModule.setAsNotFound();
             }
             prevSearch = login;
-        }        
+        }     
+    };
+
+    let closeUserPanel = function () {
+        usersPanel.style.display = "none";
+        layoutGuiModule.hideDark();
+        prevSearch = "";
+        userGuiModule.clearUsersPanel();
     };
 
     return {
         init: function () {   
             userGuiModule.init();
-            userGuiModule.setFindUserFunc(findUserByNickname);           
+            userGuiModule.getUserFindTextBox().onkeydown = async function (e) {
+                if (e.keyCode === 13 && !isSearchBlocked) {
+                    isSearchBlocked = true;
+                    await findUserByLogin();
+                    isSearchBlocked = false;
+                    return false;
+                }
+            };
+            userGuiModule.getCloseUsersPanelBtn().onclick = closeUserPanel;
         },
 
-        findUserByLogin: findUserByLogin
+        findUserByLogin: findUserByLogin        
     };
 })();
 
 let userGuiModule = (function () {
     let usersPanel;
     let userFindTextBox;
-    let userResultsInner;        
-    var isSearchBlocked = false;  
-    let equalsRadio;
-
-    closeUserInfo = function () {
-        layoutGuiModule.hideDark();
-        userInfoPanel.style.display = "none";
-    };  
+    let userResultsInner;
+    let closeUsersPanelBtn;           
 
     return {
         init: function () {
@@ -72,6 +82,7 @@ let userGuiModule = (function () {
             userResultsInner = document.getElementById("findUserResults");                       
             usersPanel = document.getElementById("usersPanel");
             equalsRadio = document.getElementById("equalsRadioSearch");
+            closeUsersPanelBtn = document.getElementById("closeUsersPanelBtn");
         },
 
         getUserFindValue: function () { return userFindTextBox.value; },                      
@@ -98,15 +109,15 @@ let userGuiModule = (function () {
 
         setAsNotFound: function () { userResultsInner.innerText = "No matches"; },          
 
-        setFindUserFunc: function (findFuncAsync) {
-            userFindTextBox.onkeydown = async function (e) {
-                if (e.keyCode === 13 && !isSearchBlocked) {
-                    isSearchBlocked = true;
-                    await findFuncAsync();
-                    isSearchBlocked = false;
-                    return false;
-                }
-            };
+        getUserFindTextBox: function () { return userFindTextBox; },
+
+        getCloseUsersPanelBtn: function () { return closeUsersPanelBtn; },
+
+        clearUsersPanel: function () {
+            userFindTextBox.value = "";
+            while (userResultsInner.firstChild) {
+                userResultsInner.firstChild.remove();
+            }
         }
     };
 })();
