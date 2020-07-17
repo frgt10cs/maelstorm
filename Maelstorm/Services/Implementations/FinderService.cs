@@ -19,6 +19,11 @@ namespace Maelstorm.Services.Implementations
             this.signalRSessionService = signalRSessionService;
         }
 
+        public async Task<List<MessageSearchResult>> FindMessageAsync(string message)
+        {
+            var request = "";
+        }
+
         public async Task<List<UserFindInfoDTO>> FindUserByLoginAsync(string login)
         {            
             var users = await context.Users

@@ -1,6 +1,7 @@
 ﻿let dialogsModule = (function () {              
     let openedDialog = null;
-    let dialogs = [];               
+    let dialogs = [];
+    let prevSearch;
 
     let removeDialogs = function () {        
         while (dialogsGuiModule.getDialogsContainer().firstChild) {
@@ -76,7 +77,12 @@
             return dialog !== null && dialog !== undefined;
         },
 
-        getDialogsOffset: function () { return dialogs.length; }
+        getDialogsOffset: function () { return dialogs.length; },
+
+        findMessage: async function () {
+            let message = dialogsGuiModule.getSearchMessageValue();
+            let results = await apiModule.findMessageAsync();
+        }
     };
 })();
 
@@ -84,21 +90,20 @@ let dialogsGuiModule = (function () {
 
     let dialogsContainer,
         messagesPanelsContainer,
-        uploadingInfo,        
-        dark;        
+        uploadingInfo,
+        searchMessageTextBox;
 
     return {
         init: function () {            
             dialogsContainer = document.getElementById("dialogs");            
             messagesPanelsContainer = document.getElementById("panelsInner");
-            uploadingInfo = document.getElementById("uploading");            
-            dark = document.getElementById("dark");
+            uploadingInfo = document.getElementById("uploading");
+            searchMessageTextBox = document.getElementById("searchMessageTextBox");
         },                
         
         getDialogsContainer: function () { return dialogsContainer; },        
         getMessagesPanelsContainer: function () { return messagesPanelsContainer; },
-        getUploadingInfo: function () { return uploadingInfo; },        
-        getDark: function () { return dark; },    
+        getUploadingInfo: function () { return uploadingInfo; },                
 
         removeMessagesPanels: function () {
             while (messagesPanelsContainer.firstChild) {
@@ -107,17 +112,19 @@ let dialogsGuiModule = (function () {
         },
 
         showUploading: function () {
-            dark.style.display = "block";
+            layoutGuiModule.showDark();
             uploadingInfo.style.display = "flex";
         },
 
         hideUploading: function () {
-            dark.style.display = "none";
+            layoutGuiModule.hideDark();
             uploadingInfo.style.display = "none";
         },
 
         toTheTop: function (dialog) {
             dialogsContainer.insertBefore(dialog.element, dialogsContainer.firstChild);
-        }
+        },
+
+        getSearchMessageValue: function () { return searchMessageTextBox.value; }
     };
 })();
