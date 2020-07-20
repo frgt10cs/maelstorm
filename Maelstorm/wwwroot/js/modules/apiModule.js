@@ -273,12 +273,6 @@ let apiModule = (function () {
             throw new Error("Invalid user id");            
         },
 
-        setTokens: setTokens,
-
-        findMessageAsync: async function (message) {
-            if (!isEmptyOrSpaces(message))
-                return await sendRequest(new MaelstormRequest("/api/finder/findmessage?message=" + message));
-            throw new Error("Message is empty");    
-        }
+        setTokens: setTokens
     };
 })();

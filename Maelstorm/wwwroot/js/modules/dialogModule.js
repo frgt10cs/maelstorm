@@ -264,36 +264,14 @@ let dialogGuiModule = (function () {
     let messageSendBtn;
     let messageTextBox;    
 
-    let smallDeviceMenuInit = function () {
-        let dialogListContainer = document.getElementById("dialogListContainer");
-        let openedDialogContainer = document.getElementById("openedDialogContainer");
-
-        let openDialogListBtn = document.getElementById("openDialogListBtn");
-        let openOpenedDialogBtn = document.getElementById("openOpenedDialogBtn");
-
-        openDialogListBtn.onclick = function () {
-            dialogListContainer.className = dialogListContainer.className.replace("d-none", "d-block");
-            openedDialogContainer.className = openedDialogContainer.className.replace("d-flex", "d-none");
-            openOpenedDialogBtn.className = openOpenedDialogBtn.className.replace("bg-dark-5", "bg-dark-2");
-            openDialogListBtn.className = openDialogListBtn.className.replace("bg-dark-2", "bg-dark-5");
-        }
-
-        openOpenedDialogBtn.onclick = function () {
-            dialogListContainer.className = dialogListContainer.className.replace("d-block", "d-none");
-            openedDialogContainer.className = openedDialogContainer.className.replace("d-none", "d-flex");
-            openOpenedDialogBtn.className = openOpenedDialogBtn.className.replace("bg-dark-2", "bg-dark-5");
-            openDialogListBtn.className = openDialogListBtn.className.replace("bg-dark-5", "bg-dark-2");
-        }
-    }
+    
 
     return {
         init: function () {            
             dialogTitleDiv = document.getElementById("dialogInfoTitle");
             dialogStatusDiv = document.getElementById("dialogInfoStatus");
             messageTextBox = document.getElementById("messageTextBox");
-            messageSendBtn = document.getElementById("messageSendBtn");  
-            if (window.screen.width < 992)
-                smallDeviceMenuInit();
+            messageSendBtn = document.getElementById("messageSendBtn");            
         },
 
         createDialogLi: function (dialog) {

@@ -44,12 +44,12 @@
 
     let getDialogByInterlocutorId = function (interlocutorId) {
         return dialogs.find(function (dialog) { return dialog.interlocutorId === interlocutorId; });
-    };
+    };   
 
     return {
 
         init: function () {
-            dialogsGuiModule.init();                      
+            dialogsGuiModule.init();          
         },
 
         getDialogById: function (id) {
@@ -77,12 +77,7 @@
             return dialog !== null && dialog !== undefined;
         },
 
-        getDialogsOffset: function () { return dialogs.length; },
-
-        findMessage: async function () {
-            let message = dialogsGuiModule.getSearchMessageValue();
-            let results = await apiModule.findMessageAsync();
-        }
+        getDialogsOffset: function () { return dialogs.length; }        
     };
 })();
 
@@ -90,15 +85,13 @@ let dialogsGuiModule = (function () {
 
     let dialogsContainer,
         messagesPanelsContainer,
-        uploadingInfo,
-        searchMessageTextBox;
+        uploadingInfo;        
 
     return {
         init: function () {            
             dialogsContainer = document.getElementById("dialogs");            
             messagesPanelsContainer = document.getElementById("panelsInner");
-            uploadingInfo = document.getElementById("uploading");
-            searchMessageTextBox = document.getElementById("searchMessageTextBox");
+            uploadingInfo = document.getElementById("uploading");            
         },                
         
         getDialogsContainer: function () { return dialogsContainer; },        
@@ -123,8 +116,6 @@ let dialogsGuiModule = (function () {
 
         toTheTop: function (dialog) {
             dialogsContainer.insertBefore(dialog.element, dialogsContainer.firstChild);
-        },
-
-        getSearchMessageValue: function () { return searchMessageTextBox.value; }
+        }
     };
 })();

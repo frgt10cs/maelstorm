@@ -38,7 +38,43 @@ function initStaticModules(fingerprint) {
     signalRModule.init(fingerprint);    
     sessionModule.init();    
     userModule.init();    
-    settingsModule.init();    
+    settingsModule.init();   
+    if (window.screen.width < 992)
+        initSmallDeviceMenu();
+}
+
+function initSmallDeviceMenu() {
+    let dialogListContainer = document.getElementById("dialogListContainer");
+    let openedDialogContainer = document.getElementById("openedDialogContainer");
+
+    let openDialogListBtn = document.getElementById("openDialogListBtn");
+    let openOpenedDialogBtn = document.getElementById("openOpenedDialogBtn");
+    let openSettingsBtn = document.getElementById("openSettingsBtn");
+
+    let currentBtn = openDialogListBtn;
+    let currentContainer = dialogListContainer;
+
+    function openContainer(btn, container) {
+        currentBtn.className = currentBtn.className.replace("bg-dark-5", "bg-dark-2");
+        currentContainer.className = currentContainer.className.replace("d-flex", "d-none");
+
+        btn.className = btn.className.replace("bg-dark-2", "bg-dark-5");
+        container.className = container.className.replace("d-none", "d-flex");
+        currentBtn = btn;
+        currentContainer = container;
+    }
+
+    openDialogListBtn.onclick = function () {
+        openContainer(openDialogListBtn, dialogListContainer);        
+    }
+
+    openOpenedDialogBtn.onclick = function () {
+        openContainer(openOpenedDialogBtn, openedDialogContainer);        
+    }
+
+    openSettingsBtn.onclick = function () {
+        openContainer(openSettingsBtn, settingsGuiModule.getSettingsContainer());         
+    }
 }
 
 function main() {

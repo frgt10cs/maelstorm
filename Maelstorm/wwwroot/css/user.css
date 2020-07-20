@@ -197,22 +197,22 @@
     width: 100%;
 }
 
-#settingsPanel {
-    position: fixed;
+#settingsContainer {
     display: flex;
-    align-items: center;
-    top: 0px;
-    height: 100vh;    
     z-index: 99;
+    width: 100%;
 }
 
-#settingsContainer {
-    height: 100vh;
+#settingsTitle {
+    display: none;
+}
+
+#settingsInnerContainer {
     display: flex;
-    flex-direction: column;    
+    flex-direction: column;
     background-color: rgba(0,0,0,0.6);
     z-index: 999;
-    width: calc(100% - 50px);    
+    width: 100%;
 }
 
 @media screen and (min-width: 992px){
@@ -220,11 +220,22 @@
         top: 0.5rem;
         height: calc(100% - 1.5rem);
     }
-    #settingsContainer{
+
+    #settingsInnerContainer {
+        width: 331px !important;
+        height: 100vh;
+    }
+
+    #settingsContainer {
+        right: -331px;
+        position: fixed;
+        top: 0px;
+        height: 100vh;
         width: 331px !important;
     }
-    #settingsPanel {
-        right: -331px;
+
+    #settingsTitle{
+        display: block;
     }
 }
 

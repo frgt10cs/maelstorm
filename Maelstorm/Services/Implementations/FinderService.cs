@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Maelstorm.Entities;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -17,11 +19,6 @@ namespace Maelstorm.Services.Implementations
         {
             this.context = context;
             this.signalRSessionService = signalRSessionService;
-        }
-
-        public async Task<List<MessageSearchResult>> FindMessageAsync(string message)
-        {
-            var request = "";
         }
 
         public async Task<List<UserFindInfoDTO>> FindUserByLoginAsync(string login)

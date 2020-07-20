@@ -7,6 +7,9 @@ namespace Maelstorm.Dtos
 {
     public class MessageSearchResult
     {
+        public int DialogId { get; set; }
+        public string Text { get; set; }
+        public int AuthorId { get; set; }
         public int InterlocutorId { get; set; }
         public string Title { get; set; }
         public string Avatar { get; set; }
