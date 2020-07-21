@@ -10,7 +10,6 @@
     }
 }
 
-// nezavisimo
 function InIntoView(inner, element) {
     var elementTop = element.offsetTop,
         elementBottom = elementTop + element.offsetHeight,

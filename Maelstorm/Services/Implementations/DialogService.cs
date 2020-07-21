@@ -30,15 +30,14 @@ namespace Maelstorm.Services.Implementations
 {
     public class DialogService : IDialogService
     {
-        private ISignalRSessionService sesServ;
-        private MaelstormContext context;
-        private ILogger<MaelstormContext> logger;        
-        private IHubContext<MessageHub> messHub;
-        private IRedisCacheClient cache;
-        private IHttpContextAccessor httpContext;
-        private ISQLService sqlService;
-        private ICryptographyService cryptoService;
-        private readonly int userId;
+        private readonly ISignalRSessionService sesServ;
+        private readonly MaelstormContext context;
+        private readonly ILogger<MaelstormContext> logger;
+        private readonly IHubContext<MessageHub> messHub;
+        private readonly IRedisCacheClient cache;
+        private readonly IHttpContextAccessor httpContext;
+        private readonly ISQLService sqlService;
+        private readonly ICryptographyService cryptoService;        
         private readonly JsonSerializerSettings serializerSettings;
 
         public DialogService(MaelstormContext context, ILogger<MaelstormContext> logger,
@@ -52,8 +51,7 @@ namespace Maelstorm.Services.Implementations
             this.httpContext = httpContext;
             this.sesServ = sesServ;
             this.sqlService = sqlService;
-            this.cryptoService = cryptoService;
-            userId = httpContext.HttpContext.GetUserId();
+            this.cryptoService = cryptoService;            
             serializerSettings = new JsonSerializerSettings();
             serializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
         }        
@@ -79,7 +77,7 @@ namespace Maelstorm.Services.Implementations
             return dialog;
         }
 
-        private async Task<Dialog> GetOrCreateDialogAsync(int interlocutorId)
+        private async Task<Dialog> GetOrCreateDialogAsync(int userId, int interlocutorId)
         {
             Dialog dialog;
             int[] ids = { userId, interlocutorId };
@@ -109,10 +107,10 @@ namespace Maelstorm.Services.Implementations
             return null;
         }
 
-        public async Task<ServiceResult> SendDialogMessageAsync(MessageSendDTO model)
+        public async Task<ServiceResult> SendDialogMessageAsync(int userId, MessageSendDTO model)
         {            
             ServiceResult result = new ServiceResult();
-            Dialog dialog = await GetOrCreateDialogAsync(model.TargetId);
+            Dialog dialog = await GetOrCreateDialogAsync(userId, model.TargetId);
             if (dialog != null)
             {
                 if (!dialog.IsClosed)
@@ -136,13 +134,13 @@ namespace Maelstorm.Services.Implementations
                 }
                 else
                 {
-                    result.SetFail("Диалог заблокирован");
+                    result.SetFail("Dialog was closed");
                     logger.LogWarning($"Trying to send message in closed dialog. AuthorId: {userId} To: {model.TargetId}");
                 }
             }
             else
             {
-                result.SetFail("Диалог не существует");
+                result.SetFail("Dialog doesn't exists");
                 logger.LogWarning($"Trying to send message in dialog that doesn't exist. AuthorId: {userId} To: {model.TargetId}");
             }
             return result;
@@ -189,7 +187,7 @@ namespace Maelstorm.Services.Implementations
             await messHub.Clients.Clients(connectionIds).SendAsync("MessageWasReaded", conversationId, messageId);
         }
 
-        public async Task SetMessageAsReaded(int messageId)
+        public async Task SetMessageAsReaded(int userId, int messageId)
         {
             if (messageId <= 0)
                 return;
@@ -246,7 +244,7 @@ namespace Maelstorm.Services.Implementations
             .ToListAsync();
         }
 
-        public async Task<List<MessageDTO>> GetReadedDialogMessagesAsync(int dialogId, int offset, int count)
+        public async Task<List<MessageDTO>> GetReadedDialogMessagesAsync(int userId, int dialogId, int offset, int count)
         {
             if (!(dialogId > 0 && offset >= 0 && count > 0 && count <= 100)) return null;
             List<MessageDTO> messages = null;
@@ -258,7 +256,7 @@ namespace Maelstorm.Services.Implementations
             return messages;
         }
 
-        public async Task<List<MessageDTO>> GetUnreadedDialogMessagesAsync(int dialogId, int offset, int count)
+        public async Task<List<MessageDTO>> GetUnreadedDialogMessagesAsync(int userId, int dialogId, int offset, int count)
         {
             if (!(dialogId > 0 && count > 0 && count <= 100)) return null;
             List<MessageDTO> messages = null;
@@ -273,7 +271,7 @@ namespace Maelstorm.Services.Implementations
         #endregion
 
         #region Uploading dialogs
-        public async Task<List<DialogDTO>> GetDialogsAsync(int offset, int count)
+        public async Task<List<DialogDTO>> GetDialogsAsync(int userId, int offset, int count)
         {
             List<DialogDTO> models = new List<DialogDTO>();
             User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -308,15 +306,15 @@ namespace Maelstorm.Services.Implementations
             return models;
         }               
 
-        public async Task<DialogDTO> GetDialogAsync(int interlocutorId)
+        public async Task<DialogDTO> GetOrCreateDialogAsync(int userId, int interlocutorId)
         {
             DialogDTO model = null;
             User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user != null)
             {               
-                Dialog dialog = await GetOrCreateDialogAsync(interlocutorId);
-                User targetUser = await context.Users.FirstOrDefaultAsync(u => u.Id == interlocutorId);
-                if (targetUser != null)
+                Dialog dialog = await GetOrCreateDialogAsync(userId, interlocutorId);
+                User interlocutor = await context.Users.FirstOrDefaultAsync(u => u.Id == interlocutorId);
+                if (interlocutor != null)
                 {
                     string sqlQuery = "select d.Id as Id, d.SaltBase64 as Salt, " +
                         "case when d.FirstUserId = @interlocutorId then d.EncryptedSecondCryptoKey else d.EncryptedFirstCryptoKey end as EncryptedKey, " +

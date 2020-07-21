@@ -7,5 +7,6 @@ public interface ISessionService
 {
     Task<bool> IsSessionClosedAsync(string userId, string sessionId);
     public Task<List<SessionDTO>> GetSessionsAsync(int userId);
+    public Task<SessionDTO> GetSessionAsync(int userId, int sessionId);
     public Task CloseSessionAsync(int userId, string sessionId, bool banDevice = false);
 }
