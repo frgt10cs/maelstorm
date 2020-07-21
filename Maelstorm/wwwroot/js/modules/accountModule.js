@@ -107,7 +107,7 @@
         sessionGuiModule.clearSessionsContainer();
         sessionStorage.clear();
         localStorage.clear();        
-        settingsGuiModule.closeSettingsPanel();
+        settingsGuiModule.closeSettingsContainer();
         layoutGuiModule.hideNavOptions();
         accountGuiModule.openLogin();
     }

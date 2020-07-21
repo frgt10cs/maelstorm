@@ -1,15 +1,28 @@
 ﻿.form {
     display: none;
     position: fixed;
-    z-index: 99;
-    top: 25%;
-    left: 50%;
+    z-index: 9999;
     -webkit-transform: translate(-50%, 0%);
+    left: 50%;
     transform: translate(-50%, 0%);
     background-color: #2A2A2C;
     padding: 10px 20px;
-    border: 3px solid #1F1F21;
-    width: 250px;
+    border: 3px solid #1F1F21;    
+    width: 100%;
+    height: 100%;
+    top: 0;
+}
+
+.formInner{
+    width: 100%;
+    padding: 10px;
+}
+
+.secure-icon{
+    width: 80px;
+    height: 80px;
+    display: block;
+    margin: 0 auto;    
 }
 
 input:-webkit-autofill,
@@ -41,6 +54,7 @@ select:-webkit-autofill:focus {
     color: white;
     font-size: 20px;
     padding: 5px 0px;
+    margin-bottom: 0.5rem;
 }
 
 .btnLink {
@@ -55,4 +69,12 @@ select:-webkit-autofill:focus {
 .formError {
     color:#D82323;
     padding-bottom:0.5rem;
+}
+
+@media screen and (min-width: 992px){
+    .form {
+        width: 250px;
+        height: auto;
+        top: 25%;        
+    }
 }
