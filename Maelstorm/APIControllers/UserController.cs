@@ -7,21 +7,20 @@ using System.Threading.Tasks;
 namespace Maelstorm.APIControllers
 {
     [Authorize]
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
-    public class UserController:ControllerBase
+    public class UserController : ControllerBase
     {
         private IUserService userService;
         public UserController(IUserService userService)
         {
             this.userService = userService;
-        }        
+        }
 
-        [HttpGet]
-        [ActionName("Users")]
-        public async Task<UserInfoDTO> GetUserInfo(int userId)
+        [HttpGet("{id}")]        
+        public async Task<UserInfoDTO> GetUserInfo(int id)
         {
-            return await userService.GetUserInfoAsync(userId);
+            return await userService.GetUserInfoAsync(id);
         }
     }
 }

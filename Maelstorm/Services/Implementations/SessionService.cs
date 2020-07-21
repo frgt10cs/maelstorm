@@ -9,6 +9,7 @@ using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 
 public class SessionService : ISessionService
@@ -16,11 +17,13 @@ public class SessionService : ISessionService
     private IRedisCacheClient cache;
     private MaelstormContext context;
     private ISignalRSessionService signalSessionServ;
-    public SessionService(IRedisCacheClient cache, MaelstormContext context, ISignalRSessionService signalSessionServ)
+    private ILogger<SessionService> logger;
+    public SessionService(IRedisCacheClient cache, MaelstormContext context, ISignalRSessionService signalSessionServ, ILogger<SessionService> logger)
     {
         this.cache = cache;
         this.context = context;
         this.signalSessionServ = signalSessionServ;
+        this.logger = logger;
     }
     public async Task<bool> IsSessionClosedAsync(string userId, string sessionId)
     {        
@@ -28,10 +31,10 @@ public class SessionService : ISessionService
                 !string.IsNullOrEmpty(await cache.Db2.GetAsync<string>(sessionId));
     }
 
-    public async Task<List<SessionDTO>> GetSessionsAsync(int userId)
+    public async Task<List<SessionDTO>> GetSessionsAsync(int userId, int offset, int count)
     {
         List<SessionDTO> models = new List<SessionDTO>();
-        var sessions = context.Sessions.Where(s => s.UserId == userId);
+        var sessions = context.Sessions.Where(s => s.UserId == userId).Skip(offset).Take(count);
         var connectionIds = await cache.Db0.HashValuesAsync<string>(userId.ToString());
         var signalRSessions = (await cache.Db1.GetAllAsync<SignalRSession>(connectionIds)).Values;
         foreach (Session session in sessions)
@@ -62,5 +65,28 @@ public class SessionService : ISessionService
         }
         context.Sessions.Remove(session);
         await context.SaveChangesAsync();
+    }
+
+    public async Task<SessionDTO> GetSessionAsync(int userId, string sessionId)
+    {
+        var session = await context.Sessions.FirstOrDefaultAsync(s => s.SessionId == sessionId);
+        SessionDTO sessionInfo = null;
+
+
+        if (session.UserId == userId)
+        {
+            var connectionIds = await cache.Db0.HashValuesAsync<string>(userId.ToString());
+            var signalRSession = (await cache.Db1.GetAllAsync<SignalRSession>(connectionIds)).Values.FirstOrDefault(s => s.SessionId == sessionId);
+            sessionInfo = new SessionDTO()
+            {
+                Session = session,
+                SignalRSession = signalRSession
+            };            
+        }
+        else
+        {
+            logger.LogWarning($"User {userId} tried to get {session.UserId} session");
+        }        
+        return sessionInfo;
     }
 }

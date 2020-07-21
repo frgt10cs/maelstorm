@@ -11,9 +11,6 @@ namespace Maelstorm.Services.Interfaces
 {
     public interface IAuthenticationService
     {
-        Task<ServiceResult> AuthenticateAsync(AuthenticationDTO model, string ip);
-        Task<ServiceResult> RefreshToken(RefreshTokenDTO model, string ip);
-        TokensDTO CreateTokens(Claim[] claims);
-        JwtValidationResult ValidateToken(string token, bool doesExpiredTokenThrowException = false);
+        Task<ServiceResult> AuthenticateAsync(AuthenticationDTO model, string ip);                
     }
 }

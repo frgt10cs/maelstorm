@@ -12,18 +12,13 @@ using Newtonsoft.Json;
 using System.Data.SqlClient;
 using System.Data;
 using Microsoft.Extensions.Logging;
-using System.IO;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Serialization;
 using Maelstorm.Hubs;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.AspNetCore.Http;
-using Maelstorm.Extensions;
 using System.Data.Common;
-using Microsoft.Data.Sqlite;
 using System.Security.Cryptography;
-using System.Text;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace Maelstorm.Services.Implementations
@@ -54,9 +49,11 @@ namespace Maelstorm.Services.Implementations
             this.cryptoService = cryptoService;            
             serializerSettings = new JsonSerializerSettings();
             serializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-        }        
+        }
 
-        private async Task<Dialog> CreateDialog(int firstUserId, int secondUserId, bool isClosed = false)
+        #region Dialog creating
+
+        public async Task<Dialog> CreateDialog(int firstUserId, int secondUserId, bool isClosed = false)
         {
             using var rsa = RSA.Create(2048);                      
             User firstUser = await context.Users.FirstOrDefaultAsync(u => u.Id == firstUserId);
@@ -65,7 +62,7 @@ namespace Maelstorm.Services.Implementations
             {
                 FirstUserId = firstUserId,
                 SecondUserId = secondUserId,
-                IsClosed = isClosed                               
+                IsClosed = isClosed
             };
             byte[] secret = cryptoService.GetRandomBytes(16);
             byte[] salt = cryptoService.GetRandomBytes(16);
@@ -77,20 +74,7 @@ namespace Maelstorm.Services.Implementations
             return dialog;
         }
 
-        private async Task<Dialog> GetOrCreateDialogAsync(int userId, int interlocutorId)
-        {
-            Dialog dialog;
-            int[] ids = { userId, interlocutorId };
-            Array.Sort(ids);
-            dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.FirstUserId == ids[0] && d.SecondUserId == ids[1]);
-            if (dialog == null)
-            {
-                dialog = await CreateDialog(ids[0], ids[1]);
-                context.Dialogs.Add(dialog);
-                await context.SaveChangesAsync();
-            }
-            return dialog;
-        }
+        #endregion
 
         #region Message sending
         private string ValidateMessageText(string text)
@@ -107,10 +91,10 @@ namespace Maelstorm.Services.Implementations
             return null;
         }
 
-        public async Task<ServiceResult> SendDialogMessageAsync(int userId, MessageSendDTO model)
+        public async Task<ServiceResult> SendDialogMessageAsync(int userId, int interlocutorId, MessageSendDTO model)
         {            
             ServiceResult result = new ServiceResult();
-            Dialog dialog = await GetOrCreateDialogAsync(userId, model.TargetId);
+            Dialog dialog = await GetOrCreateDialogAsync(userId, interlocutorId);
             if (dialog != null)
             {
                 if (!dialog.IsClosed)
@@ -135,20 +119,20 @@ namespace Maelstorm.Services.Implementations
                 else
                 {
                     result.SetFail("Dialog was closed");
-                    logger.LogWarning($"Trying to send message in closed dialog. AuthorId: {userId} To: {model.TargetId}");
+                    logger.LogWarning($"Trying to send message into closed dialog. From: {userId} To: {interlocutorId}");
                 }
             }
             else
             {
                 result.SetFail("Dialog doesn't exists");
-                logger.LogWarning($"Trying to send message in dialog that doesn't exist. AuthorId: {userId} To: {model.TargetId}");
+                logger.LogWarning($"Trying to send message into dialog that doesn't exist. From: {userId} To: {interlocutorId}");
             }
             return result;
         }
 
         #endregion
 
-        #region Pushes
+        #region Notifications
         private async Task NewMessagePush(DialogMessage message)
         {
             var messageViewModel = new MessageDTO()
@@ -268,6 +252,8 @@ namespace Maelstorm.Services.Implementations
             return messages;
         }
 
+      
+
         #endregion
 
         #region Uploading dialogs
@@ -327,7 +313,7 @@ namespace Maelstorm.Services.Implementations
                         "group by DialogId) x "+
                         "on DialogMessages.DateOfSending = x.DateOfSending and DialogMessages.DialogId = @dialogId) as m "+
                         "on d.id = m.DialogId "+
-                        "inner join (select* from users where id = @interlocutorId) u on d.SecondUserId = u.Id or d.FirstUserId = u.Id";
+                        "inner join (select * from users where id = @interlocutorId) u on d.SecondUserId = u.Id or d.FirstUserId = u.Id";
                     model = (await sqlService.ExecuteAsync(sqlQuery,
                         new DbParameter[] 
                         {
@@ -340,7 +326,22 @@ namespace Maelstorm.Services.Implementations
             return model;
         }
 
-        public async Task<List<DialogDTO>> DialogViewModelSqlCoverter(DbDataReader reader)
+        private async Task<Dialog> GetOrCreateDialogAsync(int userId, int interlocutorId)
+        {
+            Dialog dialog;
+            int[] ids = { userId, interlocutorId };
+            Array.Sort(ids);
+            dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.FirstUserId == ids[0] && d.SecondUserId == ids[1]);
+            if (dialog == null)
+            {
+                dialog = await CreateDialog(ids[0], ids[1]);
+                context.Dialogs.Add(dialog);
+                await context.SaveChangesAsync();
+            }
+            return dialog;
+        }
+
+        private async Task<List<DialogDTO>> DialogViewModelSqlCoverter(DbDataReader reader)
         {
             var models = new List<DialogDTO>();
             while (await reader.ReadAsync())

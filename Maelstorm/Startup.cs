@@ -20,6 +20,7 @@ using StackExchange.Redis.Extensions.Core.Abstractions;
 using StackExchange.Redis.Extensions.Newtonsoft;
 using StackExchange.Redis.Extensions.Core.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Localization;
 
 namespace Maelstorm
 {
@@ -52,6 +53,7 @@ namespace Maelstorm
             services.AddScoped<ISessionService, SessionService>();
             services.AddScoped<ISignalRSessionService, SignalRSessionService>();
             services.AddScoped<ICryptographyService, CryptographyService>();
+            services.AddScoped<IJwtService, JwtService>();
 
             #region Jwt / session validation
 
@@ -98,14 +100,7 @@ namespace Maelstorm
                     };
 
                     jwtBearerOptions.Events = new JwtBearerEvents
-                    {
-                        //OnMessageReceived = context =>
-                        //{
-                        //    var path = context.HttpContext.Request.Path;
-                        //    if (path.StartsWithSegments("/messageHub"))
-                        //        context.Success();
-                        //    return Task.CompletedTask;                            
-                        //},
+                    {                       
                         OnAuthenticationFailed = context =>
                         {
                             if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
@@ -138,14 +133,21 @@ namespace Maelstorm
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime, IRedisCacheClient cache)
         {
             applicationLifetime.ApplicationStopping.Register(()=> {
+                Console.WriteLine("Flushing Redis DBs and closing connections...");
                 try
                 {
+                    IRedisDatabase currentDb;                    
                     for (int i = 0; i < 16; i++)
-                        cache.GetDb(i).FlushDbAsync();
+                    {
+                        currentDb = cache.GetDb(i);
+                        currentDb.FlushDbAsync();
+                        currentDb.Database.Multiplexer.Close();                        
+                    }                        
+                    Console.WriteLine("Completed");                    
                 }
                 catch (Exception ex)
                 {
-                    
+                    Console.WriteLine("Error: " + ex.Message);
                 }                
             });
 

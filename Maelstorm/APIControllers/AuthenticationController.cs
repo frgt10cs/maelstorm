@@ -2,15 +2,11 @@
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Maelstorm.APIControllers
-{
-    [Authorize]
-    [Route("api/[controller]/[action]")]
+{    
+    [Route("api/[controller]")]
     [ApiController]
     public class AuthenticationController:ControllerBase
     {
@@ -20,8 +16,7 @@ namespace Maelstorm.APIControllers
             this.authenticationService = authenticationService;
         }
 
-        [HttpPost]
-        [ActionName("authenticate")]
+        [HttpPost]        
         public async Task<ServiceResult> Authenticate([FromBody]AuthenticationDTO model)
         {
             var result = ModelState.IsValid ?

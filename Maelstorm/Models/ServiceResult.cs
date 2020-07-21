@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 namespace Maelstorm.Models
 {
     /// <summary>
-    /// Хранит результат выполнения кода. По дефолту - успешно
+    /// Store result of excecuting code. Success by default
     /// </summary>
     public class ServiceResult
     {
@@ -55,6 +56,15 @@ namespace Maelstorm.Models
             IsSuccessful = false;
             foreach (string str in errors)
                 ErrorMessages.Add(str);
+        }
+
+        /// <summary>
+        /// Converts object to JSON in writes into data
+        /// </summary>
+        /// <param name="data"></param>
+        public void WriteData(object data)
+        {
+            Data = JsonConvert.SerializeObject(data);
         }
        
     }

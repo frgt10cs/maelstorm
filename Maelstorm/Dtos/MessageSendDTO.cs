@@ -11,11 +11,7 @@ namespace Maelstorm.Dtos
     {             
         [Required]
         [Range(0, int.MaxValue)]
-        public int BindId { get; set; }
-
-        [Required]
-        [Range(1, int.MaxValue)]
-        public int TargetId { get; set; }
+        public int BindId { get; set; }        
 
         [MaxLength(4096)]
         [MinLength(2)]
