@@ -2,10 +2,8 @@
 using Maelstorm.Services.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using StackExchange.Redis;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -13,15 +11,15 @@ using System.Threading.Tasks;
 namespace Maelstorm.Hubs
 {      
     public class MessageHub : Hub
-    {
-        private IAuthenticationService authServ;
+    {        
         private ILogger<MessageHub> logger;
         private IRedisCacheClient cache;
-        public MessageHub(IAuthenticationService authServ, ILogger<MessageHub> logger, IRedisCacheClient cache)
-        {
-            this.authServ = authServ;
+        private IJwtService jwtService;
+        public MessageHub(ILogger<MessageHub> logger, IRedisCacheClient cache, IJwtService jwtService)
+        {            
             this.logger = logger;
             this.cache = cache;           
+            this.jwtService = jwtService;
         }
 
         private async Task<bool> IsAuthorized()
@@ -39,7 +37,7 @@ namespace Maelstorm.Hubs
         {
             if (!await IsAuthorized())
             {                
-                var result = authServ.ValidateToken(token, true);
+                var result = jwtService.ValidateToken(token, true);
                 if (result.IsSuccessful)
                 {
                     ClaimsIdentity identity = new ClaimsIdentity(result.Principial.Identity);

@@ -26,7 +26,7 @@ namespace Maelstorm.Entities
         {
             AuthorId = authorId;
             DialogId = dialogId;
-            TargetId = model.TargetId;
+            TargetId = model.InterlocutorId;
             DateOfSending = DateTime.Now;
             Text = model.Text;
             IVBase64 = model.IVBase64;

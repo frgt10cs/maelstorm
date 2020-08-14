@@ -24,14 +24,15 @@ namespace Maelstorm.Services.Implementations
     {
         private MaelstormContext context;       
         private ILogger<AccountService> logger;
-        private ICryptographyService cryptoServ;
+        private ICryptographyService cryptoService;
         private IJwtService jwtService;
 
-        public AuthenticationService(MaelstormContext context, ILogger<AccountService> logger, IJwtService jwtService)
+        public AuthenticationService(MaelstormContext context, ILogger<AccountService> logger, IJwtService jwtService, ICryptographyService cryptoService)
         {            
             this.context = context;                      
             this.logger = logger;
             this.jwtService = jwtService;
+            this.cryptoService = cryptoService;
         }
 
         public async Task<ServiceResult> AuthenticateAsync(AuthenticationDTO model, string ip)
@@ -49,7 +50,7 @@ namespace Maelstorm.Services.Implementations
                         session = new Session()
                         {
                             UserId = user.Id,
-                            SessionId = cryptoServ.GetRandomBase64String(),
+                            SessionId = cryptoService.GetRandomBase64String(),
                             FingerPrint = model.Fingerprint,
                             CreatedAt = DateTime.Now,
                             App = model.App,
@@ -98,7 +99,7 @@ namespace Maelstorm.Services.Implementations
             var user = await context.Users.FirstOrDefaultAsync(u => u.Nickname == model.Login);
             if (user != null)
             {
-                string hash = Convert.ToBase64String(cryptoServ.Pbkdf2(model.Password, Convert.FromBase64String(user.PasswordSalt)));
+                string hash = Convert.ToBase64String(cryptoService.Pbkdf2(model.Password, Convert.FromBase64String(user.PasswordSalt)));
                 if (hash == user.PasswordHash)
                 {
                     result = user;

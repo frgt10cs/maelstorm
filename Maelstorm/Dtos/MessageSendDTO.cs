@@ -8,13 +8,16 @@ using System.Threading.Tasks;
 namespace Maelstorm.Dtos
 {
     public class MessageSendDTO
-    {             
+    {                     
+        [Required]
+        public int InterlocutorId { get; set; }
+
         [Required]
         [Range(0, int.MaxValue)]
         public int BindId { get; set; }        
 
         [MaxLength(4096)]
-        [MinLength(2)]
+        [MinLength(1)]
         [Required]        
         public string Text { get; set; }
         

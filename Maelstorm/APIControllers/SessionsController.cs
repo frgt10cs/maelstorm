@@ -33,7 +33,7 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet("{sessionId}")]        
-        public async Task<SessionDTO> GetSessions(int sessionId)
+        public async Task<SessionDTO> GetSessions(string sessionId)
         {
             return await sessionService.GetSessionAsync(HttpContext.GetUserId(), sessionId);
         }

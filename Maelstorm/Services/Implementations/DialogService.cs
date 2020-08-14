@@ -28,21 +28,19 @@ namespace Maelstorm.Services.Implementations
         private readonly ISignalRSessionService sesServ;
         private readonly MaelstormContext context;
         private readonly ILogger<MaelstormContext> logger;
-        private readonly IHubContext<MessageHub> messHub;
-        private readonly IRedisCacheClient cache;
+        private readonly IHubContext<MessageHub> messHub;        
         private readonly IHttpContextAccessor httpContext;
         private readonly ISQLService sqlService;
         private readonly ICryptographyService cryptoService;        
         private readonly JsonSerializerSettings serializerSettings;
 
         public DialogService(MaelstormContext context, ILogger<MaelstormContext> logger,
-            IHubContext<MessageHub> messHub, IRedisCacheClient cache, IHttpContextAccessor httpContext,
+            IHubContext<MessageHub> messHub, IHttpContextAccessor httpContext,
             ISignalRSessionService sesServ, ISQLService sqlService, ICryptographyService cryptoService)
         {
             this.context = context;
             this.logger = logger;            
-            this.messHub = messHub;
-            this.cache = cache;
+            this.messHub = messHub;            
             this.httpContext = httpContext;
             this.sesServ = sesServ;
             this.sqlService = sqlService;
@@ -91,10 +89,10 @@ namespace Maelstorm.Services.Implementations
             return null;
         }
 
-        public async Task<ServiceResult> SendDialogMessageAsync(int userId, int interlocutorId, MessageSendDTO model)
+        public async Task<ServiceResult> SendDialogMessageAsync(int userId, MessageSendDTO model)
         {            
             ServiceResult result = new ServiceResult();
-            Dialog dialog = await GetOrCreateDialogAsync(userId, interlocutorId);
+            Dialog dialog = await GetOrCreateDialogAsync(userId, model.InterlocutorId);
             if (dialog != null)
             {
                 if (!dialog.IsClosed)
@@ -119,13 +117,13 @@ namespace Maelstorm.Services.Implementations
                 else
                 {
                     result.SetFail("Dialog was closed");
-                    logger.LogWarning($"Trying to send message into closed dialog. From: {userId} To: {interlocutorId}");
+                    logger.LogWarning($"Trying to send message into closed dialog. From: {userId} To: {model.InterlocutorId}");
                 }
             }
             else
             {
                 result.SetFail("Dialog doesn't exists");
-                logger.LogWarning($"Trying to send message into dialog that doesn't exist. From: {userId} To: {interlocutorId}");
+                logger.LogWarning($"Trying to send message into dialog that doesn't exist. From: {userId} To: {model.InterlocutorId}");
             }
             return result;
         }
@@ -287,12 +285,12 @@ namespace Maelstorm.Services.Implementations
                         new SqlParameter("@offsetCount", offset),
                         new SqlParameter("@count", count)
                     },
-                    DialogViewModelSqlCoverter);                                              
+                    DialogDTOSqlCoverter);                                              
             }
             return models;
         }               
 
-        public async Task<DialogDTO> GetOrCreateDialogAsync(int userId, int interlocutorId)
+        public async Task<DialogDTO> GetDialogAsync(int userId, int interlocutorId)
         {
             DialogDTO model = null;
             User user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -320,7 +318,7 @@ namespace Maelstorm.Services.Implementations
                             new SqlParameter("@interlocutorId", interlocutorId),
                             new SqlParameter("@dialogId",dialog.Id)
                         },
-                        DialogViewModelSqlCoverter)).FirstOrDefault();                   
+                        DialogDTOSqlCoverter)).FirstOrDefault();                   
                 }
             }
             return model;
@@ -341,7 +339,7 @@ namespace Maelstorm.Services.Implementations
             return dialog;
         }
 
-        private async Task<List<DialogDTO>> DialogViewModelSqlCoverter(DbDataReader reader)
+        private async Task<List<DialogDTO>> DialogDTOSqlCoverter(DbDataReader reader)
         {
             var models = new List<DialogDTO>();
             while (await reader.ReadAsync())
