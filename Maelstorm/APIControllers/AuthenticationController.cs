@@ -17,12 +17,9 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpPost]        
-        public async Task<ServiceResult> Authenticate([FromBody]AuthenticationDTO model)
+        public async Task<ServiceResult> Authenticate(AuthenticationDTO model)
         {
-            var result = ModelState.IsValid ?
-                await authenticationService.AuthenticateAsync(model, HttpContext.Connection.RemoteIpAddress.ToString())
-                : new ServiceResult(ModelState);            
-            return result;
+            return await authenticationService.AuthenticateAsync(model, HttpContext.Connection.RemoteIpAddress.ToString());
         }
     }
 }

@@ -21,6 +21,7 @@ using StackExchange.Redis.Extensions.Newtonsoft;
 using StackExchange.Redis.Extensions.Core.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Localization;
+using StackExchange.Redis;
 
 namespace Maelstorm
 {
@@ -54,6 +55,8 @@ namespace Maelstorm
             services.AddScoped<ISignalRSessionService, SignalRSessionService>();
             services.AddScoped<ICryptographyService, CryptographyService>();
             services.AddScoped<IJwtService, JwtService>();
+
+            services.AddCors();
 
             #region Jwt / session validation
 
@@ -126,29 +129,37 @@ namespace Maelstorm
             services.AddSignalR();
 
             var redisConfiguration = Configuration.GetSection("Redis").Get<RedisConfiguration>();            
-            services.AddStackExchangeRedisExtensions<NewtonsoftSerializer>(redisConfiguration);            
+            services.AddStackExchangeRedisExtensions<NewtonsoftSerializer>(redisConfiguration);
+
+            //services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(""));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime, IRedisCacheClient cache)
         {
             applicationLifetime.ApplicationStopping.Register(()=> {
-                Console.WriteLine("Flushing Redis DBs and closing connections...");
-                try
+                if (cache.Db0.Database.Multiplexer.IsConnected)
                 {
-                    IRedisDatabase currentDb;                    
-                    for (int i = 0; i < 16; i++)
+                    Console.Write("Flushing Redis DBs and closing connections: ");                    
+                    try
                     {
-                        currentDb = cache.GetDb(i);
-                        currentDb.FlushDbAsync();
-                        currentDb.Database.Multiplexer.Close();                        
-                    }                        
-                    Console.WriteLine("Completed");                    
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error: " + ex.Message);
-                }                
+                        Console.Write('|');
+                        IRedisDatabase currentDb;
+                        for (int i = 0; i < 16; i++)
+                        {
+                            currentDb = cache.GetDb(i);                      
+                            currentDb.FlushDbAsync();
+                            // TODO: exception: sequence contains no elements
+                            //currentDb.Database.Multiplexer.Dispose();
+                            Console.Write('█');
+                        }
+                        Console.WriteLine("| - Completed");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("\nError: " + ex.Message);
+                    }
+                }                            
             });
 
             if (env.IsDevelopment())
@@ -160,6 +171,8 @@ namespace Maelstorm
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            app.UseCors(builder => builder.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader());
 
             app.UseHttpsRedirection();
             app.UseRouting();
@@ -177,7 +190,7 @@ namespace Maelstorm
                 context.Response.Headers.Add("X-Frame-Options", "DENY");
                 context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
                 await next();
-            });
+            });            
 
             app.UseEndpoints(routes =>
             {

@@ -15,9 +15,7 @@ namespace Maelstorm
     {
         public static void Main(string[] args)
         {
-            var configLogger = NLogBuilder.ConfigureNLog("nlog.config");
-            configLogger.ThrowExceptions = true;
-            var logger = configLogger.GetCurrentClassLogger();               
+            var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
             try
             {
                 logger.Debug("Init main");
