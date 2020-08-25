@@ -12,18 +12,18 @@ namespace Maelstorm.Models
     /// </summary>
     public class ServiceResult
     {
-        public bool IsSuccessful { get; set; }
+        public bool Ok { get; set; }
         public List<string> ErrorMessages { get; set; } = new List<string>();
-        public string Data { get; set; }
+        public object Data { get; set; }
 
         public ServiceResult()
         {
-            IsSuccessful = true;
+            Ok = true;
         }
 
         public ServiceResult(bool result)
         {
-            IsSuccessful = result;
+            Ok = result;
         }
 
         public ServiceResult(ModelStateDictionary modelState)
@@ -48,12 +48,12 @@ namespace Maelstorm.Models
 
         public void SetSuccess()
         {
-            IsSuccessful = true;
+            Ok = true;
         }
 
         public void SetFail(params string[] errors)
         {
-            IsSuccessful = false;
+            Ok = false;
             foreach (string str in errors)
                 ErrorMessages.Add(str);
         }

@@ -110,7 +110,7 @@ namespace Maelstorm.Services.Implementations
                             BindId = model.BindId,
                             SentAt = message.DateOfSending
                         };                        
-                        result.Data = JsonConvert.SerializeObject(confirm, serializerSettings);
+                        result.Data = confirm;
                         await NewMessagePush(message);
                     }
                 }
@@ -350,8 +350,8 @@ namespace Maelstorm.Services.Implementations
                     SaltBase64 = reader.GetString(1),
                     EncryptedKey = reader.GetString(2),
                     InterlocutorId = reader.GetInt32(3),
-                    Image = reader.GetString(4),
-                    Title = reader.GetString(5),
+                    InterlocutorImage = reader.GetString(4),
+                    InterlocutorNickname = reader.GetString(5),
                     LastMessage = new MessageDTO()
                     {
                         Id = reader.GetInt32(6),

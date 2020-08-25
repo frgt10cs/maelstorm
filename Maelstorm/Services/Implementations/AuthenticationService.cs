@@ -17,6 +17,8 @@ using Newtonsoft.Json;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Text;
+using MaelstormDTO.Requests;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -35,26 +37,26 @@ namespace Maelstorm.Services.Implementations
             this.cryptoService = cryptoService;
         }
 
-        public async Task<ServiceResult> AuthenticateAsync(AuthenticationDTO model, string ip)
+        public async Task<ServiceResult> AuthenticateAsync([FromBody]AuthenticationRequest authenticationRequest, string ip)
         {
             ServiceResult result = new ServiceResult();
-            User user = await LoginAsync(model);
+            User user = await LoginAsync(authenticationRequest);
             if (user != null)
             {
-                BannedDevice device = await context.BannedDevices.FirstOrDefaultAsync(d => d.UserId == user.Id && d.Fingerprint == model.Fingerprint);
+                BannedDevice device = await context.BannedDevices.FirstOrDefaultAsync(d => d.UserId == user.Id && d.Fingerprint == authenticationRequest.Fingerprint);
                 if (device == null)
                 {
-                    Session session = await context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id && s.FingerPrint == model.Fingerprint);
+                    Session session = await context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id && s.FingerPrint == authenticationRequest.Fingerprint);
                     if (session == null)
                     {
                         session = new Session()
                         {
                             UserId = user.Id,
                             SessionId = cryptoService.GetRandomBase64String(),
-                            FingerPrint = model.Fingerprint,
+                            FingerPrint = authenticationRequest.Fingerprint,
                             CreatedAt = DateTime.Now,
-                            App = model.App,
-                            OsCpu = model.OsCpu,
+                            App = authenticationRequest.App,
+                            OsCpu = authenticationRequest.Os,
                             // ExpiresInDays = 30,                            
                         };
                         context.Sessions.Add(session);
@@ -63,7 +65,7 @@ namespace Maelstorm.Services.Implementations
                     {
                         new Claim("UserId", user.Id.ToString()),
                         new Claim("UserEmail", user.Email),
-                        new Claim("Fingerprint", model.Fingerprint),
+                        new Claim("Fingerprint", authenticationRequest.Fingerprint),
                         new Claim("Ip", ip),
                         new Claim("SessionId", session.SessionId)
                     });
@@ -78,8 +80,8 @@ namespace Maelstorm.Services.Implementations
                         PublicKey = user.PublicKey,
                         EncryptedPrivateKey = user.EncryptedPrivateKey,
                         Tokens = tokens 
-                    };
-                    result.Data = JsonConvert.SerializeObject(authResult);
+                    };                    
+                    result.Data = authResult;
                 }
                 else
                 {
@@ -93,13 +95,13 @@ namespace Maelstorm.Services.Implementations
             return result;
         }
 
-        private async Task<User> LoginAsync(AuthenticationDTO model)
+        private async Task<User> LoginAsync(AuthenticationRequest authenticationRequest)
         {
             User result = null;
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Nickname == model.Login);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Nickname == authenticationRequest.Login);
             if (user != null)
             {
-                string hash = Convert.ToBase64String(cryptoService.Pbkdf2(model.Password, Convert.FromBase64String(user.PasswordSalt)));
+                string hash = Convert.ToBase64String(cryptoService.Pbkdf2(authenticationRequest.Password, Convert.FromBase64String(user.PasswordSalt)));
                 if (hash == user.PasswordHash)
                 {
                     result = user;
@@ -111,7 +113,7 @@ namespace Maelstorm.Services.Implementations
             }
             else
             {
-                logger.LogWarning("Login failed. Incorrect email. Login: " + model.Login);
+                logger.LogWarning("Login failed. Incorrect email. Login: " + authenticationRequest.Login);
             }
             return result;
         }         

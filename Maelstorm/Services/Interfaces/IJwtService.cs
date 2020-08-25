@@ -1,5 +1,6 @@
 ﻿using Maelstorm.Dtos;
 using Maelstorm.Models;
+using MaelstormDTO.Requests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,6 @@ namespace Maelstorm.Services.Interfaces
     {
         JwtValidationResult ValidateToken(string token, bool getOnlyNotExpiredToken = false);
         TokensDTO CreateTokens(Claim[] claims);
-        Task<ServiceResult> RefreshToken(RefreshTokenDTO model, string ip);
+        Task<ServiceResult> RefreshToken(RefreshTokenRequest model, string ip);
     }
 }

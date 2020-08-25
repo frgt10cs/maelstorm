@@ -4,6 +4,7 @@ using Maelstorm.Dtos;
 using Maelstorm.Entities;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
+using MaelstormDTO.Requests;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -63,13 +64,13 @@ namespace Maelstorm.Services.Implementations
             return model;
         }
 
-        public async Task<ServiceResult> RefreshToken(RefreshTokenDTO model, string ip)
+        public async Task<ServiceResult> RefreshToken(RefreshTokenRequest refreshTokenRequest, string ip)
         {
             ServiceResult result = new ServiceResult();
-            JwtValidationResult validationResult = ValidateToken(model.Token);
+            JwtValidationResult validationResult = ValidateToken(refreshTokenRequest.AccessToken);
             if (validationResult.IsSuccessful && validationResult.IsTokenExpired)
             {
-                Session session = await context.Sessions.FirstOrDefaultAsync(s => s.RefreshToken == model.RefreshToken && s.FingerPrint == model.Fingerprint);
+                Session session = await context.Sessions.FirstOrDefaultAsync(s => s.RefreshToken == refreshTokenRequest.RefreshToken && s.FingerPrint == refreshTokenRequest.Fingerprint);
                 if (session != null)
                 {
                     var tokens = CreateTokens(new Claim[]
@@ -83,7 +84,7 @@ namespace Maelstorm.Services.Implementations
                     session.IpAddress = ip;
                     session.RefreshToken = tokens.RefreshToken;
                     await context.SaveChangesAsync();
-                    result.WriteData(tokens);
+                    result.Data = tokens;
                     return result;
                 }
                 else
@@ -95,7 +96,7 @@ namespace Maelstorm.Services.Implementations
             else
             {
                 result.SetFail("Invalid token");
-                logger.LogWarning("Token wasn't refresh. Invalid value or token is not expired: " + model.Token);
+                logger.LogWarning("Token wasn't refresh. Invalid value or token is not expired: " + refreshTokenRequest.AccessToken);
             }
             return result;
         }

@@ -18,12 +18,11 @@ namespace Maelstorm.APIControllers
     {
         private readonly ISessionService sessionService;
         private readonly ISignalRSessionService signalRSessionService;
-        private readonly IJwtService jwtService;
-        public SessionsController(ISessionService sessionService, ISignalRSessionService signalRSessionService, IJwtService jwtService)
+        
+        public SessionsController(ISessionService sessionService, ISignalRSessionService signalRSessionService)
         {
             this.sessionService = sessionService;
-            this.signalRSessionService = signalRSessionService;
-            this.jwtService = jwtService;
+            this.signalRSessionService = signalRSessionService;            
         }
 
         [HttpGet]       
@@ -48,14 +47,6 @@ namespace Maelstorm.APIControllers
         public async Task CloseSessionAsync([FromBody]CloseSessionDTO closeSessionDTO)
         {
             await sessionService.CloseSessionAsync(HttpContext.GetUserId(), closeSessionDTO.SessionId, closeSessionDTO.BanDevice);
-        }
-
-        [HttpPost("refresh")]
-        public async Task<ServiceResult> RefreshToken([FromBody]RefreshTokenDTO model)
-        {
-            ServiceResult result = ModelState.IsValid? await jwtService.RefreshToken(model, HttpContext.Connection.RemoteIpAddress.ToString())
-                : new ServiceResult(ModelState);            
-            return result;
         }
     }
 }
