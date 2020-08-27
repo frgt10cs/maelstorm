@@ -15,8 +15,8 @@ namespace XApiTests.cs
     {
         JwtOptions IOptions<JwtOptions>.Value => new JwtOptions()
         {
-            Audience = "hui",
-            Issuer = "huier",
+            Audience = "mmm",
+            Issuer = "mmm",
             EncryptingKey = new String('e', 40),
             SigningKey = new String('s', 40),
             ExpiryMinutes = 1
@@ -27,12 +27,13 @@ namespace XApiTests.cs
     //{
     //    MaelstormContext context;
     //    AuthenticationService serv;
+    //    CryptographyService cryptographyService;
 
     //    public AuthenticationServiceTest()
     //    {
-    //        context = new FakeContext().CreateContext();
-    //        serv = new AuthenticationService(context, new PasswordService(new FakeConfig()), new JwtOpt(),
-    //            new SigningSymmetricKey(new String('s', 100)), new EncryptingSymmetricKey(new String('e', 100)));
+    //        cryptographyService = new CryptographyService(new FakeConfig());
+    //        context = FakeContext.Context();
+    //        serv = new AuthenticationService(context, null, new JwtService(context, new JwtOpt(), cryptographyService), cryptographyService);
 
     //    }
 
@@ -44,9 +45,9 @@ namespace XApiTests.cs
     //            new Claim("123","456"),
     //            new Claim("789","1010")
     //        };
-    //        string token1 = serv.CreateToken(claims);            
+    //        string token1 = serv.CreateToken(claims);
     //        string token2 = serv.CreateToken(claims);
     //        Assert.NotEqual(token1, token2);
-    //    }       
+    //    }
     //}
 }

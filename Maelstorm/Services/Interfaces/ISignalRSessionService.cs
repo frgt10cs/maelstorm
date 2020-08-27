@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Maelstorm.Dtos;
 using Maelstorm.Models;
+using MaelstormDTO.Responses;
 
 namespace Maelstorm.Services.Interfaces
 {
@@ -14,6 +15,6 @@ namespace Maelstorm.Services.Interfaces
         public Task<IEnumerable<string>> GetConnectionIdsAsync(string userId);
         public Task CloseSessionAsync(string connectionId);
         public Task<bool> IsOnlineAsync(string userId);
-        public Task<List<OnlineStatusDTO>> GetOnlineStatusesAsync(params int[] ids);
+        public Task<List<OnlineStatus>> GetOnlineStatusesAsync(params int[] ids);
     }
 }

@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using MaelstormDTO.Requests;
 
 namespace Maelstorm.Dtos
 {
     // включает в себя данные об используемом приложении для общения с апи
-    public class AuthenticationApiDTO:AuthenticationDTO
+    public class AuthenticationApiDTO:AuthenticationRequest
     {
         [Required(ErrorMessage = "AppId is required")]                      
         public long AppId { get; set; }

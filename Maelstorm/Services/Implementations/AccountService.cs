@@ -11,6 +11,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using MaelstormDTO.Requests;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -30,14 +31,14 @@ namespace Maelstorm.Services.Implementations
             this.cryptoService = cryptoService;
         }
 
-        public async Task<ServiceResult> RegistrationAsync(RegistrationDTO model)
+        public async Task<ServiceResult> RegistrationAsync(RegistrationRequest registrationRequest)
         {            
             var result = new ServiceResult();           
-            if (await EmailIsUnique(model.Email))
+            if (await EmailIsUnique(registrationRequest.Email))
             {
-                if(await NicknameIsUnique(model.Nickname))
+                if(await NicknameIsUnique(registrationRequest.Nickname))
                 {                    
-                    User user = CreateUser(model);
+                    User user = CreateUser(registrationRequest);
                     context.Users.Add(user);
                     await context.SaveChangesAsync();
                     Token token = CreateToken(user.Id, 0);
@@ -92,14 +93,14 @@ namespace Maelstorm.Services.Implementations
             return user == null;
         }               
         
-        private User CreateUser(RegistrationDTO model)
+        private User CreateUser(RegistrationRequest model)
         {
             using var rsa = RSA.Create(2048);            
             User user = new User()
             {
                 DateOfRegistration = DateTime.Now,
                 Email = model.Email,
-                Nickname = model.Nickname,                
+                Nickname = model.Nickname,             
                 Role = 0,
                 Status = "Stupid status from community",
                 Image = "defaultUser.png",
@@ -123,7 +124,7 @@ namespace Maelstorm.Services.Implementations
             return user;
         }
 
-        private Token CreateToken(int userId, byte action)
+        private Token CreateToken(long userId, byte action)
         {
             Token token = new Token()
             {

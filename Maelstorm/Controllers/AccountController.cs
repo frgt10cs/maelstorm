@@ -6,6 +6,7 @@ using Maelstorm.Services.Interfaces;
 using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using MaelstormDTO.Requests;
 
 namespace Maelstorm.Controllers
 {
@@ -42,12 +43,12 @@ namespace Maelstorm.Controllers
 
         [HttpPost]
         [ActionName("Registration")]
-        public async Task<IActionResult> Registration(RegistrationDTO model)
+        public async Task<IActionResult> Registration(RegistrationRequest registrationRequest)
         {
             ServiceResult result;
             if (ModelState.IsValid)
             {
-                result = await accServ.RegistrationAsync(model);               
+                result = await accServ.RegistrationAsync(registrationRequest);               
             }
             else
             {

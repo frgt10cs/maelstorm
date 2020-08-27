@@ -5,6 +5,7 @@ using Maelstorm.Entities;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
 using MaelstormDTO.Requests;
+using MaelstormDTO.Responses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -36,7 +37,7 @@ namespace Maelstorm.Services.Implementations
             this.logger = logger;
         }
 
-        public TokensDTO CreateTokens(Claim[] claims)
+        public Tokens CreateTokens(Claim[] claims)
         {
             DateTime generationTime = DateTime.Now;
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -55,7 +56,7 @@ namespace Maelstorm.Services.Implementations
                     encryptingKeys.SigningAlgorithm,
                     encryptingKeys.EncryptingAlgorithm)
             );
-            TokensDTO model = new TokensDTO()
+            Tokens model = new Tokens()
             {
                 AccessToken = tokenHandler.WriteToken(token),
                 RefreshToken = cryptoServ.GetRandomBase64String(),

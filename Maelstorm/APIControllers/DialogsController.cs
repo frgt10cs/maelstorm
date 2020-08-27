@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dialog = MaelstormDTO.Responses.Dialog;
 
 namespace Maelstorm.APIControllers
 {
@@ -24,13 +25,13 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet]
-        public async Task<List<DialogDTO>> GetDialogs(int offset, int count)
+        public async Task<List<Dialog>> GetDialogs(int offset, int count)
         {
             return await dialogService.GetDialogsAsync(HttpContext.GetUserId(), offset, count);
         }
 
         [HttpGet("{interlocutorId}")]
-        public async Task<DialogDTO> GetDialog(int interlocutorId)
+        public async Task<Dialog> GetDialog(int interlocutorId)
         {
             return await dialogService.GetDialogAsync(HttpContext.GetUserId(), interlocutorId);
         }        

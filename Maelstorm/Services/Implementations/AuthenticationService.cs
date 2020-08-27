@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 using System.Text;
 using MaelstormDTO.Requests;
 using Microsoft.AspNetCore.Mvc;
+using MaelstormDTO.Responses;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -61,7 +62,7 @@ namespace Maelstorm.Services.Implementations
                         };
                         context.Sessions.Add(session);
                     }
-                    TokensDTO tokens = jwtService.CreateTokens(new Claim[]
+                    Tokens tokens = jwtService.CreateTokens(new Claim[]
                     {
                         new Claim("UserId", user.Id.ToString()),
                         new Claim("UserEmail", user.Email),
@@ -73,7 +74,7 @@ namespace Maelstorm.Services.Implementations
                     session.Location = GetLocationByIp(ip);
                     session.RefreshToken = tokens.RefreshToken;                    
                     await context.SaveChangesAsync();
-                    var authResult = new AuthenticationResultDTO() 
+                    var authResult = new AuthenticationResult() 
                     {
                         IVBase64 = user.IVBase64,
                         KeySaltBase64 = user.KeySalt,

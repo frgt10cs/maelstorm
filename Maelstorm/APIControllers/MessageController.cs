@@ -2,9 +2,12 @@
 using Maelstorm.Extensions;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
+using MaelstormDTO.Requests;
+using MaelstormDTO.Responses;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Message = MaelstormDTO.Responses.Message;
 
 namespace Maelstorm.APIControllers
 {
@@ -17,24 +20,21 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet("old")]
-        public async Task<List<MessageDTO>> GetReadedMessages(int dialogId, int offset, int count)
+        public async Task<List<Message>> GetReadedMessages(int dialogId, int offset, int count)
         {
             return await dialogService.GetReadedDialogMessagesAsync(HttpContext.GetUserId(), dialogId, offset, count);
         }
 
         [HttpGet("new")]
-        public async Task<List<MessageDTO>> GetUnreadedMessages(int dialogId, int offset, int count)
+        public async Task<List<Message>> GetUnreadedMessages(int dialogId, int offset, int count)
         {
             return await dialogService.GetUnreadedDialogMessagesAsync(HttpContext.GetUserId(), dialogId, offset, count);
         }
 
         [HttpPost]
-        public async Task<ServiceResult> SendMessage(MessageSendDTO message)
+        public async Task<DeliveredMessageInfo> SendMessage(SendMessageRequest message)
         {
-            ServiceResult result = ModelState.IsValid ?
-                await dialogService.SendDialogMessageAsync(HttpContext.GetUserId(), message)
-               : new ServiceResult(ModelState);
-            return result;
+            return await dialogService.SendDialogMessageAsync(HttpContext.GetUserId(), message);
         }
     }
 }

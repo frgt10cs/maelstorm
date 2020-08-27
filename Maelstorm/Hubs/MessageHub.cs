@@ -1,5 +1,6 @@
 ﻿using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
+using MaelstormDTO.Responses;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis.Extensions.Core.Abstractions;

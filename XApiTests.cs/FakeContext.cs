@@ -14,17 +14,26 @@ namespace XApiTests.cs
         public static FakeContext Context() => db;
         private FakeContext():base(null)
         {
-            Users.Add(new User()
+            string[] nicknames = new string[]
             {
-                DateOfRegistration = DateTime.Now,
-                Email = "123@mail.com",
-                EmailIsConfirmed = true,
-                Nickname = "loshok",
-                PasswordHash = "ksksksksksks",
-                Role = 0,
-                PasswordSalt = "1234",
-                Status = "zhopa"
-            });
+                "chep",
+                "chepa"
+            };
+
+            foreach(string nickname in nicknames)
+            {
+                Users.Add(new User()
+                {
+                    DateOfRegistration = DateTime.Now,
+                    Email = $"{nickname}@gmail.com",
+                    EmailIsConfirmed = true,
+                    Nickname = nickname,
+                    PasswordHash = "ksksksksksks",
+                    Role = 0,
+                    PasswordSalt = "1234",
+                    Status = "hi!"
+                });
+            }
             SaveChanges();            
         }
 

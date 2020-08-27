@@ -7,6 +7,7 @@ using Maelstorm.Dtos;
 using Maelstorm.Entities;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
+using MaelstormDTO.Responses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -31,15 +32,15 @@ public class SessionService : ISessionService
                 !string.IsNullOrEmpty(await cache.Db2.GetAsync<string>(sessionId));
     }
 
-    public async Task<List<SessionDTO>> GetSessionsAsync(int userId, int offset, int count)
+    public async Task<List<UserSessions>> GetSessionsAsync(int userId, int offset, int count)
     {
-        List<SessionDTO> models = new List<SessionDTO>();
+        List<UserSessions> models = new List<UserSessions>();
         var sessions = context.Sessions.Where(s => s.UserId == userId).Skip(offset).Take(count);
         var connectionIds = await cache.Db0.HashValuesAsync<string>(userId.ToString());
         var signalRSessions = (await cache.Db1.GetAllAsync<SignalRSession>(connectionIds)).Values;
-        foreach (Session session in sessions)
+        foreach (var session in sessions)
         {
-            models.Add(new SessionDTO()
+            models.Add(new UserSessions()
             {
                 Session = session,
                 SignalRSession = signalRSessions?.FirstOrDefault(s => s.Fingerprint == session.FingerPrint)
@@ -67,17 +68,17 @@ public class SessionService : ISessionService
         await context.SaveChangesAsync();
     }
 
-    public async Task<SessionDTO> GetSessionAsync(int userId, string sessionId)
+    public async Task<UserSessions> GetSessionAsync(int userId, string sessionId)
     {
-        var session = await context.Sessions.FirstOrDefaultAsync(s => s.SessionId == sessionId);
-        SessionDTO sessionInfo = null;
+        var session = await context.Sessions.FindAsync(sessionId);
+        UserSessions sessionInfo = null;
 
 
         if (session.UserId == userId)
         {
             var connectionIds = await cache.Db0.HashValuesAsync<string>(userId.ToString());
             var signalRSession = (await cache.Db1.GetAllAsync<SignalRSession>(connectionIds)).Values.FirstOrDefault(s => s.SessionId == sessionId);
-            sessionInfo = new SessionDTO()
+            sessionInfo = new UserSessions()
             {
                 Session = session,
                 SignalRSession = signalRSession

@@ -8,7 +8,7 @@ namespace Maelstorm.Dtos
 {
     public class UserFindInfoDTO
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string Nickname { get; set; }
         public string MiniAvatar { get; set; }
 

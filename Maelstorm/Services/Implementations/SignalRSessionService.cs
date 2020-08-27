@@ -2,6 +2,7 @@
 using Maelstorm.Hubs;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
+using MaelstormDTO.Responses;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis.Extensions.Core.Abstractions;
@@ -48,12 +49,12 @@ namespace Maelstorm.Services.Implementations
             return await cache.Db0.ExistsAsync(userId.ToString());
         }
 
-        public async Task<List<OnlineStatusDTO>> GetOnlineStatusesAsync(params int[] ids)
+        public async Task<List<OnlineStatus>> GetOnlineStatusesAsync(params int[] ids)
         {
-            var statuses = new List<OnlineStatusDTO>();
+            var statuses = new List<OnlineStatus>();
             foreach (int id in ids)
             {
-                statuses.Add(new OnlineStatusDTO()
+                statuses.Add(new OnlineStatus()
                 {
                     UserId = id,
                     IsOnline = await IsOnlineAsync(id.ToString())

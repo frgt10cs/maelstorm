@@ -2,6 +2,7 @@
 using Maelstorm.Extensions;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
+using MaelstormDTO.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -26,19 +27,19 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet]       
-        public async Task<List<SessionDTO>> GetSessions(int offset, int count)
+        public async Task<List<UserSessions>> GetSessions(int offset, int count)
         {
             return await sessionService.GetSessionsAsync(HttpContext.GetUserId(), offset, count);
         }
 
         [HttpGet("{sessionId}")]        
-        public async Task<SessionDTO> GetSessions(string sessionId)
+        public async Task<UserSessions> GetSessions(string sessionId)
         {
             return await sessionService.GetSessionAsync(HttpContext.GetUserId(), sessionId);
         }
 
         [HttpGet("online-statuses/{ids}")]     
-        public async Task<List<OnlineStatusDTO>> GetOnlineStatuses(int[] ids)
+        public async Task<List<OnlineStatus>> GetOnlineStatuses(int[] ids)
         {
             return await signalRSessionService.GetOnlineStatusesAsync(ids);
         }
