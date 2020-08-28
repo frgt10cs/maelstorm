@@ -28,7 +28,7 @@ namespace Maelstorm.APIControllers
         [HttpPost("refresh")]
         public async Task<ServiceResult> Refresh([FromBody]RefreshTokenRequest refreshTokenRequest)
         {
-            ServiceResult result = ModelState.IsValid ? await jwtService.RefreshToken(refreshTokenRequest, HttpContext.Connection.RemoteIpAddress.ToString())
+            ServiceResult result = ModelState.IsValid ? await jwtService.RefreshTokenAsync(refreshTokenRequest, HttpContext.Connection.RemoteIpAddress.ToString())
                : new ServiceResult(ModelState);
             return result;
         }

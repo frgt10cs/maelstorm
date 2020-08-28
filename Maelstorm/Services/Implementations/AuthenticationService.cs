@@ -26,11 +26,11 @@ namespace Maelstorm.Services.Implementations
     public class AuthenticationService : IAuthenticationService
     {
         private MaelstormContext context;       
-        private ILogger<AccountService> logger;
+        private ILogger<AuthenticationService> logger;
         private ICryptographyService cryptoService;
         private IJwtService jwtService;
 
-        public AuthenticationService(MaelstormContext context, ILogger<AccountService> logger, IJwtService jwtService, ICryptographyService cryptoService)
+        public AuthenticationService(MaelstormContext context, ILogger<AuthenticationService> logger, IJwtService jwtService, ICryptographyService cryptoService)
         {            
             this.context = context;                      
             this.logger = logger;

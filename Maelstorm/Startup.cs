@@ -22,6 +22,7 @@ using StackExchange.Redis.Extensions.Core.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Localization;
 using StackExchange.Redis;
+using Microsoft.IdentityModel.Logging;
 
 namespace Maelstorm
 {
@@ -72,11 +73,8 @@ namespace Maelstorm
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
 
-            // раскоментить при ошибках с jwt и всякого рода шифрования, чтобы видеть инфу об ошибке
-            //IdentityModelEventSource.ShowPII = true;
-            
-            IJwtSigningDecodingKey signingDecodingKey = (IJwtSigningDecodingKey)signingKey;
-            IJwtEncryptingDecodingKey encryptingDecodingKey = (IJwtEncryptingDecodingKey)encryptionEncodingKey;
+            IJwtSigningDecodingKey signingDecodingKey = signingKey;
+            IJwtEncryptingDecodingKey encryptingDecodingKey = encryptionEncodingKey;
             services
                 .AddAuthentication(options =>
                 {
@@ -165,6 +163,7 @@ namespace Maelstorm
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                IdentityModelEventSource.ShowPII = true;
             }
             else
             {

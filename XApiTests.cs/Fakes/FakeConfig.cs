@@ -4,10 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace XApiTests.cs
+namespace XApiTests.Fakes
 {
     class FakeConfig : IConfiguration
-    {
+    {        
+        public FakeConfig()
+        {
+
+        }
+
         public string this[string key] { get
             {
                 switch (key)

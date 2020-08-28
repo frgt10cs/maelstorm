@@ -6,13 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace XApiTests.cs
+namespace XApiTests.Fakes
 {
-    class FakeContext : MaelstormContext
-    {
-        private static readonly FakeContext db = new FakeContext();
-        public static FakeContext Context() => db;
-        private FakeContext():base(null)
+    public class FakeContext : MaelstormContext
+    {        
+        public FakeContext():base(new DbContextOptions<MaelstormContext>())
         {
             string[] nicknames = new string[]
             {
@@ -20,7 +18,8 @@ namespace XApiTests.cs
                 "chepa"
             };
 
-            foreach(string nickname in nicknames)
+            #region Adding users
+            foreach (string nickname in nicknames)
             {
                 Users.Add(new User()
                 {
@@ -33,8 +32,9 @@ namespace XApiTests.cs
                     PasswordSalt = "1234",
                     Status = "hi!"
                 });
-            }
-            SaveChanges();            
+            }            
+            SaveChanges();
+            #endregion
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

@@ -24,10 +24,10 @@ namespace Maelstorm.Services.Implementations
         private ISigningKeys signingKeys;
         private IEncryptingKeys encryptingKeys;
         private ICryptographyService cryptoServ;
-        private ILogger<AccountService> logger;
+        private ILogger<JwtService> logger;
 
         public JwtService(MaelstormContext context, IOptions<JwtOptions> jwtOptions, ICryptographyService cryptoServ,
-            ISigningKeys signingKeys, IEncryptingKeys encryptingKeys, ILogger<AccountService> logger)
+            ISigningKeys signingKeys, IEncryptingKeys encryptingKeys, ILogger<JwtService> logger)
         {
             this.context = context;
             this.jwtOptions = jwtOptions;
@@ -39,7 +39,7 @@ namespace Maelstorm.Services.Implementations
 
         public Tokens CreateTokens(Claim[] claims)
         {
-            DateTime generationTime = DateTime.Now;
+            var generationTime = DateTime.Now;
             var tokenHandler = new JwtSecurityTokenHandler();
             JwtSecurityToken token = tokenHandler.CreateJwtSecurityToken(
                 issuer: jwtOptions.Value.Issuer,
@@ -65,7 +65,7 @@ namespace Maelstorm.Services.Implementations
             return model;
         }
 
-        public async Task<ServiceResult> RefreshToken(RefreshTokenRequest refreshTokenRequest, string ip)
+        public async Task<ServiceResult> RefreshTokenAsync(RefreshTokenRequest refreshTokenRequest, string ip)
         {
             ServiceResult result = new ServiceResult();
             JwtValidationResult validationResult = ValidateToken(refreshTokenRequest.AccessToken);

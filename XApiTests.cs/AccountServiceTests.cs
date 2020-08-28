@@ -1,74 +1,68 @@
-using Maelstorm.Controllers;
-using Maelstorm.Database;
-using Maelstorm.Services.Implementations;
-using Maelstorm.Services.Interfaces;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Primitives;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using MaelstormDTO.Requests;
+using XApiTests.Fakes;
 using Xunit;
 
 namespace XApiTests.cs
 {
-    //public class AccountServiceTests
-    //{
-    //    IConfiguration config;
-    //    IEmailService emailService;        
-    //    MaelstormRepository context;
-    //    IAccountService accServ;
+    [CollectionDefinition("Fake context")]
+    public class FakeContextCollectionDefinition : ICollectionFixture<FakeContext> { }
 
-    //    public AccountServiceTests()
-    //    {
-    //        context = FakeContext.Context();            
-    //        config = new FakeConfig();
-    //        emailService = new EmailService();            
-    //        passServ = new PasswordService(config);
-    //        accServ = new AccountService(context, passServ, emailService, config, null);
-    //    }
+    [Collection("Fake context")]
+    public class AccountServiceTests
+    {        
+        private FakeServiceFactory fakeServiceFactory;
+        public AccountServiceTests(FakeContext context)
+        {            
+            fakeServiceFactory = new FakeServiceFactory(context);
+        }        
 
-    //    [Fact]
-    //    public void EmailIsNotUniq()
-    //    {
-    //       var result = accServ.RegistrationAsync(new RegistrationViewModel()
-    //       {
-    //           ConfirmPassword = "1234567890",
-    //           Email = "123@mail.com",
-    //           Nickname = "joker",
-    //           Password = "1234567890"
-    //       }).Result;
-    //       Assert.Equal("Email is already exist", result.ErrorMessages[0]);
-    //    }
+        [Fact]
+        public void EmailIsNotUniq()
+        {
+            var accountService = fakeServiceFactory.CreateAccountService();            
 
-    //    [Fact]        
-    //    public void NicknameIsNotUniq()
-    //    {
-    //       var result = accServ.RegistrationAsync(new RegistrationViewModel()
-    //       {
-    //           ConfirmPassword = "1234567890",
-    //           Email = "1233@mail.com",
-    //           Nickname = "loshok",
-    //           Password = "1234567890"
-    //       }).Result;
-    //       Assert.Equal("Nickname is already exist", result.ErrorMessages[0]);
-    //    }
-        
-    //    [Fact]
-    //    public void SuccesfulRegistration()
-    //    {
-    //       int userCount = context.Users.Count();
-    //       int tokenCount = context.Tokens.Count();
-    //       var result = accServ.RegistrationAsync(new RegistrationViewModel()
-    //       {
-    //           ConfirmPassword = "1234567890",
-    //           Email = "1234@mail.com",
-    //           Nickname = "losh0k",
-    //           Password = "1234567890pop"
-    //       }).Result;
-    //       Assert.True(result.IsSuccessful);
-    //       Assert.Empty(result.ErrorMessages);
-    //       Assert.Equal(1, context.Users.Count() - userCount);
-    //       Assert.Equal(1, context.Tokens.Count() - tokenCount);
-    //    }
-    //}
+            var result = accountService.RegistrationAsync(new RegistrationRequest()
+            {                
+                Email = "chep@gmail.com",
+                Nickname = "joker",
+                Password = "1234567890",
+                ConfirmPassword = "1234567890",
+            }).Result;
+            
+            Assert.Equal("Email is already exist", result.ErrorMessages[0]);            
+        }
+
+        [Fact]
+        public void NicknameIsNotUniq()
+        {
+            var accountService = fakeServiceFactory.CreateAccountService();
+
+            var result = accountService.RegistrationAsync(new RegistrationRequest()
+            {
+                ConfirmPassword = "1234567890",
+                Email = "1233@mail.com",
+                Nickname = "chepa",
+                Password = "1234567890"
+            }).Result;           
+
+            Assert.Equal("Nickname is already exist", result.ErrorMessages[0]);            
+        }
+
+        [Fact]
+        public void SuccesfulRegistration()
+        {
+            var accountService = fakeServiceFactory.CreateAccountService();
+
+            var result = accountService.RegistrationAsync(new RegistrationRequest()
+            {
+                ConfirmPassword = "1234567890",
+                Email = "1234@mail.com",
+                Nickname = "turtle",
+                Password = "1234567890"
+            }).Result;
+            
+            Assert.True(result.Ok);
+            Assert.Empty(result.ErrorMessages);            
+        }
+    }
 }
