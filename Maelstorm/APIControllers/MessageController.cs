@@ -20,13 +20,13 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet("old")]
-        public async Task<List<Message>> GetReadedMessages(int dialogId, int offset, int count)
+        public async Task<List<Message>> GetReadedMessages([FromQuery]int dialogId, [FromQuery]int offset, [FromQuery]int count)
         {
             return await dialogService.GetReadedDialogMessagesAsync(HttpContext.GetUserId(), dialogId, offset, count);
         }
 
         [HttpGet("new")]
-        public async Task<List<Message>> GetUnreadedMessages(int dialogId, int offset, int count)
+        public async Task<List<Message>> GetUnreadedMessages([FromQuery]int dialogId, [FromQuery]int offset, [FromQuery]int count)
         {
             return await dialogService.GetUnreadedDialogMessagesAsync(HttpContext.GetUserId(), dialogId, offset, count);
         }

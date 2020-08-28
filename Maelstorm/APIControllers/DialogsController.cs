@@ -25,7 +25,7 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet]
-        public async Task<List<Dialog>> GetDialogs(int offset, int count)
+        public async Task<List<Dialog>> GetDialogs([FromQuery]int offset, [FromQuery]int count)
         {
             return await dialogService.GetDialogsAsync(HttpContext.GetUserId(), offset, count);
         }

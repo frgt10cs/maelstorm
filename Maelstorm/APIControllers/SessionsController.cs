@@ -2,6 +2,7 @@
 using Maelstorm.Extensions;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
+using MaelstormDTO.Requests;
 using MaelstormDTO.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +28,7 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet]       
-        public async Task<List<UserSessions>> GetSessions(int offset, int count)
+        public async Task<List<UserSessions>> GetSessions([FromQuery]int offset, [FromQuery]int count)
         {
             return await sessionService.GetSessionsAsync(HttpContext.GetUserId(), offset, count);
         }
@@ -45,7 +46,7 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpPost("close")]        
-        public async Task CloseSessionAsync([FromBody]CloseSessionDTO closeSessionDTO)
+        public async Task CloseSessionAsync([FromBody]CloseSessionRequest closeSessionDTO)
         {
             await sessionService.CloseSessionAsync(HttpContext.GetUserId(), closeSessionDTO.SessionId, closeSessionDTO.BanDevice);
         }
