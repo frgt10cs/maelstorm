@@ -1,10 +1,8 @@
 ﻿using Maelstorm.Database;
-using Maelstorm.Entities;
+using Maelstorm.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using XApiTests.cs;
 
 namespace XApiTests.Fakes
 {
@@ -12,29 +10,28 @@ namespace XApiTests.Fakes
     {        
         public FakeContext():base(new DbContextOptions<MaelstormContext>())
         {
+            var accountService = new FakeServiceFactory(this).CreateAccountService();
             string[] nicknames = new string[]
             {
                 "chep",
                 "chepa"
             };
-
-            #region Adding users
-            foreach (string nickname in nicknames)
+            foreach(var nickname in nicknames)
             {
-                Users.Add(new User()
-                {
-                    DateOfRegistration = DateTime.Now,
-                    Email = $"{nickname}@gmail.com",
-                    EmailIsConfirmed = true,
-                    Nickname = nickname,
-                    PasswordHash = "ksksksksksks",
-                    Role = 0,
-                    PasswordSalt = "1234",
-                    Status = "hi!"
-                });
-            }            
-            SaveChanges();
-            #endregion
+                AddUser(accountService, nickname);
+            }           
+            SaveChanges();            
+        }
+
+        private void AddUser(IAccountService accountService, string nickname)
+        {
+            accountService.RegistrationAsync(new MaelstormDTO.Requests.RegistrationRequest()
+            {
+                Nickname = nickname,
+                Email = $"{nickname}@gmail.com",
+                Password = "1234567890",
+                ConfirmPassword = "1234567890"
+            }).Wait();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

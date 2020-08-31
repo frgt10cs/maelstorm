@@ -1,10 +1,15 @@
 ﻿using Maelstorm.Crypto.Implementations;
+using Maelstorm.Hubs;
 using Maelstorm.Models;
 using Maelstorm.Services.Implementations;
 using Maelstorm.Services.Interfaces;
+using MaelstormDTO.Responses;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using StackExchange.Redis.Extensions.Core.Abstractions;
 using XApiTests.Fakes;
 
 namespace XApiTests.cs
@@ -94,6 +99,21 @@ namespace XApiTests.cs
             var cryptographyService = CreateCryptographyService();
             var accountService = new AccountService(context, emailService, config, cryptographyService);
             return accountService;
+        }
+
+        //public INotificationService CreateNotificationService()
+        //{
+        //    var notificatonService = new NotificationService()
+        //}
+
+        public IDialogService CreateDialogService()
+        {
+            var context = this.context ?? new FakeContext();
+            var dialogLogger = Mock.Of<ILogger<DialogService>>();                                               
+            var cryptographyService = CreateCryptographyService();            
+            var notificationService = Mock.Of<INotificationService>();
+            var dialogService = new DialogService(context, dialogLogger, cryptographyService, notificationService);
+            return dialogService;
         }
     }
 }

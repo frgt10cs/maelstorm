@@ -1,15 +1,10 @@
-﻿using Maelstorm.Crypto.Interfaces;
-using Maelstorm.Database;
+﻿using Maelstorm.Database;
 using Maelstorm.Models;
 using Maelstorm.Entities;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.Dtos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;

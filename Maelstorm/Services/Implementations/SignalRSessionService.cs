@@ -1,14 +1,9 @@
-﻿using Maelstorm.Dtos;
-using Maelstorm.Hubs;
-using Maelstorm.Models;
+﻿using Maelstorm.Hubs;
 using Maelstorm.Services.Interfaces;
 using MaelstormDTO.Responses;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis.Extensions.Core.Abstractions;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Maelstorm.Services.Implementations

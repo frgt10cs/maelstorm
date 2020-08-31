@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Maelstorm.Entities
@@ -19,5 +21,6 @@ namespace Maelstorm.Entities
         public string PublicKey { get; set; }
         public string EncryptedPrivateKey { get; set; }        
         public string IVBase64 { get; set; }
+        public IEnumerable<DialogUser> DialogUsers { get; set; }
     }
 }

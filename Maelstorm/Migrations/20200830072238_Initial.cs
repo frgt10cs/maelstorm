@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Maelstorm.Migrations
 {
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -22,39 +22,13 @@ namespace Maelstorm.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DialogMessages",
-                columns: table => new
-                {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    AuthorId = table.Column<long>(nullable: false),
-                    TargetId = table.Column<long>(nullable: false),
-                    DialogId = table.Column<long>(nullable: false),
-                    DateOfSending = table.Column<DateTime>(nullable: false),
-                    IsReaded = table.Column<bool>(nullable: false),
-                    IsVisibleForAuthor = table.Column<bool>(nullable: false),
-                    IsVisibleForOther = table.Column<bool>(nullable: false),
-                    Text = table.Column<string>(nullable: true),
-                    IVBase64 = table.Column<string>(nullable: true),
-                    ReplyId = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DialogMessages", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Dialogs",
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    FirstUserId = table.Column<int>(nullable: false),
-                    SecondUserId = table.Column<int>(nullable: false),
                     IsClosed = table.Column<bool>(nullable: false),
-                    SaltBase64 = table.Column<string>(nullable: true),
-                    EncryptedFirstCryptoKey = table.Column<string>(nullable: true),
-                    EncryptedSecondCryptoKey = table.Column<string>(nullable: true)
+                    SaltBase64 = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -120,6 +94,86 @@ namespace Maelstorm.Migrations
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "DialogUsers",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<long>(nullable: false),
+                    DialogId = table.Column<long>(nullable: false),
+                    UserEncryptedDialogKey = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DialogUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DialogUsers_Dialogs_DialogId",
+                        column: x => x.DialogId,
+                        principalTable: "Dialogs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DialogUsers_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AuthorId = table.Column<long>(nullable: false),
+                    DialogId = table.Column<long>(nullable: false),
+                    DateOfSending = table.Column<DateTime>(nullable: false),
+                    IsReaded = table.Column<bool>(nullable: false),
+                    IsVisibleForAuthor = table.Column<bool>(nullable: false),
+                    IsVisibleForOther = table.Column<bool>(nullable: false),
+                    Text = table.Column<string>(nullable: true),
+                    IVBase64 = table.Column<string>(nullable: true),
+                    ReplyId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Messages_Users_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Messages_Dialogs_DialogId",
+                        column: x => x.DialogId,
+                        principalTable: "Dialogs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DialogUsers_DialogId",
+                table: "DialogUsers",
+                column: "DialogId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DialogUsers_UserId",
+                table: "DialogUsers",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_AuthorId",
+                table: "Messages",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_DialogId",
+                table: "Messages",
+                column: "DialogId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -128,10 +182,10 @@ namespace Maelstorm.Migrations
                 name: "BannedDevices");
 
             migrationBuilder.DropTable(
-                name: "DialogMessages");
+                name: "DialogUsers");
 
             migrationBuilder.DropTable(
-                name: "Dialogs");
+                name: "Messages");
 
             migrationBuilder.DropTable(
                 name: "Sessions");
@@ -141,6 +195,9 @@ namespace Maelstorm.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Dialogs");
         }
     }
 }

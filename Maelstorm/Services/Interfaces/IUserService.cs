@@ -1,13 +1,10 @@
-﻿using Maelstorm.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using MaelstormDTO.Responses;
 using System.Threading.Tasks;
 
 namespace Maelstorm.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<UserInfoDTO> GetUserInfoAsync(int userId);               
+        Task<UserInfo> GetUserInfoAsync(int userId);               
     }
 }

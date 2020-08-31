@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Maelstorm.Migrations
 {
     [DbContext(typeof(MaelstormContext))]
-    [Migration("20200827064458_initial")]
-    partial class initial
+    [Migration("20200830072238_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -46,27 +46,40 @@ namespace Maelstorm.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("EncryptedFirstCryptoKey")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EncryptedSecondCryptoKey")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("FirstUserId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsClosed")
                         .HasColumnType("bit");
 
                     b.Property<string>("SaltBase64")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SecondUserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("Dialogs");
+                });
+
+            modelBuilder.Entity("Maelstorm.Entities.DialogUser", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<long>("DialogId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("UserEncryptedDialogKey")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DialogId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DialogUsers");
                 });
 
             modelBuilder.Entity("Maelstorm.Entities.Message", b =>
@@ -100,15 +113,16 @@ namespace Maelstorm.Migrations
                     b.Property<int>("ReplyId")
                         .HasColumnType("int");
 
-                    b.Property<long>("TargetId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Text")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("DialogMessages");
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("DialogId");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("Maelstorm.Entities.Token", b =>
@@ -218,6 +232,36 @@ namespace Maelstorm.Migrations
                     b.HasKey("SessionId");
 
                     b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("Maelstorm.Entities.DialogUser", b =>
+                {
+                    b.HasOne("Maelstorm.Entities.Dialog", "Dialog")
+                        .WithMany("DialogUsers")
+                        .HasForeignKey("DialogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Maelstorm.Entities.User", "User")
+                        .WithMany("DialogUsers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Maelstorm.Entities.Message", b =>
+                {
+                    b.HasOne("Maelstorm.Entities.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Maelstorm.Entities.Dialog", "Dialog")
+                        .WithMany("Messages")
+                        .HasForeignKey("DialogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

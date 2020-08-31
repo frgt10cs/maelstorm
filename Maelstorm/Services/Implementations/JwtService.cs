@@ -1,7 +1,5 @@
 ﻿using Maelstorm.Crypto.Interfaces;
 using Maelstorm.Database;
-using Maelstorm.Dtos;
-using Maelstorm.Entities;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
 using MaelstormDTO.Requests;

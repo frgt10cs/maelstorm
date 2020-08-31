@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Maelstorm.Crypto.Interfaces;
 using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
-using Maelstorm.Dtos;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MaelstormDTO.Requests;
 
 namespace Maelstorm.Controllers

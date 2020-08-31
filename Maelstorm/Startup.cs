@@ -20,8 +20,6 @@ using StackExchange.Redis.Extensions.Core.Abstractions;
 using StackExchange.Redis.Extensions.Newtonsoft;
 using StackExchange.Redis.Extensions.Core.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Localization;
-using StackExchange.Redis;
 using Microsoft.IdentityModel.Logging;
 
 namespace Maelstorm
@@ -49,13 +47,13 @@ namespace Maelstorm
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IDialogService, DialogService>();
             services.AddScoped<ISQLService, SQLService>();
-            //services.AddScoped<ISQLService, SQLiteService>();
-            services.AddScoped<IFinderService, FinderService>();
+            //services.AddScoped<ISQLService, SQLiteService>();            
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ISessionService, SessionService>();
             services.AddScoped<ISignalRSessionService, SignalRSessionService>();
             services.AddScoped<ICryptographyService, CryptographyService>();
             services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<INotificationService, NotificationService>();
 
             services.AddCors();
 

@@ -60,9 +60,17 @@ namespace XApiTests.cs
                 Nickname = "turtle",
                 Password = "1234567890"
             }).Result;
-            
+
+            var result2 = accountService.RegistrationAsync(new RegistrationRequest()
+            {
+                ConfirmPassword = "1234567890",
+                Email = "5678@mail.com",
+                Nickname = "turtle2",
+                Password = "1234567890"
+            }).Result;
+
             Assert.True(result.Ok);
-            Assert.Empty(result.ErrorMessages);            
+            Assert.True(result2.Ok);
         }
     }
 }

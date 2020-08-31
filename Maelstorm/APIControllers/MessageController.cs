@@ -1,6 +1,4 @@
-﻿using Maelstorm.Dtos;
-using Maelstorm.Extensions;
-using Maelstorm.Models;
+﻿using Maelstorm.Extensions;
 using Maelstorm.Services.Interfaces;
 using MaelstormDTO.Requests;
 using MaelstormDTO.Responses;
@@ -20,21 +18,21 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet("old")]
-        public async Task<List<Message>> GetReadedMessages([FromQuery]int dialogId, [FromQuery]int offset, [FromQuery]int count)
+        public async Task<IEnumerable<Message>> GetReadedMessages([FromQuery]int dialogId, [FromQuery]int offset, [FromQuery]int count)
         {
-            return await dialogService.GetReadedDialogMessagesAsync(HttpContext.GetUserId(), dialogId, offset, count);
+            return await dialogService.GetReadedMessagesAsync(HttpContext.GetUserId(), dialogId, offset, count);
         }
 
         [HttpGet("new")]
-        public async Task<List<Message>> GetUnreadedMessages([FromQuery]int dialogId, [FromQuery]int offset, [FromQuery]int count)
+        public async Task<IEnumerable<Message>> GetUnreadedMessages([FromQuery]int dialogId, [FromQuery]int offset, [FromQuery]int count)
         {
-            return await dialogService.GetUnreadedDialogMessagesAsync(HttpContext.GetUserId(), dialogId, offset, count);
+            return await dialogService.GetUnreadedMessagesAsync(HttpContext.GetUserId(), dialogId, offset, count);
         }
 
         [HttpPost]
         public async Task<DeliveredMessageInfo> SendMessage(SendMessageRequest message)
         {
-            return await dialogService.SendDialogMessageAsync(HttpContext.GetUserId(), message);
+            return await dialogService.SendDialogMessageAsync(message, HttpContext.GetUserId());
         }
     }
 }
