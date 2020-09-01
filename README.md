@@ -2,8 +2,6 @@
 
 Simple messanger built with ASP.NET Core Web API and SignalR
 
-:heavy_exclamation_mark: New frontend based on angular: https://github.com/frgt10cs/maelstorm-web-client
-
 ![Screenshot](https://user-images.githubusercontent.com/37965385/79689354-eb081900-825c-11ea-8bfb-3ed883dac2fc.PNG)
 
 ## Version
