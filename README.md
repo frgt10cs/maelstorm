@@ -15,7 +15,7 @@ In development
 | --- | --- |
 | Registration |:heavy_check_mark: |
 | Authentication |:heavy_check_mark:|
-| Token refresh |:exclamation:|
+| Token refresh |:heavy_check_mark:|
 | Messaging |:heavy_check_mark:|
 | End-to-end encryption |:heavy_check_mark:|
 | Document exchange|:clock2:|
