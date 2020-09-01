@@ -33,9 +33,9 @@ namespace Maelstorm.Services.Implementations
             this.cryptoService = cryptoService;
         }
 
-        public async Task<ServiceResult> AuthenticateAsync([FromBody]AuthenticationRequest authenticationRequest, string ip)
+        public async Task<AuthenticationResult> AuthenticateAsync([FromBody]AuthenticationRequest authenticationRequest, string ip)
         {
-            ServiceResult result = new ServiceResult();
+            AuthenticationResult authResult = null;
             User user = await LoginAsync(authenticationRequest);
             if (user != null)
             {
@@ -69,7 +69,7 @@ namespace Maelstorm.Services.Implementations
                     session.Location = GetLocationByIp(ip);
                     session.RefreshToken = tokens.RefreshToken;                    
                     await context.SaveChangesAsync();
-                    var authResult = new AuthenticationResult() 
+                    authResult = new AuthenticationResult() 
                     {
                         IVBase64 = user.IVBase64,
                         KeySaltBase64 = user.KeySalt,
@@ -77,18 +77,9 @@ namespace Maelstorm.Services.Implementations
                         EncryptedPrivateKey = user.EncryptedPrivateKey,
                         Tokens = tokens 
                     };                    
-                    result.Data = authResult;
-                }
-                else
-                {
-                    result.SetFail("Access is blocked");
-                }
-            }
-            else
-            {
-                result.SetFail("Authentication failed");
-            }
-            return result;
+                }                
+            }            
+            return authResult;
         }
 
         private async Task<User> LoginAsync(AuthenticationRequest authenticationRequest)

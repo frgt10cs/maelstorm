@@ -34,7 +34,7 @@ namespace Maelstorm
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
-        {
+        {           
             services.AddOptions();
             services.Configure<JwtOptions>(Configuration);
 
@@ -45,9 +45,7 @@ namespace Maelstorm
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IAccountService, AccountService>();            
             services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<IDialogService, DialogService>();
-            services.AddScoped<ISQLService, SQLService>();
-            //services.AddScoped<ISQLService, SQLiteService>();            
+            services.AddScoped<IDialogService, DialogService>();              
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ISessionService, SessionService>();
             services.AddScoped<ISignalRSessionService, SignalRSessionService>();
@@ -56,6 +54,7 @@ namespace Maelstorm
             services.AddScoped<INotificationService, NotificationService>();
 
             services.AddCors();
+            services.AddSignalR();
 
             #region Jwt / session validation
 
@@ -120,9 +119,7 @@ namespace Maelstorm
                     };
                 });                
 
-            #endregion
-
-            services.AddSignalR();
+            #endregion            
 
             var redisConfiguration = Configuration.GetSection("Redis").Get<RedisConfiguration>();            
             services.AddStackExchangeRedisExtensions<NewtonsoftSerializer>(redisConfiguration);

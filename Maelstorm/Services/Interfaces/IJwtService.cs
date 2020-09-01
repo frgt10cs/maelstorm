@@ -10,6 +10,6 @@ namespace Maelstorm.Services.Interfaces
     {
         JwtValidationResult ValidateToken(string token, bool getOnlyNotExpiredToken = false);
         Tokens CreateTokens(Claim[] claims);
-        Task<ServiceResult> RefreshTokenAsync(RefreshTokenRequest model, string ip);
+        Task<Tokens> RefreshTokenAsync(RefreshTokenRequest model, string ip);
     }
 }

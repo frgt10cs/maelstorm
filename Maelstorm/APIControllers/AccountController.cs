@@ -1,6 +1,7 @@
 ﻿using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
 using MaelstormDTO.Requests;
+using MaelstormDTO.Responses;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpPost("registration")]
-        public async Task<ServiceResult> Registration([FromBody]RegistrationRequest registrationRequest)
+        public async Task<ServerResponse> Registration([FromBody]RegistrationRequest registrationRequest)
         {
             return await accountService.RegistrationAsync(registrationRequest);
         }

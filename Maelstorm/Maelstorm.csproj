@@ -41,7 +41,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Authorization\Handlers\" />
     <Folder Include="wwwroot\css\bundled\" />
     <Folder Include="wwwroot\js\bundled\" />
   </ItemGroup>

@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using MaelstormDTO.Requests;
+using MaelstormDTO.Responses;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -30,9 +31,9 @@ namespace Maelstorm.Services.Implementations
             this.cryptoService = cryptoService;
         }
 
-        public async Task<ServiceResult> RegistrationAsync(RegistrationRequest registrationRequest)
+        public async Task<ServerResponse> RegistrationAsync(RegistrationRequest registrationRequest)
         {            
-            var result = new ServiceResult();           
+            var response = new ServerResponse();           
             if (await EmailIsUnique(registrationRequest.Email))
             {
                 if(await NicknameIsUnique(registrationRequest.Nickname))
@@ -51,33 +52,39 @@ namespace Maelstorm.Services.Implementations
                 }
                 else
                 {
-                    result.SetFail("Nickname is already exist");
+                    response.AddErrorMessages("Nickname is already exist");
                 }
             }
             else
             {
-                result.SetFail("Email is already exist");
+                response.AddErrorMessages("Email is already exist");
             }
-            return result;
+            return response;
         }
 
-        public async Task<ServiceResult> ConfirmEmailAsync(string token)
+        public async Task<ServerResponse> ConfirmEmailAsync(string confirmEmailTokentoken)
         {
-            var result = new ServiceResult();
-            result.SetFail();
-            var token_ = await context.Tokens.FirstOrDefaultAsync(t => t.Value == token);
-            if (token_ != null)
+            var response = new ServerResponse();            
+            var token = await context.Tokens.FirstOrDefaultAsync(t => t.Value == confirmEmailTokentoken);
+            if (token != null)
             {
-                var user = await context.Users.FirstOrDefaultAsync(u => u.Id == token_.UserId);
+                var user = await context.Users.FirstOrDefaultAsync(u => u.Id == token.UserId);
                 if (user != null)
                 {
                     user.EmailIsConfirmed = true;
-                    context.Tokens.Remove(token_);
-                    await context.SaveChangesAsync();
-                    result.SetSuccess();
+                    context.Tokens.Remove(token);
+                    await context.SaveChangesAsync();                    
+                }
+                else
+                {
+                    response.AddErrorMessages("Invalid token");
                 }
             }
-            return result;
+            else
+            {
+                response.AddErrorMessages("Invalid token");
+            }
+            return response;
         }
 
         private async Task<bool> EmailIsUnique(string email)

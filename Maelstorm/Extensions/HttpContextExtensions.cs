@@ -10,7 +10,7 @@ namespace Maelstorm.Extensions
     {
         public static int GetUserId(this HttpContext context)
         {
-            Int32.TryParse(context.User.FindFirst("UserId").Value, out int id);
+            int.TryParse(context.User.FindFirst("UserId").Value, out int id);
             return id;
         }
     }

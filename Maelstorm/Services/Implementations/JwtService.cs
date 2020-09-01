@@ -63,16 +63,16 @@ namespace Maelstorm.Services.Implementations
             return model;
         }
 
-        public async Task<ServiceResult> RefreshTokenAsync(RefreshTokenRequest refreshTokenRequest, string ip)
+        public async Task<Tokens> RefreshTokenAsync(RefreshTokenRequest refreshTokenRequest, string ip)
         {
-            ServiceResult result = new ServiceResult();
+            Tokens tokens = null;
             JwtValidationResult validationResult = ValidateToken(refreshTokenRequest.AccessToken);
             if (validationResult.IsSuccessful && validationResult.IsTokenExpired)
             {
                 Session session = await context.Sessions.FirstOrDefaultAsync(s => s.RefreshToken == refreshTokenRequest.RefreshToken && s.FingerPrint == refreshTokenRequest.Fingerprint);
                 if (session != null)
                 {
-                    var tokens = CreateTokens(new Claim[]
+                    tokens = CreateTokens(new Claim[]
                     {
                         validationResult.Principial.FindFirst("UserId"),
                         validationResult.Principial.FindFirst("UserEmail"),
@@ -82,22 +82,18 @@ namespace Maelstorm.Services.Implementations
                     });
                     session.IpAddress = ip;
                     session.RefreshToken = tokens.RefreshToken;
-                    await context.SaveChangesAsync();
-                    result.Data = tokens;
-                    return result;
+                    await context.SaveChangesAsync();                                        
                 }
                 else
-                {
-                    result.SetFail("Invalid refresh token");
+                {                    
                     logger.LogWarning("Token wasn't refresh. Invalid session");
                 }
             }
             else
-            {
-                result.SetFail("Invalid token");
+            {                
                 logger.LogWarning("Token wasn't refresh. Invalid value or token is not expired: " + refreshTokenRequest.AccessToken);
             }
-            return result;
+            return tokens;
         }
 
         public JwtValidationResult ValidateToken(string token, bool getOnlyNotExpiredToken = false)

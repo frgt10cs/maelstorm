@@ -30,7 +30,7 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpPost]
-        public async Task<DeliveredMessageInfo> SendMessage(SendMessageRequest message)
+        public async Task<DeliveredMessageInfo> SendMessage([FromBody]SendMessageRequest message)
         {
             return await dialogService.SendDialogMessageAsync(message, HttpContext.GetUserId());
         }

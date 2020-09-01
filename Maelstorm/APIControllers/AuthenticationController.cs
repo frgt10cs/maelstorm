@@ -1,6 +1,7 @@
 ﻿using Maelstorm.Models;
 using Maelstorm.Services.Interfaces;
 using MaelstormDTO.Requests;
+using MaelstormDTO.Responses;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -19,17 +20,15 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpPost]        
-        public async Task<ServiceResult> Authenticate([FromBody]AuthenticationRequest authenticationRequest)
+        public async Task<AuthenticationResult> Authenticate([FromBody]AuthenticationRequest authenticationRequest)
         {
             return await authenticationService.AuthenticateAsync(authenticationRequest, HttpContext.Connection.RemoteIpAddress.ToString());
         }
 
         [HttpPost("refresh")]
-        public async Task<ServiceResult> Refresh([FromBody]RefreshTokenRequest refreshTokenRequest)
+        public async Task<Tokens> Refresh([FromBody]RefreshTokenRequest refreshTokenRequest)
         {
-            ServiceResult result = ModelState.IsValid ? await jwtService.RefreshTokenAsync(refreshTokenRequest, HttpContext.Connection.RemoteIpAddress.ToString())
-               : new ServiceResult(ModelState);
-            return result;
+            return await jwtService.RefreshTokenAsync(refreshTokenRequest, HttpContext.Connection.RemoteIpAddress.ToString());
         }
     }
 }

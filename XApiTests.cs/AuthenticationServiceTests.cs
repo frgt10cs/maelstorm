@@ -40,12 +40,11 @@ namespace XApiTests.cs
                 Fingerprint = "abc",
             };
 
-            var result = authenticationService.AuthenticateAsync(authenticationRequest, string.Empty).Result;
-            var authTokens = (result.Data as AuthenticationResult).Tokens;
-            tokens.AccessToken = authTokens.AccessToken;
-            tokens.RefreshToken = authTokens.RefreshToken;
+            var authResult = authenticationService.AuthenticateAsync(authenticationRequest, string.Empty).Result;            
+            tokens.AccessToken = authResult?.Tokens?.AccessToken;
+            tokens.RefreshToken = authResult?.Tokens?.RefreshToken;
 
-            Assert.True(result.Ok);
+            Assert.NotNull(authResult);
         }
 
         [Fact, Priority(10)]
@@ -59,9 +58,10 @@ namespace XApiTests.cs
                 Fingerprint = "abc"
             };
 
-            var result = jwtService.RefreshTokenAsync(refreshTokenRequest, "127.0.0.1").Result;
+            var newTokens = jwtService.RefreshTokenAsync(refreshTokenRequest, "127.0.0.1").Result;
+            tokens = newTokens;
 
-            Assert.True(result.Ok);
+            Assert.NotNull(newTokens);
         }
     }
 }

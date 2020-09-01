@@ -6,11 +6,12 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using MaelstormDTO.Requests;
+using MaelstormDTO.Responses;
 
 namespace Maelstorm.Services.Interfaces
 {
     public interface IAuthenticationService
     {
-        Task<ServiceResult> AuthenticateAsync(AuthenticationRequest authenticationRequest, string ip);                
+        Task<AuthenticationResult> AuthenticateAsync(AuthenticationRequest authenticationRequest, string ip);                
     }
 }

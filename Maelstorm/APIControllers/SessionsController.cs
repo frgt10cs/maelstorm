@@ -24,19 +24,19 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet]       
-        public async Task<List<UserSessions>> GetSessions([FromQuery]int offset, [FromQuery]int count)
+        public async Task<IEnumerable<UserSessions>> GetSessions([FromQuery]int offset, [FromQuery]int count)
         {
             return await sessionService.GetSessionsAsync(HttpContext.GetUserId(), offset, count);
         }
 
         [HttpGet("{sessionId}")]        
-        public async Task<UserSessions> GetSessions(string sessionId)
+        public async Task<UserSessions> GetSession(string sessionId)
         {
             return await sessionService.GetSessionAsync(HttpContext.GetUserId(), sessionId);
         }
 
         [HttpGet("online-statuses/{ids}")]     
-        public async Task<List<OnlineStatus>> GetOnlineStatuses(int[] ids)
+        public async Task<IEnumerable<OnlineStatus>> GetOnlineStatuses(int[] ids)
         {
             return await signalRSessionService.GetOnlineStatusesAsync(ids);
         }

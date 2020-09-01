@@ -52,5 +52,23 @@ namespace XApiTests.cs
 
             Assert.NotNull(messages.First());
         }
+
+        [Fact, Priority(3)]
+        public void SetMessageAsReadedSuccessful()
+        {
+            var dialogService = fakeServiceFactory.CreateDialogService();
+
+            dialogService.SetMessageAsReadedAsync(2, 1).Wait();
+        }
+
+        [Fact, Priority(4)]
+        public void GetReadedMessageSuccessful()
+        {
+            var dialogService = fakeServiceFactory.CreateDialogService();
+
+            var messages = dialogService.GetReadedMessagesAsync(1, 1, 0, 1).Result;
+
+            Assert.NotNull(messages.First());
+        }
     }
 }

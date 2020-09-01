@@ -43,14 +43,14 @@ namespace Maelstorm.Crypto.Implementations
         {            
             using (RSA publicRSA = RSA.Create())
             {                
-                var publicKeyXML = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), Configuration["PublicKeyPath"]));
-                publicRSA.FromXml(publicKeyXML);
+                var publicKeyXML = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), Configuration["PublicKeyPath"]));
+                publicRSA.ImportRSAPublicKey(publicKeyXML, out _);
                 PublicKey = new RsaSecurityKey(publicRSA);                
             }
             using (RSA privateRSA = RSA.Create())
             {
-                var privateKeyXML = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), Configuration["PrivateKeyPath"]));
-                privateRSA.FromXml(privateKeyXML);
+                var privateKeyXML = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), Configuration["PrivateKeyPath"]));
+                privateRSA.ImportRSAPrivateKey(privateKeyXML, out _);
                 PrivateKey = new RsaSecurityKey(privateRSA);
             }
         }

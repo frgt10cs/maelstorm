@@ -1,36 +1,30 @@
 ﻿using Maelstorm.Database;
 using Maelstorm.Entities;
 using Maelstorm.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.Data.SqlClient;
-using System.Data;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Serialization;
-using Maelstorm.Hubs;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.Http;
-using System.Data.Common;
-using System.Security.Cryptography;
 using MaelstormDTO.Requests;
 using MaelstormDTO.Responses;
-using DialogDTO = MaelstormDTO.Responses.Dialog;
-using MessageDTO = MaelstormDTO.Responses.Message;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 using Dialog = Maelstorm.Entities.Dialog;
+using DialogDTO = MaelstormDTO.Responses.Dialog;
 using Message = Maelstorm.Entities.Message;
-using Org.BouncyCastle.Security;
+using MessageDTO = MaelstormDTO.Responses.Message;
 
 namespace Maelstorm.Services.Implementations
 {
     public class DialogService : IDialogService
-    {        
+    {
         private readonly MaelstormContext context;
-        private readonly ILogger<DialogService> logger;                       
-        private readonly ICryptographyService cryptoService;        
+        private readonly ILogger<DialogService> logger;
+        private readonly ICryptographyService cryptoService;
         private readonly JsonSerializerSettings serializerSettings;
         private readonly INotificationService notificationService;
 
@@ -38,7 +32,7 @@ namespace Maelstorm.Services.Implementations
             ICryptographyService cryptoService, INotificationService notificationService)
         {
             this.context = context;
-            this.logger = logger;                                                   
+            this.logger = logger;
             this.cryptoService = cryptoService;
             this.notificationService = notificationService;
             serializerSettings = new JsonSerializerSettings();
@@ -48,7 +42,7 @@ namespace Maelstorm.Services.Implementations
         #region Dialog creating
 
         public async Task<Dialog> CreateDialogAsync(long firstUserId, long secondUserId, bool isClosed = false)
-        {                               
+        {
             User firstUser = await context.Users.FirstOrDefaultAsync(u => u.Id == firstUserId);
             User secondUser = await context.Users.FirstOrDefaultAsync(u => u.Id == secondUserId);
             byte[] salt = cryptoService.GetRandomBytes(16);
@@ -66,7 +60,7 @@ namespace Maelstorm.Services.Implementations
 
             context.DialogUsers.AddRange(firstDialogUser, secondDialogUser);
             await context.SaveChangesAsync();
-            
+
             return dialog;
         }
 
@@ -94,9 +88,9 @@ namespace Maelstorm.Services.Implementations
             if (dialog != null && dialog.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
             {
                 if (!dialog.IsClosed)
-                {                    
+                {
                     if (messageRequest.Text != null)
-                    {                        
+                    {
                         Message message = new Message()
                         {
                             AuthorId = userId,
@@ -104,9 +98,9 @@ namespace Maelstorm.Services.Implementations
                             DialogId = dialog.Id,
                             IVBase64 = messageRequest.IVBase64,
                             Text = messageRequest.Text,
-                            IsReaded = false                            
-                        };               
-                        context.Messages.Add(message);                        
+                            IsReaded = false
+                        };
+                        context.Messages.Add(message);
                         await context.SaveChangesAsync();
 
                         deliveredMessageInfo = new DeliveredMessageInfo()
@@ -120,37 +114,17 @@ namespace Maelstorm.Services.Implementations
                     }
                 }
                 else
-                {                    
+                {
                     logger.LogWarning($"Trying to send message into closed dialog. From: {userId}");
                 }
             }
             else
-            {                
+            {
                 logger.LogWarning($"Trying to send message into dialog that doesn't exist. From: {userId}");
             }
             return deliveredMessageInfo;
         }
-        #endregion                        
-
-        public async Task SetMessageAsReadedAsync(long userId, long messageId)
-        {
-            if (messageId <= 0)
-                return;
-            Message message = await context.Messages.FirstOrDefaultAsync(m => m.Id == messageId);
-            if (message != null)
-            {
-                Dialog dialog = await context.Dialogs.FirstOrDefaultAsync(d => d.Id == message.DialogId);
-                if (dialog != null)
-                {
-                    //if ((dialog.FirstUserId == userId || dialog.SecondUserId == userId) && message.AuthorId != userId)
-                    //{
-                    //    message.IsReaded = true;
-                    //    await context.SaveChangesAsync();
-                    //    await MessageWasReadedPushAsync(message.AuthorId, dialog.Id, messageId);
-                    //}
-                }
-            }
-        }        
+        #endregion                                
 
         #region Getting messages
         public async Task<IEnumerable<MessageDTO>> GetReadedMessagesAsync(long dialogId, long userId, int offset, int count)
@@ -176,7 +150,7 @@ namespace Maelstorm.Services.Implementations
             var dialog = await context.Dialogs.FindAsync(dialogId);
 
             if (dialog != null && dialog.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
-            {                
+            {
                 var messages = dialog.Messages
                     .Where(m => !m.IsReaded)
                     .OrderBy(m => m.DateOfSending)
@@ -215,17 +189,17 @@ namespace Maelstorm.Services.Implementations
         public async Task<List<DialogDTO>> GetDialogsAsync(long userId, int offset, int count)
         {
             List<DialogDTO> dialogs = new List<DialogDTO>();
-            
+
             var userDialogs = await context.Dialogs
                 .Where(d => d.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
-                .Include(d=>d.Messages)
+                .Include(d => d.Messages)
                 .Include(d => d.DialogUsers)
                 .ThenInclude(du => du.User)
                 .Skip(offset)
                 .Take(count)
                 .ToArrayAsync();
 
-            foreach(var userDialog in userDialogs)
+            foreach (var userDialog in userDialogs)
             {
                 var interlocutor = userDialog.DialogUsers.Single(du => du.UserId != userId).User;
                 var lastMessage = userDialog.Messages.Last();
@@ -252,7 +226,7 @@ namespace Maelstorm.Services.Implementations
             }
 
             return dialogs;
-        }               
+        }
 
         /// <summary>
         /// Returns dialog between two users. If it doesn't exist it will be created
@@ -265,17 +239,17 @@ namespace Maelstorm.Services.Implementations
             DialogDTO dialogDTO = null;
             var dialogs = context.Dialogs
                 .Where(d => d.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
-                .Include(d=>d.Messages)
+                .Include(d => d.Messages)
                 .Include(d => d.DialogUsers)
                 .ThenInclude(du => du.User);
 
             var interlocutor = await context.Users.FindAsync(interlocutorId);
             var dialog = await dialogs.SingleOrDefaultAsync(d => d.DialogUsers.SingleOrDefault(du => du.User == interlocutor) != null);
 
-            if(dialog == null)
+            if (dialog == null)
             {
                 dialog = await CreateDialogAsync(userId, interlocutorId);
-            }           
+            }
 
             var lastMessage = dialog.Messages?.LastOrDefault();
             dialogDTO = new DialogDTO()
@@ -286,11 +260,28 @@ namespace Maelstorm.Services.Implementations
                 InterlocutorId = interlocutorId,
                 InterlocutorImage = interlocutor.Image,
                 InterlocutorNickname = interlocutor.Nickname,
-                LastMessage = lastMessage!=null?ToMessageDTO(lastMessage):null
+                LastMessage = lastMessage != null ? ToMessageDTO(lastMessage) : null
             };
 
             return dialogDTO;
         }
         #endregion
+
+        public async Task SetMessageAsReadedAsync(long userId, long messageId)
+        {
+            Message message = await context.Messages
+                .Include(m => m.Dialog)
+                .ThenInclude(du => du.DialogUsers)
+                .FirstOrDefaultAsync(m => m.Id == messageId);
+
+            if (message != null)
+            {
+                if (message.Dialog.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null && message.AuthorId != userId)
+                {
+                    message.IsReaded = true;
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
     }
 }

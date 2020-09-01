@@ -29,7 +29,7 @@ namespace XApiTests.cs
                 ConfirmPassword = "1234567890",
             }).Result;
             
-            Assert.Equal("Email is already exist", result.ErrorMessages[0]);            
+            Assert.Equal("Email is already exist", result.GetErrorMessages()[0]);            
         }
 
         [Fact]
@@ -45,7 +45,7 @@ namespace XApiTests.cs
                 Password = "1234567890"
             }).Result;           
 
-            Assert.Equal("Nickname is already exist", result.ErrorMessages[0]);            
+            Assert.Equal("Nickname is already exist", result.GetErrorMessages()[0]);            
         }
 
         [Fact]
