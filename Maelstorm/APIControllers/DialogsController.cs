@@ -24,15 +24,25 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet]
-        public async Task<List<Dialog>> GetDialogs([FromQuery]int offset, [FromQuery]int count)
+        public async Task<ActionResult<IEnumerable<Dialog>>> GetDialogs([FromQuery]int offset, [FromQuery]int count)
         {
-            return await dialogService.GetDialogsAsync(HttpContext.GetUserId(), offset, count);
+            var dialogs = await dialogService.GetDialogsAsync(HttpContext.GetUserId(), offset, count);            
+            return dialogs;
         }
 
         [HttpGet("{interlocutorId}")]
-        public async Task<Dialog> GetDialog(int interlocutorId)
+        public async Task<ActionResult<Dialog>> GetDialog(int interlocutorId)
         {
-            return await dialogService.GetDialogAsync(HttpContext.GetUserId(), interlocutorId);
+            var dialog =  await dialogService.GetDialogAsync(HttpContext.GetUserId(), interlocutorId);
+            if(dialog == null)
+            {
+                var problemDetails = new ProblemDetails()
+                {
+                    Detail = "Dialog doesn't exist"
+                };
+                return BadRequest(problemDetails);
+            }
+            return dialog;
         }        
     }
 }

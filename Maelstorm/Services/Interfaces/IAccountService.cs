@@ -7,7 +7,7 @@ namespace Maelstorm.Services.Interfaces
 {
     public interface IAccountService
     {
-        Task<ServerResponse> RegistrationAsync(RegistrationRequest model);
-        Task<ServerResponse> ConfirmEmailAsync(string token);        
+        Task<ServiceResult> RegistrationAsync(RegistrationRequest model);
+        Task<ServiceResult> ConfirmEmailAsync(string token);        
     }
 }

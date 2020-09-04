@@ -127,7 +127,7 @@ namespace Maelstorm.Services.Implementations
         #endregion                                
 
         #region Getting messages
-        public async Task<IEnumerable<MessageDTO>> GetReadedMessagesAsync(long dialogId, long userId, int offset, int count)
+        public async Task<List<MessageDTO>> GetReadedMessagesAsync(long dialogId, long userId, int offset, int count)
         {
             var dialog = await context.Dialogs.FindAsync(dialogId);
 
@@ -138,14 +138,15 @@ namespace Maelstorm.Services.Implementations
                         .OrderBy(m => m.DateOfSending)
                         .Skip(offset)
                         .Take(count)
-                        .Select(m => ToMessageDTO(m));
+                        .Select(m => ToMessageDTO(m))
+                        .ToList();
                 return messages;
             }
             logger.LogWarning($"User (ID: {userId}) tried to read messages from other people's dialog");
             return null;
         }
 
-        public async Task<IEnumerable<MessageDTO>> GetUnreadedMessagesAsync(long dialogId, long userId, int offset, int count)
+        public async Task<List<MessageDTO>> GetUnreadedMessagesAsync(long dialogId, long userId, int offset, int count)
         {
             var dialog = await context.Dialogs.FindAsync(dialogId);
 
@@ -156,7 +157,8 @@ namespace Maelstorm.Services.Implementations
                     .OrderBy(m => m.DateOfSending)
                     .Skip(offset)
                     .Take(count)
-                    .Select(m => ToMessageDTO(m));
+                    .Select(m => ToMessageDTO(m))
+                    .ToList();
                 return messages;
             }
             logger.LogWarning($"User (ID: {userId}) tried to read messages from other people's dialog");

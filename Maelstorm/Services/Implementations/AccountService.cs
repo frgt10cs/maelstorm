@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MaelstormDTO.Requests;
 using MaelstormDTO.Responses;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Maelstorm.Services.Implementations
 {
@@ -31,9 +32,9 @@ namespace Maelstorm.Services.Implementations
             this.cryptoService = cryptoService;
         }
 
-        public async Task<ServerResponse> RegistrationAsync(RegistrationRequest registrationRequest)
-        {            
-            var response = new ServerResponse();           
+        public async Task<ServiceResult> RegistrationAsync(RegistrationRequest registrationRequest)
+        {
+            var result = new ServiceResult();
             if (await EmailIsUnique(registrationRequest.Email))
             {
                 if(await NicknameIsUnique(registrationRequest.Nickname))
@@ -52,19 +53,19 @@ namespace Maelstorm.Services.Implementations
                 }
                 else
                 {
-                    response.AddErrorMessages("Nickname is already exist");
+                    result.ProblemDetails.Extensions.Add("Nickname", "Nickname is already used");
                 }
             }
             else
             {
-                response.AddErrorMessages("Email is already exist");
+                result.ProblemDetails.Extensions.Add("Email", "Email is already registered");
             }
-            return response;
+            return result;
         }
 
-        public async Task<ServerResponse> ConfirmEmailAsync(string confirmEmailTokentoken)
+        public async Task<ServiceResult> ConfirmEmailAsync(string confirmEmailTokentoken)
         {
-            var response = new ServerResponse();            
+            var result = new ServiceResult();       
             var token = await context.Tokens.FirstOrDefaultAsync(t => t.Value == confirmEmailTokentoken);
             if (token != null)
             {
@@ -77,14 +78,14 @@ namespace Maelstorm.Services.Implementations
                 }
                 else
                 {
-                    response.AddErrorMessages("Invalid token");
+                    result.ProblemDetails.Extensions.Add(string.Empty, "Invalid token");
                 }
             }
             else
             {
-                response.AddErrorMessages("Invalid token");
+                result.ProblemDetails.Extensions.Add(string.Empty ,"Invalid token");
             }
-            return response;
+            return result;
         }
 
         private async Task<bool> EmailIsUnique(string email)

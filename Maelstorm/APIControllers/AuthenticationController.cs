@@ -20,15 +20,33 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpPost]        
-        public async Task<AuthenticationResult> Authenticate([FromBody]AuthenticationRequest authenticationRequest)
+        public async Task<ActionResult<AuthenticationResult>> Authenticate([FromBody]AuthenticationRequest authenticationRequest)
         {
-            return await authenticationService.AuthenticateAsync(authenticationRequest, HttpContext.Connection.RemoteIpAddress.ToString());
+            var result = await authenticationService.AuthenticateAsync(authenticationRequest, HttpContext.Connection.RemoteIpAddress.ToString());
+            if(result == null)
+            {
+                var problemDetails = new ProblemDetails
+                {
+                    Detail = "Incorrect login or password"
+                };
+                return BadRequest(problemDetails);
+            }
+            return result;
         }
 
         [HttpPost("refresh")]
-        public async Task<Tokens> Refresh([FromBody]RefreshTokenRequest refreshTokenRequest)
+        public async Task<ActionResult<Tokens>> Refresh([FromBody]RefreshTokenRequest refreshTokenRequest)
         {
-            return await jwtService.RefreshTokenAsync(refreshTokenRequest, HttpContext.Connection.RemoteIpAddress.ToString());
+            var tokens =  await jwtService.RefreshTokenAsync(refreshTokenRequest, HttpContext.Connection.RemoteIpAddress.ToString());
+            if(tokens == null)
+            {
+                var problemDetails = new ProblemDetails
+                {
+                    Detail = "Invalid token"
+                };
+                return BadRequest(problemDetails);
+            }            
+            return tokens;
         }
     }
 }

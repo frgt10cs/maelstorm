@@ -21,9 +21,12 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpPost("registration")]
-        public async Task<ServerResponse> Registration([FromBody]RegistrationRequest registrationRequest)
+        public async Task<IActionResult> Registration([FromBody]RegistrationRequest registrationRequest)
         {
-            return await accountService.RegistrationAsync(registrationRequest);
+            var result  = await accountService.RegistrationAsync(registrationRequest);
+            if(result.Ok)
+                return Ok();
+            return BadRequest(result.ProblemDetails);          
         }
     }
 }

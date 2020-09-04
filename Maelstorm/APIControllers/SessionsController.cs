@@ -42,9 +42,9 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpPost("close")]        
-        public async Task CloseSessionAsync([FromBody]CloseSessionRequest closeSessionDTO)
+        public void CloseSessionAsync([FromBody]CloseSessionRequest closeSessionDTO)
         {
-            await sessionService.CloseSessionAsync(HttpContext.GetUserId(), closeSessionDTO.SessionId, closeSessionDTO.BanDevice);
+            sessionService.CloseSessionAsync(HttpContext.GetUserId(), closeSessionDTO.SessionId, closeSessionDTO.BanDevice);
         }
     }
 }

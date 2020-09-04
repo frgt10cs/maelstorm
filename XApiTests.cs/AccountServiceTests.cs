@@ -1,6 +1,8 @@
 using MaelstormDTO.Requests;
 using XApiTests.Fakes;
 using Xunit;
+using MaelstormDTO.Responses;
+using System.Linq;
 
 namespace XApiTests.cs
 {
@@ -29,7 +31,7 @@ namespace XApiTests.cs
                 ConfirmPassword = "1234567890",
             }).Result;
             
-            Assert.Equal("Email is already exist", result.GetErrorMessages()[0]);            
+            Assert.NotNull(result.ProblemDetails.Extensions["Email"]);            
         }
 
         [Fact]
@@ -45,7 +47,7 @@ namespace XApiTests.cs
                 Password = "1234567890"
             }).Result;           
 
-            Assert.Equal("Nickname is already exist", result.GetErrorMessages()[0]);            
+            Assert.NotNull(result.ProblemDetails.Extensions["Nickname"]);            
         }
 
         [Fact]
@@ -70,7 +72,7 @@ namespace XApiTests.cs
             }).Result;
 
             Assert.True(result.Ok);
-            Assert.True(result2.Ok);
+            Assert.True(result2.Ok);            
         }
     }
 }
