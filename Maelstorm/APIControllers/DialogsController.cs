@@ -33,16 +33,18 @@ namespace Maelstorm.APIControllers
         [HttpGet("{interlocutorId}")]
         public async Task<ActionResult<Dialog>> GetDialog(int interlocutorId)
         {
-            var dialog =  await dialogService.GetDialogAsync(HttpContext.GetUserId(), interlocutorId);
-            if(dialog == null)
+            if(interlocutorId != HttpContext.GetUserId())
             {
-                var problemDetails = new ProblemDetails()
-                {
-                    Detail = "Dialog doesn't exist"
-                };
-                return BadRequest(problemDetails);
+                var dialog = await dialogService.GetDialogAsync(HttpContext.GetUserId(), interlocutorId);
+                if (dialog != null)
+                    return dialog;                
             }
-            return dialog;
+
+            var problemDetails = new ProblemDetails()
+            {
+                Detail = "Dialog doesn't exist and can't be created"
+            };
+            return BadRequest(problemDetails);
         }        
     }
 }

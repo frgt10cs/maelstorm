@@ -47,7 +47,7 @@ namespace XApiTests.cs
                 Password = "1234567890"
             }).Result;           
 
-            Assert.NotNull(result.ProblemDetails.Extensions["Nickname"]);            
+            Assert.NotNull(result.ProblemDetails.Extensions["Nickname"]);           
         }
 
         [Fact]

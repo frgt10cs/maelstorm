@@ -237,7 +237,7 @@ namespace Maelstorm.Services.Implementations
         /// <param name="interlocutorId"></param>
         /// <returns></returns>
         public async Task<DialogDTO> GetDialogAsync(long userId, long interlocutorId)
-        {
+        {            
             DialogDTO dialogDTO = null;
             var dialogs = context.Dialogs
                 .Where(d => d.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
@@ -249,9 +249,7 @@ namespace Maelstorm.Services.Implementations
             var dialog = await dialogs.SingleOrDefaultAsync(d => d.DialogUsers.SingleOrDefault(du => du.User == interlocutor) != null);
 
             if (dialog == null)
-            {
                 dialog = await CreateDialogAsync(userId, interlocutorId);
-            }
 
             var lastMessage = dialog.Messages?.LastOrDefault();
             dialogDTO = new DialogDTO()

@@ -166,7 +166,7 @@ namespace Maelstorm
                 app.UseHsts();
             }
 
-            app.UseCors(builder => builder.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader());
+            app.UseCors(builder => builder.WithOrigins("http://localhost:4251","https://localhost:4251").AllowAnyMethod().AllowAnyHeader());
 
             app.UseHttpsRedirection();
             app.UseRouting();
