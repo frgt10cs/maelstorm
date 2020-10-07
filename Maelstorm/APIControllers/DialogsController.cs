@@ -1,12 +1,8 @@
-﻿using Maelstorm.Entities;
-using Maelstorm.Extensions;
-using Maelstorm.Models;
+﻿using Maelstorm.Extensions;
 using Maelstorm.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Dialog = MaelstormDTO.Responses.Dialog;
 
