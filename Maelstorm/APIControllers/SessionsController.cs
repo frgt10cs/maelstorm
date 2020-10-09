@@ -5,6 +5,7 @@ using MaelstormDTO.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Maelstorm.APIControllers
@@ -41,10 +42,17 @@ namespace Maelstorm.APIControllers
             return await signalRSessionService.GetOnlineStatusesAsync(ids);
         }
 
-        [HttpPost("close")]        
+        [HttpDelete]        
         public void CloseSessionAsync([FromBody]CloseSessionRequest closeSessionDTO)
         {
             sessionService.CloseSessionAsync(HttpContext.GetUserId(), closeSessionDTO.SessionId, closeSessionDTO.BanDevice);
+        }
+
+        [HttpDelete("current")]
+        public void CloseCurrentSession()
+        {
+            sessionService.CloseSessionAsync(HttpContext.GetUserId(),
+                HttpContext.GetSessionId());
         }
     }
 }

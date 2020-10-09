@@ -70,13 +70,13 @@ namespace Maelstorm.Hubs
                     else
                     {
                         logger.LogWarning("Hub auth fail. Fingerprints are not same. Token: " + token);
-                        await Clients.Caller.SendAsync("OnHubAuthFalied", "Token doesn't belong this device.");
+                        await Clients.Caller.SendAsync("OnHubAuthFailed", "Token doesn't belong this device.");
                     }
                 }
                 else
                 {
                     logger.LogWarning("Hub auth fail. Token: " + token);
-                    await Clients.Caller.SendAsync("OnHubAuthFalied", "Invalid token.");
+                    await Clients.Caller.SendAsync("OnHubAuthFailed", "Invalid token.");
                 }
             }
         }        
