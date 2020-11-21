@@ -25,12 +25,12 @@ namespace Maelstorm.Services.Implementations
             MainSalt = config["MainSalt"];
         }
 
-        public byte[] AesEncryptBytes(byte[] bytes, byte[] key, byte[] iv, int keySize = 128)
+        public byte[] AesEncryptBytes(byte[] bytes, byte[] key, byte[] iv, int keyBitSize = 128)
         {            
             byte[] result;
             using (Aes aes = Aes.Create())
             {
-                aes.KeySize = keySize;
+                aes.KeySize = keyBitSize;
                 aes.BlockSize = 128;
                 aes.Key = key;
 

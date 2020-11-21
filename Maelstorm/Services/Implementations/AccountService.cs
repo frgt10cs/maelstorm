@@ -124,8 +124,10 @@ namespace Maelstorm.Services.Implementations
             user.KeySalt = Convert.ToBase64String(keySalt);
             var iv = cryptoService.GenerateIV();                        
             user.IVBase64 = Convert.ToBase64String(iv);            
-            var userAesKey = cryptoService.PBKDF2_SHA256(model.Password, keySalt, 10000, 16);               
-            user.EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportPkcs8PrivateKey(), userAesKey, iv));            
+            // key with 256-bites length
+            var userAesKey = cryptoService.Pbkdf2(model.Password, keySalt, 32);
+            Console.WriteLine(string.Join(' ', rsa.ExportPkcs8PrivateKey()));
+            user.EncryptedPrivateKey = Convert.ToBase64String(cryptoService.AesEncryptBytes(rsa.ExportPkcs8PrivateKey(), userAesKey, iv, 256));            
             #endregion
 
             return user;
