@@ -204,16 +204,11 @@ namespace Maelstorm.Services.Implementations
             foreach (var userDialog in userDialogs)
             {
                 var interlocutor = userDialog.DialogUsers.Single(du => du.UserId != userId).User;
-                var lastMessage = userDialog.Messages.Last();
-                var dialog = new DialogDTO()
+                MessageDTO lastMessageDTO = null;
+                if (userDialog.Messages.Any())
                 {
-                    IsClosed = userDialog.IsClosed,
-                    Id = userDialog.Id,
-                    EncryptedKey = userDialog.DialogUsers.Single(du => du.UserId == userId).UserEncryptedDialogKey,
-                    InterlocutorId = interlocutor.Id,
-                    InterlocutorImage = interlocutor.Image,
-                    InterlocutorNickname = interlocutor.Nickname,
-                    LastMessage = new MessageDTO()
+                    var lastMessage = userDialog.Messages.Last();
+                    lastMessageDTO = new MessageDTO()
                     {
                         Id = lastMessage.Id,
                         AuthorId = lastMessage.AuthorId,
@@ -222,7 +217,18 @@ namespace Maelstorm.Services.Implementations
                         IsReaded = lastMessage.IsReaded,
                         IVBase64 = lastMessage.IVBase64,
                         Text = lastMessage.Text
-                    }
+                    };
+                }
+                
+                var dialog = new DialogDTO()
+                {
+                    IsClosed = userDialog.IsClosed,
+                    Id = userDialog.Id,
+                    EncryptedKey = userDialog.DialogUsers.Single(du => du.UserId == userId).UserEncryptedDialogKey,
+                    InterlocutorId = interlocutor.Id,
+                    InterlocutorImage = interlocutor.Image,
+                    InterlocutorNickname = interlocutor.Nickname,
+                    LastMessage = lastMessageDTO
                 };
                 dialogs.Add(dialog);
             }
