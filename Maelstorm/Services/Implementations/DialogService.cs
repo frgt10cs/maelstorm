@@ -129,7 +129,7 @@ namespace Maelstorm.Services.Implementations
         #region Getting messages
         public async Task<List<MessageDTO>> GetReadedMessagesAsync(long dialogId, long userId, int offset, int count)
         {
-            var dialog = await context.Dialogs.FindAsync(dialogId);
+            var dialog = await context.Dialogs.FindAsync(dialogId);            
 
             if (dialog != null && dialog.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
             {

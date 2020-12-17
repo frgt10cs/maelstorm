@@ -13,10 +13,10 @@ namespace Maelstorm.APIControllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class MessageController:ControllerBase
+    public class MessagesController:ControllerBase
     {
         private IDialogService dialogService;
-        public MessageController(IDialogService dialogService)
+        public MessagesController(IDialogService dialogService)
         {
             this.dialogService = dialogService;
         }
