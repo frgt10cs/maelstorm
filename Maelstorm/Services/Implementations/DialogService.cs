@@ -127,9 +127,9 @@ namespace Maelstorm.Services.Implementations
         #endregion                                
 
         #region Getting messages
-        public async Task<List<MessageDTO>> GetReadedMessagesAsync(long dialogId, long userId, int offset, int count)
+        public async Task<List<MessageDTO>> GetReadedMessagesAsync(long userId, long dialogId, int offset, int count)
         {
-            var dialog = await context.Dialogs.FindAsync(dialogId);            
+            var dialog = await context.Dialogs.Include(d=>d.DialogUsers).FirstOrDefaultAsync(d=>d.Id == dialogId);            
 
             if (dialog != null && dialog.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
             {
@@ -146,9 +146,9 @@ namespace Maelstorm.Services.Implementations
             return null;
         }
 
-        public async Task<List<MessageDTO>> GetUnreadedMessagesAsync(long dialogId, long userId, int offset, int count)
+        public async Task<List<MessageDTO>> GetUnreadedMessagesAsync(long userId, long dialogId, int offset, int count)
         {
-            var dialog = await context.Dialogs.FindAsync(dialogId);
+            var dialog = await context.Dialogs.Include(d => d.DialogUsers).FirstOrDefaultAsync(d => d.Id == dialogId);
 
             if (dialog != null && dialog.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
             {
