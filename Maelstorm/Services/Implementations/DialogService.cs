@@ -84,8 +84,11 @@ namespace Maelstorm.Services.Implementations
         public async Task<DeliveredMessageInfo> SendDialogMessageAsync(SendMessageRequest messageRequest, long userId)
         {
             DeliveredMessageInfo deliveredMessageInfo = null;
-            var dialog = await context.Dialogs.FindAsync(messageRequest.DialogId);
-            if (dialog != null && dialog.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
+            var dialog = await context.Dialogs
+                .Include(d=>d.DialogUsers)
+                .FirstOrDefaultAsync(d=>d.Id == messageRequest.DialogId);
+            if (dialog != null && dialog.DialogUsers
+                .SingleOrDefault(du => du.UserId == userId) != null)
             {
                 if (!dialog.IsClosed)
                 {
@@ -109,7 +112,7 @@ namespace Maelstorm.Services.Implementations
                             DateOfSending = message.DateOfSending
                         };
 
-                        var messageDTO = ToMessageDTO(message);
+                        var messageDTO = (MessageDTO)message;
                         await notificationService.NewMassageNotifyAsync(dialog, messageDTO);
                     }
                 }
@@ -129,17 +132,20 @@ namespace Maelstorm.Services.Implementations
         #region Getting messages
         public async Task<List<MessageDTO>> GetReadedMessagesAsync(long userId, long dialogId, int offset, int count)
         {
-            var dialog = await context.Dialogs.Include(d=>d.DialogUsers).FirstOrDefaultAsync(d=>d.Id == dialogId);            
+            var dialog = await context.Dialogs
+                .Include(d=>d.DialogUsers)
+                .FirstOrDefaultAsync(d=>d.Id == dialogId);            
 
             if (dialog != null && dialog.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
             {
-                var messages = dialog.Messages
+                var messages = await context.Messages
+                    .Where(m => m.DialogId == dialog.Id)
                         .Where(m => m.IsReaded)
                         .OrderBy(m => m.DateOfSending)
                         .Skip(offset)
                         .Take(count)
-                        .Select(m => ToMessageDTO(m))
-                        .ToList();
+                        .Select(m => (MessageDTO)m)
+                        .ToListAsync();
                 return messages;
             }
             logger.LogWarning($"User (ID: {userId}) tried to read messages from other people's dialog");
@@ -148,35 +154,25 @@ namespace Maelstorm.Services.Implementations
 
         public async Task<List<MessageDTO>> GetUnreadedMessagesAsync(long userId, long dialogId, int offset, int count)
         {
-            var dialog = await context.Dialogs.Include(d => d.DialogUsers).FirstOrDefaultAsync(d => d.Id == dialogId);
+            var dialog = await context.Dialogs
+                .Include(d => d.DialogUsers)
+                .FirstOrDefaultAsync(d => d.Id == dialogId);
 
             if (dialog != null && dialog.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
             {
-                var messages = dialog.Messages
+                var messages = await context.Messages
+                    .Where(m=>m.DialogId == dialog.Id)                    
                     .Where(m => !m.IsReaded)
                     .OrderBy(m => m.DateOfSending)
                     .Skip(offset)
                     .Take(count)
-                    .Select(m => ToMessageDTO(m))
-                    .ToList();
+                    .Select(m => (MessageDTO)m)
+                    .ToListAsync();
                 return messages;
             }
             logger.LogWarning($"User (ID: {userId}) tried to read messages from other people's dialog");
             return null;
-        }
-
-        private MessageDTO ToMessageDTO(Message message)
-        {
-            return new MessageDTO()
-            {
-                AuthorId = message.AuthorId,
-                DateOfSending = message.DateOfSending,
-                DialogId = message.DialogId,
-                IVBase64 = message.IVBase64,
-                Text = message.Text,
-                IsReaded = message.IsReaded
-            };
-        }
+        }        
         #endregion
 
         #region Getting dialogs
@@ -193,10 +189,9 @@ namespace Maelstorm.Services.Implementations
             List<DialogDTO> dialogs = new List<DialogDTO>();
 
             var userDialogs = await context.Dialogs
-                .Where(d => d.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
-                .Include(d => d.Messages)
+                .Where(d => d.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)                
                 .Include(d => d.DialogUsers)
-                .ThenInclude(du => du.User)
+                .ThenInclude(du=>du.User)
                 .Skip(offset)
                 .Take(count)
                 .ToArrayAsync();
@@ -205,9 +200,13 @@ namespace Maelstorm.Services.Implementations
             {
                 var interlocutor = userDialog.DialogUsers.Single(du => du.UserId != userId).User;
                 MessageDTO lastMessageDTO = null;
-                if (userDialog.Messages.Any())
+                if ((await context.Messages.Where(m=>m.DialogId == userDialog.Id).CountAsync())!= 0)
                 {
-                    var lastMessage = userDialog.Messages.Last();
+                    var lastMessage = await context.Messages
+                       .Where(m => m.DialogId == userDialog.Id)
+                       .OrderByDescending(m => m.DateOfSending)
+                       .FirstOrDefaultAsync();
+
                     lastMessageDTO = new MessageDTO()
                     {
                         Id = lastMessage.Id,
@@ -245,19 +244,20 @@ namespace Maelstorm.Services.Implementations
         public async Task<DialogDTO> GetDialogAsync(long userId, long interlocutorId)
         {            
             DialogDTO dialogDTO = null;
-            var dialogs = context.Dialogs
-                .Where(d => d.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null)
-                .Include(d => d.Messages)
+            var dialog = await context.Dialogs
                 .Include(d => d.DialogUsers)
-                .ThenInclude(du => du.User);
+                .FirstOrDefaultAsync(d => d.DialogUsers.SingleOrDefault(du => du.UserId == userId) != null
+                    && d.DialogUsers.SingleOrDefault(du => du.UserId == interlocutorId) != null);                
 
-            var interlocutor = await context.Users.FindAsync(interlocutorId);
-            var dialog = await dialogs.SingleOrDefaultAsync(d => d.DialogUsers.SingleOrDefault(du => du.User == interlocutor) != null);
+            var interlocutor = await context.Users.FindAsync(interlocutorId);            
 
             if (dialog == null)
                 dialog = await CreateDialogAsync(userId, interlocutorId);
 
-            var lastMessage = dialog.Messages?.LastOrDefault();
+            var lastMessage = await context.Messages
+                .Where(m => m.DialogId == dialog.Id)
+                .OrderByDescending(m => m.DateOfSending)
+                .FirstOrDefaultAsync();
             dialogDTO = new DialogDTO()
             {
                 Id = dialog.Id,
@@ -266,7 +266,7 @@ namespace Maelstorm.Services.Implementations
                 InterlocutorId = interlocutorId,
                 InterlocutorImage = interlocutor.Image,
                 InterlocutorNickname = interlocutor.Nickname,
-                LastMessage = lastMessage != null ? ToMessageDTO(lastMessage) : null
+                LastMessage = lastMessage != null ? (MessageDTO)lastMessage : null
             };
 
             return dialogDTO;
