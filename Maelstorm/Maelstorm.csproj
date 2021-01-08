@@ -1,25 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <TypeScriptToolsVersion>3.1</TypeScriptToolsVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="Filters\**" />
     <Content Remove="Filters\**" />
     <EmbeddedResource Remove="Filters\**" />
     <None Remove="Filters\**" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="BouncyCastle.NetCore" Version="1.8.6" />
-    <PackageReference Include="BundlerMinifier.Core" Version="3.2.449" />    
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.7" />    
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />    
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.7" />    
-    <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="3.1.7" />    
+    <PackageReference Include="BundlerMinifier.Core" Version="3.2.449" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="3.1.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.7" />
@@ -36,25 +33,25 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
     <DotNetCliToolReference Include="BundlerMinifier.Core" Version="2.6.362" />
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="maelstorm-dtos">
       <HintPath>..\..\..\RiderProjects\maelstorm-api\maelstorm-dtos\bin\Debug\netstandard2.1\maelstorm-dtos.dll</HintPath>
     </Reference>
-    <Reference Include="MaelstormDTO">
-      <HintPath>..\..\..\RiderProjects\maelstorm-api\MaelstormDTO\bin\Debug\netstandard2.1\MaelstormDTO.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
       <HintPath>..\..\..\..\..\..\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.aspnetcore.http.abstractions\2.2.0\lib\netstandard2.0\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
     </Reference>
+    <Reference Include="MaelstormDTO">
+      <HintPath>/home/vand0s/desktop/maelstorm-cs-api/MaelstormDTO/bin/Debug/netstandard2.1/MaelstormDTO.dll</HintPath>
+    </Reference>
   </ItemGroup>
-
   <ItemGroup>
     <Content Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
-  <ProjectExtensions><VisualStudio><UserProperties bundleconfig_1json__JsonSchema="" appsettings_1json__JSONSchema="http://json.schemastore.org/appsscript" /></VisualStudio></ProjectExtensions>
-
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties bundleconfig_1json__JsonSchema="" appsettings_1json__JSONSchema="http://json.schemastore.org/appsscript" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>
