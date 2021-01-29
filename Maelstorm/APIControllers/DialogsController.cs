@@ -11,7 +11,7 @@ namespace Maelstorm.APIControllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class DialogsController:ControllerBase
+    public class DialogsController : ControllerBase
     {
         private IDialogService dialogService;
         public DialogsController(IDialogService dialogService)
@@ -20,20 +20,37 @@ namespace Maelstorm.APIControllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Dialog>>> GetDialogs([FromQuery]int offset, [FromQuery]int count)
+        public async Task<ActionResult<IEnumerable<Dialog>>> GetDialogs([FromQuery] int offset, [FromQuery] int count)
         {
-            var dialogs = await dialogService.GetDialogsAsync(HttpContext.GetUserId(), offset, count);            
+            var dialogs = await dialogService.GetDialogsAsync(HttpContext.GetUserId(), offset, count);
             return dialogs;
         }
 
-        [HttpGet("{interlocutorId}")]
-        public async Task<ActionResult<Dialog>> GetDialog(int interlocutorId)
+        [HttpGet("{dialogId}")]
+        public async Task<ActionResult<Dialog>> GetDialog(int dialogId)
         {
-            if(interlocutorId != HttpContext.GetUserId())
+            if (dialogId > 0)
             {
-                var dialog = await dialogService.GetDialogAsync(HttpContext.GetUserId(), interlocutorId);
+                var dialog = await dialogService.GetDialogAsync(HttpContext.GetUserId(), dialogId);
                 if (dialog != null)
-                    return dialog;                
+                    return dialog;
+            }
+
+            var problemDetails = new ProblemDetails()
+            {
+                Detail = "Dialog doesn't exist"
+            };
+            return BadRequest(problemDetails);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<Dialog>> GetDialogByInterlocutorId([FromQuery] int interlocutorId)
+        {
+            if (interlocutorId != HttpContext.GetUserId())
+            {
+                var dialog = await dialogService.GetDialogByInterlocutorIdAsync(HttpContext.GetUserId(), interlocutorId);
+                if (dialog != null)
+                    return dialog;
             }
 
             var problemDetails = new ProblemDetails()
@@ -41,6 +58,6 @@ namespace Maelstorm.APIControllers
                 Detail = "Dialog doesn't exist and can't be created"
             };
             return BadRequest(problemDetails);
-        }        
+        }
     }
 }

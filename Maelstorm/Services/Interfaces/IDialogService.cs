@@ -14,7 +14,8 @@ namespace Maelstorm.Services.Interfaces
         Task<List<Message>> GetUnreadedMessagesAsync(long userId, long dialogId, int offset, int count);
         Task<List<Dialog>> GetDialogsAsync(long userId, int offset, int count);
         Task SetMessageAsReadedAsync(long userId, long messageId);
-        Task<Dialog> GetDialogAsync(long userId, long interlocutorId);
+        Task<Dialog> GetDialogAsync(long userId, long dialogId);
+        Task<Dialog> GetDialogByInterlocutorIdAsync(long userId, long interlocutorId);
         Task<Entities.Dialog> CreateDialogAsync(long firstUserId, long secondUserId, bool isClosed = false);
     }
 }
