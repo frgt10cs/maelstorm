@@ -1,6 +1,6 @@
 # Maelstorm
 
-Simple messanger built with ASP.NET Core Web API and SignalR
+Simple messanger built with ASP.NET Core Web API and SignalR (ABANDONED)
 
 ![Screenshot](https://user-images.githubusercontent.com/37965385/79689354-eb081900-825c-11ea-8bfb-3ed883dac2fc.PNG)
 
